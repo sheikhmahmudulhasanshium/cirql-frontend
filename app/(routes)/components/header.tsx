@@ -1,46 +1,53 @@
+// app/(routes)/components/Header.tsx
 import Image from "next/image";
-// Assuming logo.png is a more compact/square version, e.g., 48x48px or similar
-// Assuming logo-full.svg is your horizontal logo, e.g., 185x90px
-
-import Navbar from "./navbar"
-import { ModeToggle } from "@/components/mode-toggle"
+import Navbar from "./navbar"; // This will now be the Navbar with icons only
+import Searchbar from "./searchbar"; // Import the dedicated Searchbar
+// import { ModeToggle } from "@/components/mode-toggle"; // Assuming you might add this back
 
 const Header = () => {
     return (
-        <div className="flex h-20 px-4 items-center justify-between w-full shadow-lg bg-primary-foreground dark:bg-primary-foreground">
-            <a href="/" aria-label="Go to homepage">
-                {/** Small Logo - Visible by default, hidden on lg screens and up */}
-                <Image
-                    src={'/logo.png'}
-                    alt="Company Logo Short"
-                    // Example: if logo.png is 48x48px
-                    width={52}
-                    height={52}
-                    className="block h-16 w-16 lg:hidden" // Displayed at 40x40px
-                    priority
-                />
+        <header className="flex h-16 sm:h-20 px-2 md:px-4 lg:px-6 items-center w-full shadow-md dark:shadow-gray-700/50 bg-background gap-2 sm:gap-3 md:gap-4">
+            {/* Logo Area - flex-shrink-0 prevents it from shrinking */}
+            <div className="flex-shrink-0">
+                <a href="/" aria-label="Go to homepage" className="flex items-center">
+                    <Image
+                        src={'/logo.png'} // Ensure this is a small, square-ish logo
+                        alt="Company Logo Short"
+                        width={40}  // Adjust to your logo's aspect ratio
+                        height={40} // Adjust to your logo's aspect ratio
+                        className="block h-9 w-9 sm:h-10 sm:w-10 lg:hidden" // Adjust size
+                        priority
+                    />
+                    <Image
+                        src={'/logo-full.svg'} // Your horizontal SVG logo
+                        alt="Company Logo Full"
+                        width={130} // Adjust to your logo's aspect ratio
+                        height={40} // Adjust to your logo's aspect ratio
+                        className="hidden lg:block h-9 sm:h-10 w-auto" // Adjust size
+                        priority
+                    />
+                </a>
+            </div>
 
-                {/** Full Logo - Hidden by default, visible on lg screens and up */}
-                <Image
-                    src={'/logo-full.svg'} // Your SVG logo
-                    alt="Company Logo Full"
-                    // Example: if your SVG is designed at 185x90
-                    width={200}
-                    height={100}
-                    // Tailwind classes for display:
-                    // - `hidden`: hides this image by default.
-                    // - `lg:block`: makes it visible as a block element on `lg` screens and wider.
-                    // - `h-16`: **INCREASED HEIGHT** (e.g., 4rem or 64px). Adjust as needed.
-                    // - `w-auto`: allows the width to scale automatically.
-                    className="hidden h-20 w-auto lg:block" // <--- CHANGED h-12 to h-16
-                    priority
-                />
-            </a>
+            {/* Searchbar Area - flex-grow allows it to take available space */}
+            {/* min-w-0 is important for flex items that might overflow */}
+            {/* justify-center will center the searchbar if it doesn't reach its max-width */}
+            <div className="flex flex-grow min-w-0 justify-center px-1 sm:px-2">
+                <Searchbar />
+            </div>
 
-            <Navbar/>
-            <ModeToggle/>
-            
-        </div>
+            {/* Navigation & Actions Area - flex-shrink-0 prevents shrinking */}
+            <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
+                <Navbar /> {/* This is Navbar.tsx, now containing only icons */}
+                {/* <ModeToggle /> */}
+                {/* You could add other items here like a profile dropdown */}
+                {/* Example:
+                <Button variant="ghost" size="icon" className="rounded-full">
+                    <UserCircle2 className="h-6 w-6" />
+                </Button>
+                */}
+            </div>
+        </header>
     );
 }
 

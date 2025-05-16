@@ -1,19 +1,14 @@
+import { footerLinks } from "@/lib/menu";
 import Image from "next/image";
 import Link from "next/link";
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
 
-    const footerLinks = [
-        { href: "/about", label: "About" },
-        { href: "/faq", label: "FAQs" },
-        { href: "/terms-and-conditions", label: "Terms & Conditions" },
-        { href: "/privacy-policy", label: "Privacy Policy" },
-        { href: "/sitemap", label: "Sitemap" },
-    ];
+    
 
     return (
-        <footer className="bg-accent dark:bg-accent-dark text-accent-foreground dark:text-accent-foreground-dark w-full absolute bottom-0">
+        <footer className="bg-accent dark:bg-accent-dark text-accent-foreground dark:text-accent-foreground-dark w-full  ">
             {/* 
                 Consider if `absolute` positioning is truly needed. 
                 If the page content can be shorter than the viewport, `absolute` works.
@@ -42,7 +37,7 @@ const Footer = () => {
                 </p>
 
                 {/* Section 3: Navigation Links */}
-                <nav className="flex flex-wrap justify-center items-center gap-x-4 sm:gap-x-6 gap-y-2 sm:gap-y-3 mb-6 md:mb-8">
+                <nav className="flex flex-wrap justify-center items-center gap-x-4 sm:gap-x-6 gap-y-2 sm:gap-y-3 mb-6 md:mb-8 px-4">
                     {footerLinks.map((link) => (
                         <Link
                             key={link.href}
@@ -57,7 +52,7 @@ const Footer = () => {
                 {/* Section 4: Copyright */}
                 {/* mt-auto can be used if you want this to stick to the bottom of the flex container if space allows */}
                 <small className="text-xs sm:text-sm text-muted-foreground dark:text-muted-foreground-dark mt-4 md:mt-auto">
-                    © CIRQL {currentYear}. All rights reserved.
+                    &copy; CIRQL {currentYear}. All rights reserved.
                 </small>
             </div>
         </footer>
