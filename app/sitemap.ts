@@ -1,44 +1,18 @@
 // app/sitemap.ts
 import type { MetadataRoute } from 'next';
-import { navbarMenu, footerLinks } from '@/lib/menu'; // Assuming this path is correct
 
 const BASE_URL = 'https://cirql.vercel.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const sitemapEntries: MetadataRoute.Sitemap = [];
 
-  navbarMenu.forEach((item) => {
-    sitemapEntries.push({
-      url: `${BASE_URL}${item.href}`,
-      lastModified: new Date(), // Key: uses current date/time at build
-    });
-  });
+  // ... (your existing loops for navbarMenu, footerLinks, otherEssentialPages) ...
+  // ENSURE ALL `lastModified` are `new Date()`
 
-  footerLinks.forEach((item) => {
-    if (item.href.toLowerCase() === '/sitemap' || item.href.toLowerCase() === '/sitemap.xml') {
-      return;
-    }
-    sitemapEntries.push({
-      url: `${BASE_URL}${item.href}`,
-      lastModified: new Date(), // Key: uses current date/time at build
-    });
-  });
-
-  const otherEssentialPages = [
-    { href: '/', priority: 1.0, changeFrequency: 'daily' as const },
-    { href: '/signin', priority: 0.5 },
-    { href: '/signout', priority: 0.3 },
-  ];
-
-  otherEssentialPages.forEach((page) => {
-    if (!sitemapEntries.some(entry => entry.url === `${BASE_URL}${page.href}`)) {
-      sitemapEntries.push({
-        url: `${BASE_URL}${page.href}`,
-        lastModified: new Date(), // Key: uses current date/time at build
-        priority: page.priority,
-        changeFrequency: page.changeFrequency,
-      });
-    }
+  // ADD THIS CANARY ENTRY
+  sitemapEntries.push({
+    url: `${BASE_URL}/sitemap-test-canary-${new Date().toISOString().replace(/[:.]/g, '-')}`, // Unique URL
+    lastModified: new Date(),
   });
 
   const uniqueSitemapEntries = Array.from(new Map(sitemapEntries.map(item => [item.url, item])).values());
