@@ -1,6 +1,4 @@
-# CiRQL
-
-"- Stay In the Loop."
+# <img src='/logo.png' alt='Cirql Logo' width='40' style='vertical-align: middle;' /> CiRQL: "Stay In the Loop."
 
 Cirql is a modern social media and communication platform designed for Gen Z, millennials, creators, and tech-savvy professionals to connect and stay informed. It aims to be a friendly, trustworthy, and tech-forward space, offering a user experience that's clean, minimal, and intuitive.
 
