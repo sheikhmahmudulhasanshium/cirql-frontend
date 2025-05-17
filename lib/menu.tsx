@@ -22,6 +22,6 @@ export const footerLinks = [
         { href: "/faq", label: "FAQs" },
         { href: "/terms-and-conditions", label: "Terms & Conditions" },
         { href: "/privacy-policy", label: "Privacy Policy" },
-        { href: "//sitemap.xml", label: "Sitemap" },
+        { href: "/sitemap.xml", label: "Sitemap" },
         { href:"/contacts", label: "Contacts"}
     ];
