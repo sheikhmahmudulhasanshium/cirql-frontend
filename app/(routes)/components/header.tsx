@@ -2,6 +2,7 @@
 import Image from "next/image";
 import Navbar from "./navbar"; // This will now be the Navbar with icons only
 import Searchbar from "./searchbar"; // Import the dedicated Searchbar
+import Link from "next/link";
 // import { ModeToggle } from "@/components/mode-toggle"; // Assuming you might add this back
 
 const Header = () => {
@@ -9,7 +10,7 @@ const Header = () => {
         <header className="flex h-16 sm:h-20 px-2 md:px-4 lg:px-6 items-center w-full shadow-md dark:shadow-gray-700/50 bg-background gap-2 sm:gap-3 md:gap-4">
             {/* Logo Area - flex-shrink-0 prevents it from shrinking */}
             <div className="flex-shrink-0">
-                <a href="/" aria-label="Go to homepage" className="flex items-center">
+                <Link href="/" aria-label="Go to homepage" className="flex items-center">
                     <Image
                         src={'/logo.png'} // Ensure this is a small, square-ish logo
                         alt="Company Logo Short"
@@ -26,7 +27,7 @@ const Header = () => {
                         className="hidden lg:block h-9 sm:h-10 w-auto" // Adjust size
                         priority
                     />
-                </a>
+                </Link>
             </div>
 
             {/* Searchbar Area - flex-grow allows it to take available space */}
