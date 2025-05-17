@@ -1,7 +1,9 @@
+import FAQ from "../components/faq";
+
 const FAQs = () => {
     return ( 
         <div>
-            FAQs
+            <FAQ/>
         </div>
      );
 }
