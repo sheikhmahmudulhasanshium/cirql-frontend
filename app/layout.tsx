@@ -34,6 +34,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-title" content="cirql" />
         <link rel="manifest" href="/site.webmanifest" />
+        <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
         {/* Any other valid <meta>, <link>, <script>, <style>, <title> tags go here,
             with no extra characters or comments between them. */}
       </head>

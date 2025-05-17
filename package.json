@@ -1,7 +1,7 @@
 {
   "name": "cirql-frontend",
   "version": "0.1.0",
-  "author":"Sheikh Mahmudul Hasan Shium",
+  "author": "Sheikh Mahmudul Hasan Shium",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -14,10 +14,13 @@
     "@radix-ui/react-slot": "^1.2.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.5.0",
     "lucide-react": "^0.510.0",
     "next": "15.3.2",
     "next-themes": "^0.4.6",
-    "react": "^19.0.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "react": "^19.1.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.0"
   },
@@ -25,6 +28,8 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
