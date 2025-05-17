@@ -1,3 +1,4 @@
+// app/(routes)/signin/page.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Button } from '@/components/ui/button';
 const SignInPage = () => {
   const handleGoogleSignIn = () => {
     // Redirect to your backend route for Google authentication
-    window.location.href = '/api/auth/google'; // This route needs to be implemented
+    window.location.href = '/auth/google'; // <--- UPDATED PATH
   };
 
   return (

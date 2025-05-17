@@ -20,7 +20,10 @@ The development of Cirql is guided by the following principles, inspired by its 
 *   **Styling:** Tailwind CSS (as `shadcn/ui` is built on top of it)
 *   **Font:** [Geist](https://vercel.com/font) (via `next/font`)
 *   **Database:** To be decided.
-*   **Authentication:** To be decided.
+*   **Authentication:**
+    *   **Provider:** Google (via OAuth 2.0 and OpenID Connect)
+    *   **Implementation:** [Passport.js](http://www.passportjs.org/) using the `passport-google-oauth20` strategy.
+    *   **Session Management:** JSON Web Tokens (JWTs) issued by Cirql after successful Google authentication, stored client-side.
 
 ## Getting Started
 
