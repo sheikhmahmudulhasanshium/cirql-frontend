@@ -10,7 +10,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   navbarMenu.forEach((item) => {
     sitemapEntries.push({
       url: `${BASE_URL}${item.href}`,
-      lastModified: new Date(),
+      lastModified: new Date(), // Key: uses current date/time at build
     });
   });
 
@@ -20,7 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
     sitemapEntries.push({
       url: `${BASE_URL}${item.href}`,
-      lastModified: new Date(),
+      lastModified: new Date(), // Key: uses current date/time at build
     });
   });
 
@@ -34,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     if (!sitemapEntries.some(entry => entry.url === `${BASE_URL}${page.href}`)) {
       sitemapEntries.push({
         url: `${BASE_URL}${page.href}`,
-        lastModified: new Date(),
+        lastModified: new Date(), // Key: uses current date/time at build
         priority: page.priority,
         changeFrequency: page.changeFrequency,
       });
