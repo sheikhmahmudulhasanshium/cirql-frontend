@@ -1,10 +1,10 @@
 'use client'
 
 import BasicPageProvider from "@/components/providers/basic-page-provider"
-import Footer from "./components/footer"; 
-import Header from "./components/header-sign-out";
-import FAQ from "./components/faq";
-import About from "./components/about";
+import Footer from "./(routes)/components/footer"; 
+import Header from "./(routes)/components/header-sign-out";
+import FAQ from "./(routes)/components/faq";
+import About from "./(routes)/components/about";
 //export const metadata: Metadata = {
 //  title: "CiRQL: Stay In the Loop.",
 //  description: "A modern take on community and messaging, Cirql helps you stay connected through voice, chat, and private group networks — all in one private space.",

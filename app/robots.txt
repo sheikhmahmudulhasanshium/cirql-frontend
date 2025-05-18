@@ -1,10 +1,4 @@
 User-agent: *
 Allow: /
 
-Disallow: /some-private-path/
-Disallow: /admin/
-Disallow: /api/
-Disallow: /internal/
-Disallow: /debug/
-
 Sitemap: https://cirql.vercel.app/sitemap.xml
