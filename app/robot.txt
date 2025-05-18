@@ -1,5 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /some-private-path/
-
-Sitemap: https://cirql.vercel.app/sitemap.xml

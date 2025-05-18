@@ -2,7 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-
+import { GoogleAnalytics } from "@next/third-parties/google";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -23,6 +23,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  //console.log()
   return (
     <html lang="en" suppressHydrationWarning>
       {/* This comment is OUTSIDE <head> and is fine */}
@@ -52,6 +53,8 @@ export default function RootLayout({
             </div>
           </ThemeProvider>
       </body>
+      {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && 
+      <GoogleAnalytics gaId= {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}/>}
     </html>
   );
 }
