@@ -27,10 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       {/* This comment is OUTSIDE <head> and is fine */}
-      {process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID && (
+      <head>
+        {process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID} />
         )}
-      <head>
+      
         {/* NO JSX COMMENTS OR WHITESPACE NODES ALLOWED HERE AS DIRECT CHILDREN */}
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
