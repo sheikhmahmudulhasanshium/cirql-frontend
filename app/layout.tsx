@@ -1,18 +1,54 @@
 // RootLayout.tsx
-import { Geist, Geist_Mono } from "next/font/google"; // Correct import name
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
+import type { Metadata } from 'next'; // Import Metadata type
 
-const geistSans = Geist({ // Correct function call
+const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({ // Correct function call
+const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+// Define global/fallback metadata for the application
+export const metadata: Metadata = {
+  metadataBase: new URL('https://cirql.vercel.app'), // Important: Set your production URL base
+  title: {
+    default: 'CiRQL', // Default title for the site
+    template: '%s | CiRQL', // Template for page titles, e.g., "About Us | CiRQL"
+  },
+  description: 'CiRQL: Your modern community platform for private group networks and seamless messaging. Stay in the loop!', // Default description
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
+      // '/favicon.ico' is often automatically picked up by Next.js if present in /public or /app
+    ],
+    shortcut: ['/favicon.ico'], // For older browsers or specific needs
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  manifest: '/site.webmanifest',
+  appleWebApp: {
+    title: 'cirql', // Name for "Add to Home Screen"
+    statusBarStyle: 'default',
+    capable: true,
+  },
+  verification: {
+    google: "WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU", // Google Site Verification
+  },
+  // You can add default Open Graph properties here if desired
+  // openGraph: {
+  //   siteName: 'CiRQL',
+  // },
+};
+
 
 export default function RootLayout({
   children,
@@ -25,20 +61,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-title" content="cirql" />
-        <link rel="manifest" href="/site.webmanifest" />
+        {/*
+          Favicon links, manifest, apple-mobile-web-app-title, and google-site-verification
+          are now handled by the `metadata` object exported above.
+          Next.js will automatically inject them into the <head>.
+          Manual tags for these are no longer needed here.
+        */}
 
-        <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
-
-        {/* --- Google Analytics Snippet (for GA verification) --- */}
+        {/* --- Google Analytics Snippet --- */}
          {gaId && (
           <>
-            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
-            <script
+            <Script strategy="afterInteractive" async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></Script>
+            <Script
+              id="ga-inline-script" // Added an ID for the inline script
+              strategy="afterInteractive"
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -51,7 +87,6 @@ export default function RootLayout({
           </>
         )}
         {/* --- End Google Analytics Snippet --- */}
-
 
         {/* --- Google Tag Manager - Head Snippet --- */}
          {gtmId && (
@@ -72,10 +107,9 @@ export default function RootLayout({
         {/* --- End Google Tag Manager - Head Snippet --- */}
       </head>
 
-      {/* Apply the font variables to the body className */}
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`} // <-- FIX IS HERE
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {gtmId && (
           <noscript>
@@ -84,7 +118,7 @@ export default function RootLayout({
               height="0"
               width="0"
               style={{ display: 'none', visibility: 'hidden' }}
-              title="Google Tag Manager noscript" // Added title for accessibility
+              title="Google Tag Manager noscript"
             ></iframe>
           </noscript>
         )}
@@ -94,7 +128,6 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
         >
-          {/* Changed div to main for better semantics, ensure it matches your global styles if needed */}
           <main className="flex flex-col min-h-screen">{children}</main>
         </ThemeProvider>
       </body>
