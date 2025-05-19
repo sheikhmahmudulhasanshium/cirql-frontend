@@ -38,10 +38,15 @@ export default function RootLayout({
         <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
         {/* Any other valid <meta>, <link>, <script>, <style>, <title> tags go here,
             with no extra characters or comments between them. */}
+      
       </head>
+      
       <body suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      >{process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID &&
+        process.env.NODE_ENV === "production" && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+        )}
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -53,8 +58,6 @@ export default function RootLayout({
             </div>
           </ThemeProvider>
       </body>
-      {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && 
-      <GoogleAnalytics gaId= {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}/>}
-    </html>
+      </html>
   );
 }
