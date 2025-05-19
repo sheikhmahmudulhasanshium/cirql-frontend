@@ -35,15 +35,10 @@ export default function RootLayout({
         <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
 
         {/* --- Google Analytics Snippet (for GA verification) --- */}
-        {gaId && (
+         {gaId && (
           <>
-            <Script
-              strategy="afterInteractive"
-              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-            />
-            <Script
-              id="google-analytics-config"
-              strategy="afterInteractive"
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></script>
+            <script
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -59,7 +54,7 @@ export default function RootLayout({
 
 
         {/* --- Google Tag Manager - Head Snippet --- */}
-        {gtmId && (
+         {gtmId && (
           <Script
             id="google-tag-manager-head"
             strategy="afterInteractive"
@@ -89,7 +84,7 @@ export default function RootLayout({
               height="0"
               width="0"
               style={{ display: 'none', visibility: 'hidden' }}
-              title="Google Tag Manager noscript"
+              title="Google Tag Manager noscript" // Added title for accessibility
             ></iframe>
           </noscript>
         )}
