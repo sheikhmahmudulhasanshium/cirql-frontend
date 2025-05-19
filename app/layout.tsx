@@ -2,7 +2,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import Script from 'next/script'; // Import next/script
+import Script from 'next/script';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const gtmId = process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID;
-  // We will rely on GTM to load GA, so gaId is not directly used for a separate GA snippet here.
+  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID; // GA ID for direct GA snippet
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -38,10 +38,36 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="cirql" />
         <link rel="manifest" href="/site.webmanifest" />
 
-        {/* Google Search Console Verification Meta Tag (Keep this if you used this method) */}
+        {/* Google Search Console Verification Meta Tag (Keep if you used this HTML tag method) */}
         <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
 
-        {/* Google Tag Manager - Head Snippet */}
+        {/* --- Google Analytics Snippet (for GA verification) --- */}
+        {gaId && (
+          <>
+            <Script
+              strategy="afterInteractive" // Good strategy for analytics
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            />
+            <Script
+              id="google-analytics-config"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${gaId}', {
+                    page_path: window.location.pathname,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
+        {/* --- End Google Analytics Snippet --- */}
+
+
+        {/* --- Google Tag Manager - Head Snippet (for GTM verification & tag management) --- */}
         {gtmId && (
           <Script
             id="google-tag-manager-head"
@@ -57,6 +83,7 @@ export default function RootLayout({
             }}
           />
         )}
+        {/* --- End Google Tag Manager - Head Snippet --- */}
       </head>
 
       <body
@@ -71,7 +98,7 @@ export default function RootLayout({
               height="0"
               width="0"
               style={{ display: 'none', visibility: 'hidden' }}
-              title="Google Tag Manager noscript" // Added title for accessibility
+              title="Google Tag Manager noscript"
             ></iframe>
           </noscript>
         )}
