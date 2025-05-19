@@ -1,14 +1,15 @@
 // RootLayout.tsx
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google"; // Correct import name
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
-const geistSans = Geist({
+
+const geistSans = Geist({ // Correct function call
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = Geist_Mono({ // Correct function call
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
@@ -23,7 +24,6 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* THE <head> ELEMENT STARTS HERE. SCRIPTS MUST BE INSIDE IT. */}
       <head>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -35,11 +35,10 @@ export default function RootLayout({
         <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
 
         {/* --- Google Analytics Snippet (for GA verification) --- */}
-        {/* This block MUST render within the <head> tags of your final HTML */}
         {gaId && (
           <>
             <Script
-              strategy="afterInteractive" // This strategy is generally fine.
+              strategy="afterInteractive"
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
             />
             <Script
@@ -50,7 +49,7 @@ export default function RootLayout({
                   window.dataLayer = window.dataLayer || [];
                   function gtag(){dataLayer.push(arguments);}
                   gtag('js', new Date());
-                  gtag('config', '${gaId}'); {/* Removed page_path for simplicity during verification */}
+                  gtag('config', '${gaId}');
                 `,
               }}
             />
@@ -60,7 +59,6 @@ export default function RootLayout({
 
 
         {/* --- Google Tag Manager - Head Snippet --- */}
-        {/* This block MUST also render within the <head> tags */}
         {gtmId && (
           <Script
             id="google-tag-manager-head"
@@ -78,9 +76,12 @@ export default function RootLayout({
         )}
         {/* --- End Google Tag Manager - Head Snippet --- */}
       </head>
-      {/* THE <head> ELEMENT ENDS HERE. */}
 
-      <body /* ... */ >
+      {/* Apply the font variables to the body className */}
+      <body
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`} // <-- FIX IS HERE
+      >
         {gtmId && (
           <noscript>
             <iframe
@@ -92,7 +93,13 @@ export default function RootLayout({
             ></iframe>
           </noscript>
         )}
-        <ThemeProvider /* ... */ >
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+          {/* Changed div to main for better semantics, ensure it matches your global styles if needed */}
           <main className="flex flex-col min-h-screen">{children}</main>
         </ThemeProvider>
       </body>
