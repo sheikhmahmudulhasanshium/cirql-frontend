@@ -36,19 +36,32 @@ const Footer = () => {
                     A modern take on community and messaging, Cirql helps you stay connected through voice, chat, and private group networks — all in one private space.
                 </p>
 
+
+
                 {/* Section 3: Navigation Links */}
                 <nav className="flex flex-wrap justify-center items-center gap-x-4 sm:gap-x-6 gap-y-2 sm:gap-y-3 mb-6 md:mb-8 px-4">
                     {footerLinks.map((link) => (
-                        <Link
-                            key={link.href}
-                            href={link.href}
-                            className="text-sm sm:text-base text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 hover:underline transition-colors duration-150"
-                        >
-                            {link.label}
-                        </Link>
+                        link.href === "/sitemap.xml" ? (
+                            <a
+                                key={link.href}
+                                href={link.href}
+                                className="text-sm sm:text-base text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 hover:underline transition-colors duration-150"
+                                target="_blank" // Good practice to open XML in a new tab
+                                rel="noopener noreferrer" // Security for target="_blank"
+                            >
+                                {link.label}
+                            </a>
+                        ) : (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className="text-sm sm:text-base text-primary dark:text-primary-dark hover:text-primary/80 dark:hover:text-primary-dark/80 hover:underline transition-colors duration-150"
+                            >
+                                {link.label}
+                            </Link>
+                        )
                     ))}
                 </nav>
-
                 {/* Section 4: Copyright */}
                 {/* mt-auto can be used if you want this to stick to the bottom of the flex container if space allows */}
                 <small className="text-xs sm:text-sm text-muted-foreground dark:text-muted-foreground-dark mt-4 md:mt-auto">
