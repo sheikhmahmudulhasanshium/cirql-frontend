@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -14,22 +13,17 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// Optional: Define metadata here if you prefer it over page-level metadata
-// export const metadata = {
-//  title: "CiRQL: Stay In the Loop.",
-//  description: "A modern take on community and messaging, Cirql helps you stay connected through voice, chat, and private group networks — all in one private space.",
-// };
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const gtmId = process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID;
-  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID; // GA ID for direct GA snippet
+  const gaId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 
   return (
     <html lang="en" suppressHydrationWarning>
+      {/* THE <head> ELEMENT STARTS HERE. SCRIPTS MUST BE INSIDE IT. */}
       <head>
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -38,14 +32,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="cirql" />
         <link rel="manifest" href="/site.webmanifest" />
 
-        {/* Google Search Console Verification Meta Tag (Keep if you used this HTML tag method) */}
         <meta name="google-site-verification" content="WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU" />
 
         {/* --- Google Analytics Snippet (for GA verification) --- */}
+        {/* This block MUST render within the <head> tags of your final HTML */}
         {gaId && (
           <>
             <Script
-              strategy="afterInteractive" // Good strategy for analytics
+              strategy="afterInteractive" // This strategy is generally fine.
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
             />
             <Script
@@ -56,9 +50,7 @@ export default function RootLayout({
                   window.dataLayer = window.dataLayer || [];
                   function gtag(){dataLayer.push(arguments);}
                   gtag('js', new Date());
-                  gtag('config', '${gaId}', {
-                    page_path: window.location.pathname,
-                  });
+                  gtag('config', '${gaId}'); {/* Removed page_path for simplicity during verification */}
                 `,
               }}
             />
@@ -67,11 +59,12 @@ export default function RootLayout({
         {/* --- End Google Analytics Snippet --- */}
 
 
-        {/* --- Google Tag Manager - Head Snippet (for GTM verification & tag management) --- */}
+        {/* --- Google Tag Manager - Head Snippet --- */}
+        {/* This block MUST also render within the <head> tags */}
         {gtmId && (
           <Script
             id="google-tag-manager-head"
-            strategy="afterInteractive" // Good strategy for GTM
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -85,12 +78,9 @@ export default function RootLayout({
         )}
         {/* --- End Google Tag Manager - Head Snippet --- */}
       </head>
+      {/* THE <head> ELEMENT ENDS HERE. */}
 
-      <body
-        suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* Google Tag Manager - Body Snippet (noscript) */}
+      <body /* ... */ >
         {gtmId && (
           <noscript>
             <iframe
@@ -102,14 +92,8 @@ export default function RootLayout({
             ></iframe>
           </noscript>
         )}
-
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="flex flex-col min-h-screen">{children}</div>
+        <ThemeProvider /* ... */ >
+          <main className="flex flex-col min-h-screen">{children}</main>
         </ThemeProvider>
       </body>
     </html>
