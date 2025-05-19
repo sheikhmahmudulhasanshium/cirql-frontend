@@ -27,9 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       {/* This comment is OUTSIDE <head> and is fine */}
-      {process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID&&
-        <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID} />
-}
+      {process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID && (
+          <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID} />
+        )}
       <head>
         {/* NO JSX COMMENTS OR WHITESPACE NODES ALLOWED HERE AS DIRECT CHILDREN */}
         <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
@@ -46,16 +46,16 @@ export default function RootLayout({
       
       <body suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >{process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID &&
-        process.env.NODE_ENV === "production" && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
-        )}
-        <ThemeProvider
+      > <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-          >
+          >{process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID &&
+        process.env.NODE_ENV === "production" && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
+        )}
+       
             <div className="flex flex-col min-h-screen">
               {children}
             </div>
