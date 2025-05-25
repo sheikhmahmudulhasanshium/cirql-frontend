@@ -1,0 +1,7 @@
+# This website (cirql.vercel.app) does not display any advertisements.
+# Therefore, there are no authorized digital sellers to list in this ads.txt file.
+#
+# For inquiries related to this domain, please visit our contact page:
+# https://cirql.vercel.app/contacts
+#
+# Learn more about ads.txt: https://iabtechlab.com/ads-txt/

@@ -9,7 +9,7 @@ const Header = () => {
     return (
         <header className="flex h-16 sm:h-20 px-2 md:px-4 lg:px-6 items-center w-full shadow-md dark:shadow-gray-700/50 bg-background gap-2 sm:gap-3 md:gap-4">
             {/* Logo Area - flex-shrink-0 prevents it from shrinking */}
-            <div className="flex-shrink-0">
+            <h1 className="flex-shrink-0">
                 <Link href="/" aria-label="Go to homepage" className="flex items-center">
                     <Image
                         src={'/logo.png'} // Ensure this is a small, square-ish logo
@@ -28,7 +28,7 @@ const Header = () => {
                         priority
                     />
                 </Link>
-            </div>
+            </h1>
 
             {/* Searchbar Area - flex-grow allows it to take available space */}
             {/* min-w-0 is important for flex items that might overflow */}
