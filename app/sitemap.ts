@@ -5,18 +5,19 @@ const BASE_URL = 'https://cirql.vercel.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const routes = ['', '/about', '/faq', '/privacy-policy', '/contacts', '/terms-and-conditions'];
-  const testDate = '2024-01-15T10:00:00.000Z'; // A known past date
+  const currentDate = new Date().toISOString(); // Revert to this
 
-  // You can also add a log to see what the build process thinks the date is
-  // This log will appear in your Vercel build logs
-  console.log("Sitemap generation: Forcing lastModified to:", testDate);
-  const currentDateObject = new Date();
-  console.log("Sitemap generation: Current new Date() on build server is:", currentDateObject.toISOString());
+  // Or for "current - 2 days"
+  // const currentDateObject = new Date();
+  // const twoDaysInMilliseconds = 2 * 24 * 60 * 60 * 1000;
+  // const dateTwoDaysAgo = new Date(currentDateObject.getTime() - twoDaysInMilliseconds);
+  // const currentDate = dateTwoDaysAgo.toISOString();
 
+  console.log("Sitemap generation: Using date:", currentDate); // Keep this log for now!
 
   return routes.map((route) => ({
     url: `${BASE_URL}${route}`,
-    lastModified: testDate, // Use the hardcoded test date
+    lastModified: currentDate,
     changeFrequency: 'daily',
     priority: route === '' ? 1 : 0.8,
   }));
