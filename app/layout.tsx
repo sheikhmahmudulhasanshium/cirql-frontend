@@ -1,52 +1,111 @@
-// RootLayout.tsx
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google"; // Corrected import for next/font/google
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
-import type { Metadata } from 'next'; // Import Metadata type
+import type { Metadata } from 'next';
 
-const geistSans = Geist({
+const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const geistMono = Geist_Mono({ // Corrected invocation
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
-// Define global/fallback metadata for the application
+// --- START: JSON-LD Structured Data ---
+const structuredData = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "name": "CiRQL", // Using the name from your metadata for consistency
+      "url": "https://cirql.vercel.app/",
+      "description": "CiRQL: Your modern community platform for private group networks and seamless messaging. Stay in the loop!", // Using description from metadata
+      "publisher": {
+        "@type": "Person",
+        "name": "Sheikh Mahmudul Hasan Shium",
+        "url": "https://github.com/sheikhmahmudulhasanshium"
+      },
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://cirql.vercel.app/logo.png" // Ensure this path is correct relative to your public folder or a full URL
+      },
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://cirql.vercel.app/logo-full.svg" // Ensure this path is correct
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "CiRQL", // Using the name from your metadata for consistency
+      "applicationCategory": ["DesignApplication", "WebApplication", "MultimediaApplication", "UtilityApplication", "SocialNetworkingApplication"], // Added SocialNetworkingApplication based on description
+      "operatingSystem": "Web Browser",
+      "description": "CiRQL is a modern community platform for private group networks and seamless messaging. It helps users stay in the loop and connect within their private groups.", // Slightly adapted for SoftwareApplication
+      "url": "https://cirql.vercel.app/",
+      "author": {
+        "@type": "Person",
+        "name": "Sheikh Mahmudul Hasan Shium",
+        "url": "https://github.com/sheikhmahmudulhasanshium"
+      },
+      "creator": {
+        "@type": "Person",
+        "name": "Sheikh Mahmudul Hasan Shium",
+        "url": "https://github.com/sheikhmahmudulhasanshium"
+      },
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://cirql.vercel.app/logo.png" // Ensure this path is correct
+      },
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://cirql.vercel.app/logo-full.svg" // Ensure this path is correct
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0", // Assuming it's free to use
+        "priceCurrency": "USD"
+      },
+      "isAccessibleForFree": true, // Assuming it's free
+      "keywords": "community platform, private groups, messaging, social networking, CiRQL, group network, collaboration tool", // Updated keywords
+      // featureList can be added if specific features are highlighted
+      // "featureList": [
+      //   "Private group creation",
+      //   "Seamless messaging",
+      //   "Community networking"
+      // ]
+    }
+  ]
+};
+// --- END: JSON-LD Structured Data ---
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://cirql.vercel.app'), // Important: Set your production URL base
+  metadataBase: new URL('https://cirql.vercel.app'),
   title: {
-    default: 'CiRQL', // Default title for the site
-    template: '%s | CiRQL', // Template for page titles, e.g., "About Us | CiRQL"
+    default: 'CiRQL',
+    template: '%s | CiRQL',
   },
-  description: 'CiRQL: Your modern community platform for private group networks and seamless messaging. Stay in the loop!', // Default description
+  description: 'CiRQL: Your modern community platform for private group networks and seamless messaging. Stay in the loop!',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
       { url: '/favicon-96x96.png', type: 'image/png', sizes: '96x96' },
-      // '/favicon.ico' is often automatically picked up by Next.js if present in /public or /app
     ],
-    shortcut: ['/favicon.ico'], // For older browsers or specific needs
+    shortcut: ['/favicon.ico'],
     apple: [
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
   manifest: '/site.webmanifest',
   appleWebApp: {
-    title: 'cirql', // Name for "Add to Home Screen"
+    title: 'CiRQL', // Changed to match title
     statusBarStyle: 'default',
     capable: true,
   },
   verification: {
     google: "WRd30nYZYkPGTW-FtsbgzbgKSaB1d_bteLvzj-sA3YU", // Google Site Verification
   },
-  // You can add default Open Graph properties here if desired
-  // openGraph: {
-  //   siteName: 'CiRQL',
-  // },
 };
 
 
@@ -61,19 +120,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/*
-          Favicon links, manifest, apple-mobile-web-app-title, and google-site-verification
-          are now handled by the `metadata` object exported above.
-          Next.js will automatically inject them into the <head>.
-          Manual tags for these are no longer needed here.
-        */}
-
         {/* --- Google Analytics Snippet --- */}
          {gaId && (
           <>
             <Script strategy="afterInteractive" async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></Script>
             <Script
-              id="ga-inline-script" // Added an ID for the inline script
+              id="ga-inline-script"
               strategy="afterInteractive"
               dangerouslySetInnerHTML={{
                 __html: `
@@ -105,6 +157,14 @@ export default function RootLayout({
           />
         )}
         {/* --- End Google Tag Manager - Head Snippet --- */}
+
+        {/* --- START: JSON-LD Structured Data Script --- */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        {/* --- END: JSON-LD Structured Data Script --- */}
+
       </head>
 
       <body
