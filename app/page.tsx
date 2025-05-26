@@ -6,6 +6,7 @@ import Header from "./(routes)/components/header-sign-out";
 import FAQ from "./(routes)/components/faq";
 import About from "./(routes)/components/about";
 import type { Metadata } from 'next';
+import Welcome from "./(routes)/components/welcome";
 
 const pageTitle = "CiRQL: Stay In the Loop.";
 const pageDescription = "Discover Cirql, your modern community platform for private group networks and seamless messaging. Effortlessly connect with secure voice, dynamic chat, and dedicated groups—all in one private space. Join Cirql today!";
@@ -65,6 +66,7 @@ export default function LandingPage() {
       footer={<Footer />}
     >
       <div className="flex flex-col justify-center items-center text-center p-4">
+        <Welcome/>
         <About />
         <FAQ />
       </div>

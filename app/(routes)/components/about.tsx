@@ -2,10 +2,9 @@ const About = () => {
   return (
     <div className="w-full px-4 py-12 max-w-4xl">
       <div className="text-left mx-auto">
-        <h1 className="text-4xl font-bold mb-12 text-center">About CiRQL</h1>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Our Mission</h2>
+          <h2 className="text-2xl font-semibold mb-4">🎯 Our Mission</h2>
           <p className="text-lg text-gray-700 dark:text-gray-300">
             CiRQL exists to help people connect more meaningfully in private spaces. In a world of
             overwhelming feeds, endless noise, and impersonal communication, we believe there&apos;s a better
@@ -19,7 +18,7 @@ const About = () => {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">What is CiRQL?</h2>
+          <h2 className="text-2xl font-semibold mb-4">🤔 What is CiRQL?</h2>
           <p className="text-lg text-gray-700 dark:text-gray-300">
             CiRQL is a private, invite-only communication platform where you can build groups that feel
             like home. Unlike traditional social platforms, CiRQL is built from the ground up to support
@@ -39,7 +38,7 @@ const About = () => {
         </section>
 
         <section>
-          <h2 className="text-2xl font-semibold mb-4">Join Us</h2>
+          <h2 className="text-2xl font-semibold mb-4">🤝 Join Us</h2>
           <p className="text-lg text-gray-700 dark:text-gray-300">
             Whether you&apos;re starting a mastermind group, running a private club, or just want a better
             place for your friends to hang out, CiRQL gives you the space to build your own community—
