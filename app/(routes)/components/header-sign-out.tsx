@@ -3,7 +3,7 @@ import Image from "next/image";
 import Searchbar from "./searchbar"; // Import the dedicated Searchbar
 import { Button } from "@/components/ui/button";
 import { UserPlusIcon } from "lucide-react";
-import { ModeToggle } from "@/components/mode-toggle"; // Assuming you might add this back
+import { ModeToggle } from "@/components/mode-toggle";
 import Link from "next/link";
 
 const Header = () => {
@@ -23,17 +23,20 @@ const Header = () => {
                     <Image
                         src={'/logo-full.svg'} // Your horizontal SVG logo
                         alt="Company Logo Full"
-                        width={130} // Adjust to your logo's aspect ratio
-                        height={40} // Adjust to your logo's aspect ratio
-                        className="hidden lg:block h-9 sm:h-10 w-auto" // Adjust size
+                        width={132} // CRITICAL: Must match intrinsic aspect ratio of logo-full.svg
+                        height={60} // CRITICAL: Must match intrinsic aspect ratio of logo-full.svg
+                        // Option 1: Keep using Tailwind (preferred if aspect ratio props are correct)
+                        // Ensure `h-16` and `w-auto` are active on lg. `sm:h-16` is fine.
+                        className="hidden lg:block h-16 sm:h-16 w-auto"
+                        // Option 2: Use style prop if warning persists despite correct aspect ratio & Tailwind
+                        // style={{ height: '4rem', width: 'auto' }} // 4rem is h-16. Remove h-16 and w-auto from className if using this.
+                        // className="hidden lg:block" // Use className only for visibility if using style prop for size
                         priority
                     />
                 </Link>
             </div>
 
             {/* Searchbar Area - flex-grow allows it to take available space */}
-            {/* min-w-0 is important for flex items that might overflow */}
-            {/* justify-center will center the searchbar if it doesn't reach its max-width */}
             <div className="flex flex-grow min-w-0 justify-center px-1 sm:px-2">
                 <Searchbar />
             </div>
@@ -41,18 +44,18 @@ const Header = () => {
             {/* Navigation & Actions Area - flex-shrink-0 prevents shrinking */}
             <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
                   {/* Button for medium and larger screens */}
-                  <Button className="hidden md:inline-flex items-center">
-                      <UserPlusIcon className=" h-4 w-4" />
-                      Join to Community
-                  </Button>
+                    <Link href={'/sign-in'}>
+                        <Button className="hidden md:inline-flex items-center">
+                            <UserPlusIcon className=" h-4 w-4" />
+                            Join to Community
+                        </Button>
 
-                  {/* Button for small screens (default) */}
-                  <Button className="md:hidden inline-flex items-center"> {/* Use inline-flex to keep icon and text together */}
-                      <UserPlusIcon className=" h-4 w-4" />
-                      Join
-                  </Button>
-
-                  {/* Example of ModeToggle if you add it back */}
+                        {/* Button for small screens (default) */}
+                        <Button className="md:hidden inline-flex items-center">
+                            <UserPlusIcon className=" h-4 w-4" />
+                            Join
+                        </Button>
+                    </Link>
                   { <ModeToggle /> }
             </div>
         </header>
