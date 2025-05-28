@@ -11,6 +11,7 @@ import BasicPageProvider from "@/components/providers/basic-page-provider";
  import Footer from "../components/footer"; // This would be correct
 
 import type { Metadata } from 'next';
+import Navbar from "./navbar";
 
 export const metadata: Metadata = {
   title: 'Welcome to the CiRQL Community!', // Catchy and informative
@@ -27,6 +28,7 @@ export default function Home() {
       footer={<Footer />}
     >
       <div className="flex flex-col justify-center items-center text-center p-4 flex-grow"> {/* Added flex-grow if needed */}
+        <Navbar/>
         <h1 className="text-3xl font-bold mb-4">Welcome to the Home Page!</h1>
         <p className="mb-2">This is where the specific content for the home page goes.</p>
         <p>

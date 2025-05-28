@@ -6,7 +6,7 @@ import { Chrome } from "lucide-react"; // Or your preferred Google icon
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import Link from 'next/link';
-import { useAuth } from "./context";
+import { useAuth } from "@/components/contexts/AuthContext";
 
 function SignInContent() {
   const backendUrlForAuth = process.env.NEXT_PUBLIC_BACKEND_URL;

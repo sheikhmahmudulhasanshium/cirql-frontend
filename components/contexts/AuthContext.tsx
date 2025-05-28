@@ -82,15 +82,28 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Navigation (e.g., to /dashboard) should happen in the callback page itself after login completes.
   };
 
-  const logout = () => {
+  // In cirql-frontend/context/AuthContext.tsx
+// ...
+  const logout = async () => { // Make it async
+    try {
+      // Optional: Call backend logout endpoint
+      await apiClient.post('/auth/logout'); // Assumes your apiClient is set up
+      console.log("Backend logout acknowledged.");
+    } catch (error) {
+      console.error("Error calling backend logout endpoint:", error);
+      // Still proceed with client-side logout even if backend call fails
+    }
+
     localStorage.removeItem('authToken');
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    apiClient.defaults.headers.common['Authorization'] = ''; // Clear from axios instance
-    router.push('/sign-in'); // Or your preferred login page
+    if (apiClient?.defaults?.headers?.common) {
+        apiClient.defaults.headers.common['Authorization'] = '';
+    }
+    router.push('/sign-in');
   };
-
+// ...
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, token, isLoading, login, logout, checkAuth }}>
       {children}

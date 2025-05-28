@@ -3,7 +3,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/app/(routes)/sign-in/context';
+import { useAuth } from '@/components/contexts/AuthContext';
 
 function AuthCallbackHandler() {
   const router = useRouter();

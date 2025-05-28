@@ -3,7 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
 import type { Metadata } from 'next';
-import { AuthProvider } from "./(routes)/sign-in/context";
+import { AuthProvider } from "../components/contexts/AuthContext";
 
 const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
