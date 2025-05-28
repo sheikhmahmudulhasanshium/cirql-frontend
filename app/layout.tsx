@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
 import type { Metadata } from 'next';
+import { AuthProvider } from "./(routes)/sign-in/context";
 
 const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
@@ -187,8 +188,8 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-        >
-          <main className="flex flex-col min-h-screen">{children}</main>
+        > <AuthProvider>
+          <main className="flex flex-col min-h-screen">{children}</main> </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
