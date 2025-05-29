@@ -1,9 +1,10 @@
-// Assuming path: cirql-frontend/context/AuthContext.tsx
+// cirql-frontend/components/contexts/AuthContext.tsx
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode, useContext, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import apiClient from '@/lib/apiClient'; // Assumes lib folder at root: cirql-frontend/lib/apiClient.ts
+// Corrected: Removed usePathname from import as it's not used
+import { useRouter } from 'next/navigation';
+import apiClient from '@/lib/apiClient';
 
 interface User {
   _id: string;
@@ -18,9 +19,9 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (token: string) => Promise<void>; // Called by /auth/google/callback page
-  logout: () => void;
-  checkAuth: () => Promise<void>; // To verify token on app load
+  login: (token: string) => Promise<void>;
+  logout: () => Promise<void>; // logout in context is async
+  checkAuth: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,31 +32,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
-  const pathname = usePathname();
+  // const pathname = usePathname(); // This line was correctly removed/commented out previously
 
   const fetchUserAndSetState = useCallback(async (currentToken: string) => {
     setIsLoading(true);
     try {
-      // apiClient should automatically add the Authorization header
-      const response = await apiClient.get<User>('/auth/status'); // Backend endpoint
+      const response = await apiClient.get<User>('/auth/status');
       setUser(response.data);
       setToken(currentToken);
       setIsAuthenticated(true);
-      localStorage.setItem('authToken', currentToken); // Persist token
+      localStorage.setItem('authToken', currentToken);
     } catch (error) {
       console.error('AuthContext: Token validation/user fetch failed:', error);
       localStorage.removeItem('authToken');
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      // Optionally redirect if on a protected page and token becomes invalid
-      // if (!['/login', '/sign-in', '/auth/google/callback', '/'].includes(pathname)) {
-      //    router.push('/login'); // Or '/sign-in'
-      // }
     } finally {
       setIsLoading(false);
     }
-  }, [pathname, router]); // Added router and pathname
+  }, []); // State setters are stable
 
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
@@ -72,26 +68,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     checkAuth();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // checkAuth is memoized, safe for dependency array
+  }, [checkAuth]);
 
-  const login = async (newToken: string) => {
-    // This function is called from the /auth/google/callback page on the frontend
-    // after the backend redirects with the token.
+  const login = useCallback(async (newToken: string) => {
     await fetchUserAndSetState(newToken);
-    // Navigation (e.g., to /dashboard) should happen in the callback page itself after login completes.
-  };
+  }, [fetchUserAndSetState]);
 
-  // In cirql-frontend/context/AuthContext.tsx
-// ...
-  const logout = async () => { // Make it async
+  const logout = useCallback(async () => {
     try {
-      // Optional: Call backend logout endpoint
-      await apiClient.post('/auth/logout'); // Assumes your apiClient is set up
+      await apiClient.post('/auth/logout');
       console.log("Backend logout acknowledged.");
     } catch (error) {
       console.error("Error calling backend logout endpoint:", error);
-      // Still proceed with client-side logout even if backend call fails
     }
 
     localStorage.removeItem('authToken');
@@ -102,8 +90,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         apiClient.defaults.headers.common['Authorization'] = '';
     }
     router.push('/sign-in');
-  };
-// ...
+  }, [router]); // router is a dependency
+
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, token, isLoading, login, logout, checkAuth }}>
       {children}
