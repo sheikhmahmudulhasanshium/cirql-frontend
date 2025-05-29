@@ -1,8 +1,7 @@
 "use client";
 
-// ... other imports
 import Link from "next/link";
-import { Button } from "@/components/ui/button"; // Keep if used for other buttons, or remove if only SignInButton is used
+//import { Button } from "@/components/ui/button"; // Keep if used for other buttons, or remove if only SignInButton is used
 import { useAuth } from "@/components/contexts/AuthContext";
 import { SignInButton } from "@/components/auth/sign-in-button";
 import { SignOutButton } from "@/components/auth/sign-out-button";

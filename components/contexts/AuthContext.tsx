@@ -3,6 +3,7 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
+import type { AxiosHeaderValue } from 'axios'; // Import AxiosHeaderValue
 
 interface User {
   _id: string;
@@ -22,6 +23,18 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
 }
 
+// Interface for the 'common' headers object
+interface CommonHeaders {
+  Authorization?: string;
+  [key: string]: AxiosHeaderValue | undefined; // More specific value type
+}
+
+// Interface for the overall headers structure we are asserting to
+interface ExpectedAxiosHeaders {
+  common?: CommonHeaders;
+  [key: string]: CommonHeaders | AxiosHeaderValue | undefined; // Other methods like 'get', 'post' can also have CommonHeaders
+}
+
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -34,41 +47,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const fetchUserAndSetState = useCallback(async (currentToken: string) => {
     setIsLoading(true);
     try {
-      // 1. Set token in localStorage first
       localStorage.setItem('authToken', currentToken);
 
-      // 2. Explicitly set the Authorization header for THIS apiClient instance
-      //    for the upcoming call. This ensures the /auth/status call uses
-      //    the brand new token. The interceptor will handle subsequent requests.
-      if (apiClient?.defaults?.headers?.common) {
-           apiClient.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
-      } else if (apiClient?.defaults?.headers) { // Fallback if common is not there
-           (apiClient.defaults.headers as any)['Authorization'] = `Bearer ${currentToken}`;
+      if (apiClient?.defaults?.headers) {
+        const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
+        if (headers.common) {
+          headers.common['Authorization'] = `Bearer ${currentToken}`;
+        } else {
+          // If 'common' doesn't exist, create it and set Authorization
+          headers.common = { Authorization: `Bearer ${currentToken}` };
+        }
       } else {
-        console.warn("AuthContext: apiClient.defaults.headers or common is not available to set Authorization header directly.");
+        console.warn("AuthContext: apiClient.defaults.headers is not available to set Authorization header.");
       }
 
       const response = await apiClient.get<User>('/auth/status');
       setUser(response.data);
-      setToken(currentToken); // Set context state for current token
+      setToken(currentToken);
       setIsAuthenticated(true);
-      // localStorage.setItem('authToken', currentToken); // Already done above
+
     } catch (error) {
       console.error('AuthContext: Token validation/user fetch failed:', error);
       localStorage.removeItem('authToken');
       setToken(null);
       setUser(null);
       setIsAuthenticated(false);
-      // Clear the header from the default instance if auth fails
-      if (apiClient?.defaults?.headers?.common) {
-          delete apiClient.defaults.headers.common['Authorization'];
-      } else if (apiClient?.defaults?.headers) {
-          delete (apiClient.defaults.headers as any)['Authorization'];
+
+      if (apiClient?.defaults?.headers) {
+        const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
+        if (headers.common) {
+          delete headers.common['Authorization'];
+        }
       }
     } finally {
       setIsLoading(false);
     }
-  }, []); // Dependencies: state setters are stable, apiClient is stable.
+  }, []);
 
   const checkAuth = useCallback(async () => {
     setIsLoading(true);
@@ -88,15 +102,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [checkAuth]);
 
   const login = useCallback(async (newToken: string) => {
-    // The primary action is to fetch user and set state based on the new token.
-    // The apiClient instance will be updated inside fetchUserAndSetState.
     await fetchUserAndSetState(newToken);
   }, [fetchUserAndSetState]);
 
   const logout = useCallback(async () => {
-    setIsLoading(true); // Indicate loading during logout process
+    setIsLoading(true);
     try {
-      // Attempt to inform the backend, but proceed with client-side logout regardless
       await apiClient.post('/auth/logout');
       console.log("AuthContext: Backend logout acknowledged.");
     } catch (error) {
@@ -107,15 +118,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(null);
     setUser(null);
     setIsAuthenticated(false);
-    // Clear Authorization header from the global apiClient instance
-    if (apiClient?.defaults?.headers?.common) {
-        delete apiClient.defaults.headers.common['Authorization'];
-    } else if (apiClient?.defaults?.headers) {
-        delete (apiClient.defaults.headers as any)['Authorization'];
+
+    if (apiClient?.defaults?.headers) {
+      const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
+      if (headers.common) {
+        delete headers.common['Authorization'];
+      }
     }
     setIsLoading(false);
-    router.push('/sign-in'); // Redirect after all cleanup
-  }, [router]); // router is a dependency
+    router.push('/sign-in');
+  }, [router]);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, token, isLoading, login, logout, checkAuth }}>
