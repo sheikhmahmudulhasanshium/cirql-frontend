@@ -1,24 +1,20 @@
-// cirql-frontend/lib/apiClient.ts
 import axios from 'axios';
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 if (!backendUrl) {
-  // This check runs at build time and client-side.
-  // For client-side, it's good to have a runtime warning too if somehow it's still undefined.
   console.error("CRITICAL: NEXT_PUBLIC_BACKEND_URL is not defined. API calls will fail.");
 }
 
 const apiClient = axios.create({
-  baseURL: backendUrl, // This will be undefined if NEXT_PUBLIC_BACKEND_URL is not set
+  baseURL: backendUrl,
 });
 
 apiClient.interceptors.request.use(
   (config) => {
-    // This interceptor runs client-side
-    if (typeof window !== 'undefined') { // Ensure localStorage is available
+    if (typeof window !== 'undefined') {
       const token = localStorage.getItem('authToken');
-      if (token) {
+      if (token && !config.headers.Authorization) { // Only set if not already set (e.g., by explicit call in AuthContext)
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
@@ -28,5 +24,23 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// Optional: Add an interceptor to handle 401s globally if needed, e.g., redirect to login
+// apiClient.interceptors.response.use(
+//   response => response,
+//   error => {
+//     if (error.response && error.response.status === 401) {
+//       // If not on a public page or login page already
+//       if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/sign-in') && !window.location.pathname.startsWith('/auth')) {
+//         // Potentially call logout from AuthContext or directly clear storage and redirect
+//         console.warn("Global interceptor: Received 401, redirecting to sign-in.");
+//         localStorage.removeItem('authToken');
+//         // window.location.href = '/sign-in?session_expired=true'; // Full page reload
+//         // Or use Next.js router if accessible here, but might be tricky
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default apiClient;

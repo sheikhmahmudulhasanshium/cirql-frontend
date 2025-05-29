@@ -1,69 +1,86 @@
-// cirql-frontend/app/(routes)/sign-in/page.tsx
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Chrome } from "lucide-react"; // Or your preferred Google icon
+import { Chrome } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import Link from 'next/link';
 import { useAuth } from "@/components/contexts/AuthContext";
 
 function SignInContent() {
-  const backendUrlForAuth = process.env.NEXT_PUBLIC_BACKEND_URL;
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authContextIsLoading } = useAuth(); // Renamed isLoading for clarity
   const router = useRouter();
-  const searchParams = useSearchParams(); // To read error messages from URL
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      const callbackUrlQuery = searchParams.get('callbackUrl'); // If you implement a returnTo feature
+    if (!authContextIsLoading && isAuthenticated) {
+      const callbackUrlQuery = searchParams.get('callbackUrl');
+      console.log("SignInPage: Already authenticated, redirecting...");
       router.push(callbackUrlQuery || '/home');
     }
-  }, [isAuthenticated, isLoading, router, searchParams]);
+  }, [isAuthenticated, authContextIsLoading, router, searchParams]);
 
   const handleGoogleLogin = () => {
+    const backendUrlForAuth = process.env.NEXT_PUBLIC_BACKEND_URL; // Moved inside for fresh read
     if (!backendUrlForAuth) {
-      console.error("Frontend Error: NEXT_PUBLIC_BACKEND_URL is not configured.");
-      // Optionally: show an error message to the user
-      alert("Configuration error. Unable to initiate login.");
+      console.error("SignInPage Error: NEXT_PUBLIC_BACKEND_URL is not configured.");
+      alert("Configuration error. Unable to initiate login. Please contact support.");
       return;
     }
 
     const googleAuthInitiateUrl = `${backendUrlForAuth}/auth/google`;
-    // This is the URL on THIS frontend that will process the token from the backend.
     const frontendTokenCallbackUrl = `${window.location.origin}/auth/google/callback`;
 
     const statePayload = {
       finalRedirectUri: frontendTokenCallbackUrl,
-      // Example: if you want to redirect user back to a specific page after successful login
-      // returnToPath: searchParams.get('returnTo') || '/dashboard',
+      // returnToPath: searchParams.get('returnTo') || '/dashboard', // Example for future
     };
     const encodedState = encodeURIComponent(JSON.stringify(statePayload));
 
     window.location.href = `${googleAuthInitiateUrl}?state=${encodedState}`;
   };
 
-  if (isLoading) {
+  if (authContextIsLoading) {
     return <div className="flex items-center justify-center min-h-screen">Authenticating...</div>;
   }
-  if (isAuthenticated) { // Should be handled by useEffect, but as a safeguard
+  // If authenticated and effect hasn't redirected yet (e.g., during initial render after auth)
+  if (isAuthenticated) {
      return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>;
   }
 
   const errorParam = searchParams.get('error');
+  let errorMessage = 'An unknown error occurred. Please try again.';
+  if (errorParam) {
+    switch (errorParam) {
+      case 'authenticationFailedAfterOAuth':
+        errorMessage = 'Authentication process failed after connecting with Google.';
+        break;
+      case 'tokenGenerationFailed':
+        errorMessage = 'Could not complete sign-in. Please try again.';
+        break;
+      case 'missing_token_in_callback':
+        errorMessage = 'Authentication callback was incomplete. Please try signing in again.';
+        break;
+      case 'token_processing_failed':
+        errorMessage = 'There was an issue processing your login. Please try again.';
+        break;
+      // Add more specific error cases from your backend if needed
+    }
+  }
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-12">
       <main className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-8">
         <div className="text-center">
+          {/* Optional: Add your logo here */}
+          {/* <Image src="/logo-full.svg" alt="Cirql Logo" width={180} height={70} className="mb-6" /> */}
           <h1 className="text-4xl font-bold">Sign In to Cirql</h1>
           <p className="mt-2 text-muted-foreground">Access your account or join the community.</p>
         </div>
         {errorParam && (
-          <div className="p-3 text-sm text-red-500 bg-red-100 border border-red-200 rounded-md">
-            Login failed: {errorParam === 'authenticationFailedAfterOAuth' ? 'Authentication process failed.' : 
-                            errorParam === 'tokenGenerationFailed' ? 'Could not complete sign-in.' :
-                            'An unknown error occurred.'}
+          <div className="p-3 text-sm text-red-700 bg-red-100 border border-red-300 rounded-md w-full text-center">
+            {errorMessage}
           </div>
         )}
         <Button onClick={handleGoogleLogin} size="lg" className="w-full">

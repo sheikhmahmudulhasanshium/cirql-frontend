@@ -1,41 +1,44 @@
-## <img src='https://raw.githubusercontent.com/sheikhmahmudulhasanshium/cirql-frontend/main/public/logo-full.svg' alt='Cirql Logo' width='120' style='vertical-align: middle;' /> - Stay In the Loop.
+# <img src='https://raw.githubusercontent.com/sheikhmahmudulhasanshium/cirql-frontend/main/public/logo-full.svg' alt='Cirql Logo' width='120' style='vertical-align: middle;' /> - Cirql Frontend: Stay In the Loop.
 
 Cirql is a modern social media and communication platform designed for Gen Z, millennials, creators, and tech-savvy professionals to connect and stay informed. It aims to be a friendly, trustworthy, and tech-forward space, offering a user experience that's clean, minimal, and intuitive.
 
-This project is bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+This project is the frontend for Cirql, bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+**Live Frontend:** [https://cirql.vercel.app/](https://cirql.vercel.app/)
+**Backend Repository:** [cirql-backend](https://github.com/sheikhmahmudulhasanshium/cirql-backend/)
 
 ## Core Concepts
 
-The development of Cirql is guided by the following principles, inspired by its [Logo Design Brief](./Cirql_Logo_Design_Brief.txt):
+The development of Cirql is guided by the following principles:
 
 *   **Connection & Community:** Facilitating seamless user connections and the formation of 'loops' or groups for shared interests and discussions.
 *   **Modern & Minimal UI/UX:** A clean, intuitive interface that is both aesthetically pleasing and easy to navigate, leveraging modern UI components.
 *   **Trust & Presence:** Building a trustworthy platform where users feel connected and aware of their network's activity.
 
-## Tech Stack & Key Decisions
+## Tech Stack & Key Features
 
-*   **Framework:** [Next.js](https://nextjs.org)
+*   **Framework:** [Next.js](https://nextjs.org) (App Router)
 *   **Language:** TypeScript
 *   **UI Components:** [shadcn/ui](https://ui.shadcn.com/) - A collection of re-usable UI components.
-*   **Styling:** Tailwind CSS (as `shadcn/ui` is built on top of it)
+*   **Styling:** Tailwind CSS
 *   **Font:** [Geist](https://vercel.com/font) (via `next/font`)
-*   **Database:** To be decided.
+*   **State Management:** React Context API (for Authentication)
+*   **API Communication:** Axios (via `lib/apiClient.ts`)
 *   **Authentication:**
-    *   **Provider:** Google (via OAuth 2.0 and OpenID Connect)
-    *   **Implementation:** [Passport.js](http://www.passportjs.org/) using the `passport-google-oauth20` strategy.
-    *   **Session Management:** JSON Web Tokens (JWTs) issued by Cirql after successful Google authentication, stored client-side.
+    *   Integrates with the Cirql Backend for Google OAuth 2.0.
+    *   Handles JWTs issued by the backend for session management.
+    *   Client-side token storage in `localStorage`.
+*   **Analytics:** Google Analytics & Google Tag Manager integration.
 
-## Getting Started
+## Environment Variables
 
-First, ensure you have Node.js and npm/yarn/pnpm/bun installed.
+Create a `.env.local` file in the root of the project for local development. For production, these variables should be set in your Vercel project settings.
 
-Then, run the development server:
+**Local Development (`.env.local`):**
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
+NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000 # Or whatever port your local frontend runs on
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Optional, for local analytics testing if needed
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-YOUR_GA_ID_FOR_DEV
+NEXT_PUBLIC_GOOGLE_TAG_MANAGER_ID=GTM-YOUR_GTM_ID_FOR_DEV

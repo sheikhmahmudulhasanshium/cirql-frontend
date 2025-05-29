@@ -1,33 +1,33 @@
 "use client";
 
-// Removed useRouter from here as it's no longer directly used for logout navigation
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/contexts/AuthContext";
+// ... other imports
 import Link from "next/link";
+import { Button } from "@/components/ui/button"; // Keep if used for other buttons, or remove if only SignInButton is used
+import { useAuth } from "@/components/contexts/AuthContext";
+import { SignInButton } from "@/components/auth/sign-in-button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 const Navbar = () => {
   const { isAuthenticated, user } = useAuth();
-  // const router = useRouter(); // No longer needed here if SignOutButton handles it
-
-  // handleLogout function is no longer needed as SignOutButton encapsulates the logic
-  // const handleLogout = () => {
-  //   router.push('/sign-out');
-  // };
 
   if (!isAuthenticated) {
+    // Render for non-authenticated users
     return (
       <nav className="flex items-center justify-between p-4 bg-background shadow">
         <Link href="/" className="text-lg font-semibold">
           Cirql
         </Link>
-        <Link href="/sign-in">
-          <Button variant="outline">Sign In</Button>
-        </Link>
+        {/* Use the new SignInButton component */}
+        <SignInButton variant="outline">
+          Sign In
+        </SignInButton>
+        {/* Or if you want to use the default text "Sign In": */}
+        {/* <SignInButton variant="outline" /> */}
       </nav>
     );
   }
 
+  // Render for authenticated users
   return (
     <nav className="flex items-center justify-between p-4 bg-background shadow">
       <div>
@@ -35,7 +35,6 @@ const Navbar = () => {
           Hello, {user?.firstName || user?.email}
         </Link>
       </div>
-      {/* Use the new SignOutButton component */}
       <SignOutButton variant="outline">
         Logout
       </SignOutButton>
