@@ -88,8 +88,8 @@ function SignInContent() {
         </Button>
         <p className="text-xs text-center text-muted-foreground px-8">
           By signing in, you agree to our{' '}
-          <Link href="/terms" className="underline hover:text-primary">Terms of Service</Link> and{' '}
-          <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>.
+          <Link href="/terms-and-conditions" className="underline hover:text-primary">Terms of Service</Link> and{' '}
+          <Link href="/privacy-policy" className="underline hover:text-primary">Privacy Policy</Link>.
         </p>
       </main>
     </div>

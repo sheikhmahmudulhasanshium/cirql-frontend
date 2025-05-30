@@ -1,10 +1,11 @@
+
 const About = () => {
   return (
     <div className="w-full px-4 py-12 max-w-4xl">
       <div className="text-left mx-auto">
 
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">🎯 Our Mission</h2>
+          <h2 className="text-2xl font-semibold mb-4 ">🎯 Our Mission</h2>
           <p className="text-lg text-gray-700 dark:text-gray-300">
             CiRQL exists to help people connect more meaningfully in private spaces. In a world of
             overwhelming feeds, endless noise, and impersonal communication, we believe there&apos;s a better
@@ -50,6 +51,7 @@ const About = () => {
           </p>
         </section>
       </div>
+      
     </div>
   );
 };

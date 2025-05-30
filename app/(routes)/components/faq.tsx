@@ -1,7 +1,7 @@
 const FAQ = () => {
   return (
     <div className="w-full px-4 py-12 max-w-4xl mx-auto">
-      <h2 className="text-3xl font-bold mb-8 text-center">Frequently Asked Questions</h2>
+      <h2 className=" font-bold mb-8 text-center text-3xl font-geistSans lg:text-6xl md:text-4xl sm:text-3xl bg-gradient-to-tl from-slate-500 to-yellow-100 dark:from-blue-500 dark:to-cyan-300 text-transparent bg-clip-text py-4 animate-accordion-down">Frequently Asked Questions</h2>
 
       <div className="space-y-8 text-left text-gray-700 dark:text-gray-300">
         <div>
