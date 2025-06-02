@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, Suspense } from "react";
 import Link from 'next/link';
 import { useAuth } from "@/components/contexts/AuthContext";
-
+import Image from "next/image";
 function SignInContent() {
   const { isAuthenticated, isLoading: authContextIsLoading } = useAuth(); // Renamed isLoading for clarity
   const router = useRouter();
@@ -70,12 +70,15 @@ function SignInContent() {
 
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen py-12">
+    <div className="flex flex-col items-center justify-center min-h-screen py-12 dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
       <main className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-8">
+        <Link href={'/'}>
+                   <Image src="/banner.svg" alt="Cirql Logo" width={400} height={200} className="mb-6" /> 
+
+        </Link>
         <div className="text-center">
           {/* Optional: Add your logo here */}
-          {/* <Image src="/logo-full.svg" alt="Cirql Logo" width={180} height={70} className="mb-6" /> */}
-          <h1 className="text-4xl font-bold">Sign In to Cirql</h1>
+          <h1 className="text-4xl font-bold">Sign In to CiRQL</h1>
           <p className="mt-2 text-muted-foreground">Access your account or join the community.</p>
         </div>
         {errorParam && (

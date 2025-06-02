@@ -30,7 +30,7 @@ const SignOutPage = () => {
   // UI shown while AuthContext's logout is processing or if already signed out by the time this renders
   if (isLoading || isLoggingOut.current) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
+      <div className="flex flex-col items-center justify-center min-h-screen  dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
         <h1 className="text-2xl font-bold">Signing Out...</h1>
         <p className="mt-3 text-lg">Please wait.</p>
       </div>
@@ -39,7 +39,7 @@ const SignOutPage = () => {
 
   // Fallback UI if user somehow lands here already signed out and useEffect hasn't redirected yet
   return (
-      <div className="flex flex-col items-center justify-center min-h-screen py-2">
+      <div className="flex flex-col items-center justify-center min-h-screen py-2  dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
           <h1 className="text-2xl font-bold">You have been signed out</h1>
           <p className="mt-3 text-lg">Redirecting to the sign-in page.</p>
