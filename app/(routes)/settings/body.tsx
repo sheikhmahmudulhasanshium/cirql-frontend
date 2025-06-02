@@ -58,7 +58,8 @@ const usageLimitOptions: Array<{ value: string; label: string }> = [
     { value: "180", label: "3 hours per day" },
 ];
 
-function debounce<T extends (...args: any[]) => any>(func: T, delay: number): (...args: Parameters<T>) => void {
+// FIX 1: Replaced 'any[]' with 'unknown[]' and 'any' with 'unknown' in the generic constraint for T
+function debounce<T extends (...args: unknown[]) => unknown>(func: T, delay: number): (...args: Parameters<T>) => void {
   let timeoutId: NodeJS.Timeout;
   return function(this: ThisParameterType<T>, ...args: Parameters<T>) {
     clearTimeout(timeoutId);
@@ -148,9 +149,16 @@ export default function Body() {
             try {
                 const updatedSettings = await updateUserPreferencesApi(payload);
                 populateStatesFromFetchedData(updatedSettings);
-            } catch (err: any) {
+            // FIX 2: Changed 'err: any' to 'err: unknown' and added type checking
+            } catch (err: unknown) {
                 console.error("Failed to save settings:", err);
-                setError(err.message || "Failed to save settings");
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else if (typeof err === 'string') {
+                    setError(err);
+                } else {
+                    setError("An unknown error occurred while saving settings");
+                }
             } finally {
                 setIsSaving(false);
             }
