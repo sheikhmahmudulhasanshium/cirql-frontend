@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
 import type { AxiosHeaderValue } from 'axios'; // Import AxiosHeaderValue
 
-interface User {
+export interface User {
   _id: string;
   email?: string;
   firstName?: string;
@@ -13,7 +13,7 @@ interface User {
   picture?: string;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
   token: string | null;
