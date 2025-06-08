@@ -3,8 +3,8 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
-import type { AxiosHeaderValue } from 'axios'; // Import AxiosHeaderValue
 
+// User and Context interfaces remain the same.
 export interface User {
   _id: string;
   email?: string;
@@ -16,121 +16,79 @@ export interface User {
 export interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   login: (token: string) => Promise<void>;
-  logout: () => Promise<void>;
+  logout: () => void; // No longer needs to be async from the component's perspective
   checkAuth: () => Promise<void>;
-}
-
-// Interface for the 'common' headers object
-interface CommonHeaders {
-  Authorization?: string;
-  [key: string]: AxiosHeaderValue | undefined; // More specific value type
-}
-
-// Interface for the overall headers structure we are asserting to
-interface ExpectedAxiosHeaders {
-  common?: CommonHeaders;
-  [key: string]: CommonHeaders | AxiosHeaderValue | undefined; // Other methods like 'get', 'post' can also have CommonHeaders
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Define a constant for the localStorage key to prevent typos.
+const AUTH_TOKEN_KEY = 'authToken';
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  const fetchUserAndSetState = useCallback(async (currentToken: string) => {
-    setIsLoading(true);
-    try {
-      localStorage.setItem('authToken', currentToken);
-
-      if (apiClient?.defaults?.headers) {
-        const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
-        if (headers.common) {
-          headers.common['Authorization'] = `Bearer ${currentToken}`;
-        } else {
-          // If 'common' doesn't exist, create it and set Authorization
-          headers.common = { Authorization: `Bearer ${currentToken}` };
-        }
-      } else {
-        console.warn("AuthContext: apiClient.defaults.headers is not available to set Authorization header.");
-      }
-
-      const response = await apiClient.get<User>('/auth/status');
-      setUser(response.data);
-      setToken(currentToken);
-      setIsAuthenticated(true);
-
-    } catch (error) {
-      console.error('AuthContext: Token validation/user fetch failed:', error);
-      localStorage.removeItem('authToken');
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-
-      if (apiClient?.defaults?.headers) {
-        const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
-        if (headers.common) {
-          delete headers.common['Authorization'];
-        }
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const checkAuth = useCallback(async () => {
-    setIsLoading(true);
-    const storedToken = localStorage.getItem('authToken');
-    if (storedToken) {
-      await fetchUserAndSetState(storedToken);
-    } else {
-      setToken(null);
-      setUser(null);
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }
-  }, [fetchUserAndSetState]);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
-
-  const login = useCallback(async (newToken: string) => {
-    await fetchUserAndSetState(newToken);
-  }, [fetchUserAndSetState]);
-
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      await apiClient.post('/auth/logout');
-      console.log("AuthContext: Backend logout acknowledged.");
-    } catch (error) {
-      console.error("AuthContext: Error calling backend logout endpoint:", error);
-    }
-
-    localStorage.removeItem('authToken');
-    setToken(null);
+  // FIX: Simplified logout function. Its only job is to clear state and storage.
+  const logout = useCallback(() => {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
     setIsAuthenticated(false);
 
-    if (apiClient?.defaults?.headers) {
-      const headers = apiClient.defaults.headers as unknown as ExpectedAxiosHeaders;
-      if (headers.common) {
-        delete headers.common['Authorization'];
-      }
-    }
-    setIsLoading(false);
+    // Optional: Inform the backend, but don't wait for it.
+    // Wrap in try/catch so a failed backend call doesn't break the frontend logout.
+    apiClient.post('/auth/logout').catch(err => {
+      console.error("AuthContext: Backend logout call failed, but user is logged out on the client.", err);
+    });
+    
     router.push('/sign-in');
   }, [router]);
 
+  // FIX: This function now has a single purpose: fetch user data if a token exists.
+  // It relies on the apiClient interceptor to add the header.
+  const fetchUser = useCallback(async () => {
+    try {
+      const { data } = await apiClient.get<User>('/auth/status');
+      setUser(data);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("AuthContext: Token validation failed.", error);
+      // If fetching fails, the token is invalid. Log the user out.
+      logout();
+    }
+  }, [logout]);
+
+  // FIX: Simplified login function.
+  const login = useCallback(async (newToken: string) => {
+    // 1. Save the token to storage. This is its primary job.
+    localStorage.setItem(AUTH_TOKEN_KEY, newToken);
+    // 2. Fetch the user to update the state.
+    await fetchUser();
+  }, [fetchUser]);
+
+  // FIX: Renamed for clarity. This is the initial check on app load.
+  const checkAuth = useCallback(async () => {
+    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    if (storedToken) {
+      // If a token exists, try to validate it by fetching the user.
+      await fetchUser();
+    }
+    // No matter what, we're done with the initial load.
+    setIsLoading(false);
+  }, [fetchUser]);
+
+  // This effect runs only once on initial app load.
+  useEffect(() => {
+    setIsLoading(true);
+    checkAuth();
+  }, [checkAuth]);
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, token, isLoading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, checkAuth }}>
       {children}
     </AuthContext.Provider>
   );

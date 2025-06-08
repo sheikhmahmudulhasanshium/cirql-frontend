@@ -1,6 +1,5 @@
 'use client';
 
-// FIX: 'useCallback' is no longer needed, and we won't use the delete hook.
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -23,16 +22,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     BellRing, ShieldCheck, UserCog, Accessibility, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
-    LogIn
+    LogIn, History
 } from 'lucide-react';
 
 // Auth Context & API Hooks
 import { useAuth } from '@/components/contexts/AuthContext';
 import { SettingsDto, UpdateSettingDto } from '@/lib/types';
 import { useGetMySettings } from '@/components/hooks/settings/get-settings';
-// FIX: The 'resetMySettings' hook (DELETE) is not used because the backend endpoint is broken.
-// import { resetMySettings } from '@/components/hooks/settings/delete-settings';
+import { resetMySettings } from '@/components/hooks/settings/delete-settings';
 import { updateMySettings } from '@/components/hooks/settings/patch-settings';
+import { SignOutButton } from '@/components/auth/sign-out-button';
+
+// FIX: Import the new custom SignOutButton component
 
 
 // --- START: DEFINITIONS OUTSIDE THE COMPONENT ---
@@ -41,6 +42,7 @@ type EditableSettings = Omit<SettingsDto, '_id' | 'userId' | 'createdAt' | 'upda
 type SettingsObjectKey = {
   [K in keyof EditableSettings]: EditableSettings[K] extends object ? K : never;
 }[keyof EditableSettings];
+
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function debounce<F extends (...args: any[]) => any>(func: F, delay: number): (...args: Parameters<F>) => void {
@@ -61,13 +63,19 @@ export default function Body() {
     const { settings, setSettings, isLoading: isLoadingData, error } = useGetMySettings();
     const [isSaving, setIsSaving] = useState(false);
 
+    // Placeholder state for new, upcoming settings
+    const [notificationSound, setNotificationSound] = useState(true);
+    const [activeStatusVisibility, setActiveStatusVisibility] = useState('everyone');
+    const [saveSearchHistory, setSaveSearchHistory] = useState(true);
+
+
     const debouncedSaveSettings = useMemo(
         () => debounce(async (payload: UpdateSettingDto) => {
             if (!user?._id) return;
             setIsSaving(true);
             try {
                 const savedSettings = await updateMySettings(payload);
-                setSettings(savedSettings);
+                setSettings(savedSettings); // Sync with confirmed server state
             } catch (err) {
                 console.error("Failed to save settings:", err);
             } finally {
@@ -95,49 +103,16 @@ export default function Body() {
         debouncedSaveSettings({ [category]: newSettings[category] });
     };
 
-    // FIX: Re-implementing the workaround to use the working PATCH endpoint.
     const handleReset = async () => {
         if (!user || !window.confirm("Are you sure you want to reset all settings to their default values?")) {
             return;
         }
-
-        // 1. Define the complete default settings payload on the client-side.
-        const defaultSettingsPayload: UpdateSettingDto = {
-            isDefault: true,
-            notificationPreferences: {
-                emailNotifications: true,
-                pushNotifications: true,
-            },
-            accountSettingsPreferences: {
-                isPrivate: false,
-                theme: "system",
-            },
-            securitySettingsPreferences: {
-                enable2FA: false,
-                recoveryMethod: "email",
-            },
-            accessibilityOptionsPreferences: {
-                highContrastMode: false,
-                screenReaderSupport: false,
-            },
-            contentPreferences: {
-                theme: "default",
-                interests: [],
-            },
-            uiCustomizationPreferences: {
-                animationsEnabled: true,
-                layout: "list",
-            },
-        };
-
         setIsSaving(true);
         try {
-            // 2. Call the working `updateMySettings` (PATCH) endpoint.
-            const resetData = await updateMySettings(defaultSettingsPayload);
-            // 3. Update local state with the confirmed settings from the server.
+            const resetData = await resetMySettings();
             setSettings(resetData);
         } catch (err) {
-            console.error("Failed to reset settings using PATCH workaround:", err);
+            console.error("Failed to reset settings:", err);
         } finally {
             setIsSaving(false);
         }
@@ -182,8 +157,15 @@ export default function Body() {
 
     return (
         <div className="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8 space-y-10 min-w-0">
+            {/* User Header */}
             <div className="flex items-center space-x-4 mb-6 p-4 border-b dark:border-slate-700">
-                <Avatar className="h-16 w-16 sm:h-20 sm:w-20"><AvatarImage src={user.picture || ''} alt={user.firstName || 'User'} /><AvatarFallback>{user.firstName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback></Avatar>
+                <div className="relative">
+                    <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                        <AvatarImage src={user.picture || ''} alt={user.firstName || 'User'} />
+                        <AvatarFallback>{user.firstName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <span className="absolute bottom-1 right-1 block h-4 w-4 rounded-full bg-green-500 border-2 border-background" />
+                </div>
                 <div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                         {user.firstName || user.email} {user.lastName || ''}
@@ -192,30 +174,52 @@ export default function Body() {
                 </div>
             </div>
 
+            {/* Reset Button */}
             <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
                 <div className='flex-1'><h3 className="text-md font-medium">Reset Preferences</h3><p className="text-sm text-muted-foreground">Revert all settings to their original defaults.</p></div>
                 <Button variant="outline" onClick={handleReset} disabled={isSaving}><Undo className="mr-2 h-4 w-4" /> {isSaving ? 'Resetting...' : 'Reset to Defaults'}</Button>
             </div>
             <Separator />
 
+            {/* Notifications Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><BellRing className="mr-2 h-5 w-5 text-muted-foreground"/> Notifications {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
                     <div className="flex items-center justify-between"><Label htmlFor="email-notif" className="flex-1 cursor-pointer font-medium">Email Notifications</Label><Switch id="email-notif" checked={settings.notificationPreferences.emailNotifications} onCheckedChange={(c) => handleSettingChange('notificationPreferences', 'emailNotifications', c)} disabled={isSaving} /></div>
                     <div className="flex items-center justify-between"><Label htmlFor="push-notif" className="flex-1 cursor-pointer font-medium">Push Notifications</Label><Switch id="push-notif" checked={settings.notificationPreferences.pushNotifications} onCheckedChange={(c) => handleSettingChange('notificationPreferences', 'pushNotifications', c)} disabled={isSaving} /></div>
+                    <div className="flex items-center justify-between"><Label htmlFor="notif-sound" className="flex-1 cursor-pointer font-medium text-muted-foreground">Notification Sounds (Upcoming)</Label><Switch id="notif-sound" checked={notificationSound} onCheckedChange={setNotificationSound} disabled /></div>
                 </div>
             </section>
             <Separator />
 
+            {/* Account Settings Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><UserCog className="mr-2 h-5 w-5 text-muted-foreground"/> Account Settings {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
                     <div className="flex items-center justify-between"><Label htmlFor="is-private" className="flex-1 cursor-pointer font-medium">Private Account</Label><Switch id="is-private" checked={settings.accountSettingsPreferences.isPrivate} onCheckedChange={(c) => handleSettingChange('accountSettingsPreferences', 'isPrivate', c)} disabled={isSaving}/></div>
+                    <div className="flex items-center justify-between"><Label htmlFor="active-status" className="flex-1 font-medium text-muted-foreground">Active Status Visibility (Upcoming)</Label>
+                        <Select value={activeStatusVisibility} onValueChange={setActiveStatusVisibility} disabled>
+                            <SelectTrigger id="active-status" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="everyone">Everyone</SelectItem><SelectItem value="friends">Friends Only</SelectItem><SelectItem value="none">No One</SelectItem></SelectContent>
+                        </Select>
+                    </div>
                     <div className="flex items-center justify-between"><Label className="flex-1 font-medium">Appearance</Label><ModeToggle /></div>
                 </div>
             </section>
             <Separator />
+
+            {/* New Data & Privacy Section (Placeholder) */}
+            <section className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-muted-foreground"><History className="mr-2 h-5 w-5"/> Data & Privacy (Upcoming)</h2>
+                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
+                    <div className="flex items-center justify-between"><Label htmlFor="save-history" className="flex-1 cursor-pointer font-medium">Save search history</Label><Switch id="save-history" checked={saveSearchHistory} onCheckedChange={setSaveSearchHistory} disabled /></div>
+                    <div className="flex items-center justify-between"><p className="text-sm flex-1">Clear your search history on this account.</p><Button variant="outline" onClick={() => alert('Not implemented yet')} disabled>Clear History</Button></div>
+                    <div className="flex items-center justify-between"><p className="text-sm flex-1">Clear your account activity log.</p><Button variant="outline" onClick={() => alert('Not implemented yet')} disabled>Clear Log</Button></div>
+                </div>
+            </section>
+            <Separator />
             
+            {/* Security Settings Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><ShieldCheck className="mr-2 h-5 w-5 text-muted-foreground"/> Security {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -230,6 +234,7 @@ export default function Body() {
             </section>
             <Separator />
 
+            {/* Accessibility Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Accessibility className="mr-2 h-5 w-5 text-muted-foreground"/> Accessibility {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -239,6 +244,7 @@ export default function Body() {
             </section>
             <Separator />
             
+            {/* UI Customization Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Brush className="mr-2 h-5 w-5 text-muted-foreground"/> UI Customization {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -252,17 +258,8 @@ export default function Body() {
                 </div>
             </section>
             <Separator />
-
-            <section className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><LogOut className="mr-2 h-5 w-5 text-muted-foreground" /> Session</h2>
-                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700">
-                    <div className="flex items-center justify-between">
-                        <div className="flex-1"><h3 className="text-md font-medium">Sign Out</h3><p className="text-sm text-muted-foreground">End your current session on this device.</p></div>
-                        <Button variant="outline" onClick={logout}><LogOut className="mr-2 h-4 w-4" /> Sign Out</Button>
-                    </div>
-                </div>
-            </section>
-            <Separator />
+            
+            {/* Danger Zone Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-destructive"><AlertTriangle className="mr-2 h-5 w-5" /> Danger Zone</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm border-destructive dark:border-red-700/70 space-y-8">
@@ -279,6 +276,25 @@ export default function Body() {
                     <div className="flex items-center justify-between">
                         <div className="flex-1"><h3 className="text-md font-medium text-destructive">Delete Account</h3><p className="text-sm text-red-600/90 dark:text-red-500/90 leading-snug">Permanently delete your account and all data.</p></div>
                         <Button variant="destructive" onClick={() => alert("Not implemented")}><AlertTriangle className="mr-2 h-4 w-4" /> Delete My Account</Button>
+                    </div>
+                </div>
+            </section>
+            <Separator />
+
+            {/* Session Section */}
+            <section className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><LogOut className="mr-2 h-5 w-5 text-muted-foreground" /> Session</h2>
+                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1"><h3 className="text-md font-medium">Sign Out</h3><p className="text-sm text-muted-foreground">End your current session on this device.</p></div>
+                        {/* Using the new custom component */}
+                        <SignOutButton
+                          variant="outline"
+                          className="text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"
+                        >
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
+                        </SignOutButton>
                     </div>
                 </div>
             </section>
