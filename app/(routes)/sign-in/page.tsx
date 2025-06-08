@@ -78,7 +78,7 @@ function SignInContent() {
         </Link>
         <div className="text-center">
           {/* Optional: Add your logo here */}
-          <h1 className="text-4xl font-bold">Sign In to CiRQL</h1>
+          <h1 className="text-4xl font-bold">Sign in to CiRQL</h1>
           <p className="mt-2 text-muted-foreground">Access your account or join the community.</p>
         </div>
         {errorParam && (

@@ -6,58 +6,56 @@ export interface NavMenu{
     label:string
 }
 
-//@/lib/types.tsx
-export interface UserPreferencesData {
+// lib/types.ts
+
+// --- Sub-document DTOs ---
+export interface NotificationPreferencesDto {
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+}
+
+export interface AccountSettingsPreferencesDto {
+  isPrivate: boolean;
+  theme: string;
+}
+
+export interface SecuritySettingsPreferencesDto {
+  enable2FA: boolean;
+  recoveryMethod: string;
+}
+
+export interface AccessibilityOptionsPreferencesDto {
+  highContrastMode: boolean;
+  screenReaderSupport: boolean;
+}
+
+export interface ContentPreferencesDto {
+  theme: string;
+  interests: string[];
+}
+
+export interface UiCustomizationPreferencesDto {
+  layout: string;
+  animationsEnabled: boolean;
+}
+
+// --- Main DTOs ---
+
+// This is the full Settings object returned by the API
+export interface SettingsDto {
   _id: string;
   userId: string;
-  resourceType: "userPreferences";
-  resourceId: "general";
-  notification_preferences: {
-    email_digests_enabled: boolean;
-    push_mentions_enabled: boolean;
-    push_loop_activity_enabled: boolean;
-    snooze_duration_minutes: string;
-  };
-  well_being: {
-    daily_usage_limit_enabled: boolean;
-    daily_usage_limit_minutes: string;
-  };
-  privacy_controls: {
-    profile_visibility: string;
-    message_permissions: string;
-  };
-  account_settings: {
-    show_active_status_enabled: boolean;
-  };
+  isDefault: boolean;
+  notificationPreferences: NotificationPreferencesDto;
+  accountSettingsPreferences: AccountSettingsPreferencesDto;
+  securitySettingsPreferences: SecuritySettingsPreferencesDto;
+  accessibilityOptionsPreferences: AccessibilityOptionsPreferencesDto;
+  contentPreferences: ContentPreferencesDto;
+  uiCustomizationPreferences: UiCustomizationPreferencesDto;
   createdAt?: string;
   updatedAt?: string;
 }
 
-// Payload for updating user preferences (matches backend UpdateSettingDto for userPrefs)
-export type UpdateUserPreferencesPayload = Partial<{
-  notification_preferences: Partial<UserPreferencesData['notification_preferences']>;
-  well_being: Partial<UserPreferencesData['well_being']>;
-  privacy_controls: Partial<UserPreferencesData['privacy_controls']>;
-  account_settings: Partial<UserPreferencesData['account_settings']>;
-}>;
-
-// Your flat frontend state structure (used in Body.tsx)
-export type UserSettingsFlatState = {
-  notification_preferences: {
-    email_digests_enabled: boolean;
-    push_mentions_enabled: boolean;
-    push_loop_activity_enabled: boolean;
-    snooze_duration_minutes: string;
-  };
-  well_being: {
-    daily_usage_limit_enabled: boolean;
-    daily_usage_limit_minutes: string;
-  };
-  privacy_controls: {
-    profile_visibility: string;
-    message_permissions: string;
-  };
-  account_settings: {
-    show_active_status_enabled: boolean;
-  };
-};
+// This is the type for the PATCH request body for updates.
+// It's a partial object of the main DTO, without the read-only fields.
+export type UpdateSettingDto = Partial<Omit<SettingsDto, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>;
