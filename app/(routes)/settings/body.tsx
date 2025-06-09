@@ -1,10 +1,8 @@
-// frontend/app/(dashboard)/settings/components/Body.tsx
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTheme } from 'next-themes'; // Import useTheme
+import { useTheme } from 'next-themes';
 
 // Shadcn UI Imports
 import { Button } from "@/components/ui/button";
@@ -22,9 +20,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Lucide Icons
 import {
-    BellRing, ShieldCheck, UserCog, Accessibility, Brush,
+    BellRing, ShieldCheck, UserCog, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
-    LogIn, History, Text, Type
+    LogIn, History, Text, Type,
+    View // More universal icon for Display
 } from 'lucide-react';
 
 // Auth Context & API Hooks
@@ -55,26 +54,36 @@ function debounce<F extends (...args: any[]) => any>(func: F, delay: number): (.
 export default function Body() {
     const { user, isLoading: authIsLoading } = useAuth();
     const router = useRouter();
-    const { setTheme: applyTheme } = useTheme(); // For applying theme on load
+    const { setTheme: applyTheme } = useTheme();
 
     const { settings, setSettings, isLoading: isLoadingData, error } = useGetMySettings();
     const [isSaving, setIsSaving] = useState(false);
 
-    // Placeholder state for new, upcoming settings
+    // Placeholder state for settings not yet in the backend
     const [notificationSound, setNotificationSound] = useState(true);
     const [activeStatusVisibility, setActiveStatusVisibility] = useState('everyone');
     const [saveSearchHistory, setSaveSearchHistory] = useState(true);
-    const [preferredFont, setPreferredFont] = useState('sans'); // Placeholder
-    const [textSize, setTextSize] = useState('medium'); // Placeholder
 
-
-    // --- FIX START: Sync theme from server on initial load ---
+    // This effect applies all visual settings when the component loads or settings change.
     useEffect(() => {
-        if (settings?.uiCustomizationPreferences?.theme) {
-            applyTheme(settings.uiCustomizationPreferences.theme);
+        const body = document.body;
+        if (settings) {
+            // Apply Theme
+            if (settings.uiCustomizationPreferences?.theme) {
+                applyTheme(settings.uiCustomizationPreferences.theme);
+            }
+            // Apply Font
+            body.classList.remove('font-setting-default', 'font-setting-serif', 'font-setting-mono', 'font-setting-inter');
+            if (settings.accessibilityOptionsPreferences?.font) {
+                body.classList.add(`font-setting-${settings.accessibilityOptionsPreferences.font}`);
+            }
+            // Apply Text Size
+            body.classList.remove('text-setting-small', 'text-setting-medium', 'text-setting-large', 'text-setting-xl');
+            if (settings.accessibilityOptionsPreferences?.textSize) {
+                body.classList.add(`text-setting-${settings.accessibilityOptionsPreferences.textSize}`);
+            }
         }
-    }, [settings?.uiCustomizationPreferences?.theme, applyTheme]);
-    // --- FIX END ---
+    }, [settings, applyTheme]);
 
     const debouncedSaveSettings = useMemo(
         () => debounce(async (payload: UpdateSettingDto) => {
@@ -82,18 +91,14 @@ export default function Body() {
             setIsSaving(true);
             try {
                 const savedSettings = await updateMySettings(payload);
-                setSettings(savedSettings);
-                // Also apply theme from saved settings to ensure consistency
-                if (savedSettings.uiCustomizationPreferences.theme) {
-                    applyTheme(savedSettings.uiCustomizationPreferences.theme);
-                }
+                setSettings(savedSettings); // Sync with confirmed server state
             } catch (err) {
                 console.error("Failed to save settings:", err);
             } finally {
                 setIsSaving(false);
             }
         }, 1500),
-        [user?._id, setSettings, applyTheme]
+        [user?._id, setSettings]
     );
 
     const handleSettingChange = <K extends SettingsObjectKey>(
@@ -110,15 +115,13 @@ export default function Body() {
                 [settingKey]: value,
             },
         };
-        setSettings(newSettings);
+        setSettings(newSettings); // Optimistic UI update
         debouncedSaveSettings({ [category]: newSettings[category] });
     };
     
-    // --- FIX START: New handler specifically for theme changes ---
     const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
         handleSettingChange('uiCustomizationPreferences', 'theme', theme);
     };
-    // --- FIX END ---
 
     const handleReset = async () => {
         if (!user || !window.confirm("Are you sure you want to reset all settings to their default values?")) {
@@ -128,19 +131,12 @@ export default function Body() {
         try {
             const resetData = await resetMySettings();
             setSettings(resetData);
-            // Apply the default theme after reset
-            if (resetData.uiCustomizationPreferences.theme) {
-                applyTheme(resetData.uiCustomizationPreferences.theme);
-            }
         } catch (err) {
             console.error("Failed to reset settings:", err);
         } finally {
             setIsSaving(false);
         }
     };
-    
-    // ... (rest of the component's JSX, loading states, etc.)
-    // Only showing the relevant JSX sections that changed below
     
     if (authIsLoading) {
         return (
@@ -205,7 +201,74 @@ export default function Body() {
             </div>
             <Separator />
             
-            {/* Notifications Section */}
+            {/* --- SECTION REORDERING APPLIED BELOW --- */}
+
+            {/* 1. UI Customization Section */}
+            <section className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Brush className="mr-2 h-5 w-5 text-muted-foreground"/> UI Customization {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
+                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
+                    <div className="flex items-center justify-between">
+                        <Label className="flex-1 font-medium">Appearance</Label>
+                        <CustomModeToggle 
+                          value={settings.uiCustomizationPreferences.theme}
+                          onChange={handleThemeChange}
+                          disabled={isSaving}
+                        />
+                    </div>
+                    <div className="flex items-center justify-between"><Label htmlFor="animations" className="flex-1 cursor-pointer font-medium">Enable Animations</Label><Switch id="animations" checked={settings.uiCustomizationPreferences.animationsEnabled} onCheckedChange={(c) => handleSettingChange('uiCustomizationPreferences', 'animationsEnabled', c)} disabled={isSaving}/></div>
+                    <div className="flex items-center justify-between"><Label htmlFor="layout" className="flex-1 font-medium">Default Layout</Label>
+                        <Select value={settings.uiCustomizationPreferences.layout} onValueChange={(v) => handleSettingChange('uiCustomizationPreferences', 'layout', v as 'list' | 'grid')} disabled={isSaving}>
+                            <SelectTrigger id="layout" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="list">List View</SelectItem><SelectItem value="grid">Grid View</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </section>
+            <Separator />
+
+            {/* 2. Display & Accessibility Section */}
+            <section className="space-y-6">
+                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><View className="mr-2 h-5 w-5 text-muted-foreground"/> Display & Accessibility {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
+                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
+                    <div className="flex items-center justify-between"><Label htmlFor="high-contrast" className="flex-1 cursor-pointer font-medium">High Contrast Mode</Label><Switch id="high-contrast" checked={settings.accessibilityOptionsPreferences.highContrastMode} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'highContrastMode', c)} disabled={isSaving}/></div>
+                    <div className="flex items-center justify-between"><Label htmlFor="screen-reader" className="flex-1 cursor-pointer font-medium">Screen Reader Support</Label><Switch id="screen-reader" checked={settings.accessibilityOptionsPreferences.screenReaderSupport} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'screenReaderSupport', c)} disabled={isSaving}/></div>
+                    
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="font-pref" className="flex-1 font-medium"><Type className="inline-block mr-2 h-4 w-4" /> Preferred Font</Label>
+                        <Select
+                            value={settings.accessibilityOptionsPreferences.font}
+                            onValueChange={(v) => handleSettingChange('accessibilityOptionsPreferences', 'font', v as 'default' | 'serif' | 'mono' | 'inter')}
+                            disabled={isSaving}>
+                            <SelectTrigger id="font-pref" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="default" className="font-sans">Default (Sans-Serif)</SelectItem>
+                                <SelectItem value="serif" className="font-serif">Serif</SelectItem>
+                                <SelectItem value="mono" className="font-mono">Monospace</SelectItem>
+                                <SelectItem value="inter" style={{ fontFamily: 'var(--font-inter)' }}>Inter (Custom)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                        <Label htmlFor="text-size" className="flex-1 font-medium"><Text className="inline-block mr-2 h-4 w-4" /> Text Size</Label>
+                        <Select
+                            value={settings.accessibilityOptionsPreferences.textSize}
+                            onValueChange={(v) => handleSettingChange('accessibilityOptionsPreferences', 'textSize', v as 'small' | 'medium' | 'large' | 'xl')}
+                            disabled={isSaving}>
+                            <SelectTrigger id="text-size" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="small" className="text-sm">Small</SelectItem>
+                                <SelectItem value="medium" className="text-base">Medium</SelectItem>
+                                <SelectItem value="large" className="text-lg">Large</SelectItem>
+                                <SelectItem value="xl" className="text-xl">XL</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+            </section>
+            <Separator />
+
+            {/* 3. Notifications Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><BellRing className="mr-2 h-5 w-5 text-muted-foreground"/> Notifications {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -216,7 +279,7 @@ export default function Body() {
             </section>
             <Separator />
 
-            {/* Account Settings Section */}
+            {/* 4. Account Settings Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><UserCog className="mr-2 h-5 w-5 text-muted-foreground"/> Account Settings {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -230,8 +293,8 @@ export default function Body() {
                 </div>
             </section>
             <Separator />
-
-            {/* Data & Privacy Section (Placeholder) */}
+            
+            {/* 5. Data & Privacy Section (Placeholder) */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-muted-foreground"><History className="mr-2 h-5 w-5"/> Data & Privacy (Upcoming)</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -242,7 +305,7 @@ export default function Body() {
             </section>
             <Separator />
             
-            {/* Security Settings Section */}
+            {/* 6. Security Settings Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><ShieldCheck className="mr-2 h-5 w-5 text-muted-foreground"/> Security {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -257,61 +320,7 @@ export default function Body() {
             </section>
             <Separator />
 
-            {/* Accessibility Section */}
-            <section className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Accessibility className="mr-2 h-5 w-5 text-muted-foreground"/> Accessibility {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
-                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
-                    <div className="flex items-center justify-between"><Label htmlFor="high-contrast" className="flex-1 cursor-pointer font-medium">High Contrast Mode</Label><Switch id="high-contrast" checked={settings.accessibilityOptionsPreferences.highContrastMode} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'highContrastMode', c)} disabled={isSaving}/></div>
-                    <div className="flex items-center justify-between"><Label htmlFor="screen-reader" className="flex-1 cursor-pointer font-medium">Screen Reader Support</Label><Switch id="screen-reader" checked={settings.accessibilityOptionsPreferences.screenReaderSupport} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'screenReaderSupport', c)} disabled={isSaving}/></div>
-                    {/* --- FIX START: Placeholder Font and Text Size Settings --- */}
-                    <div className="flex items-center justify-between"><Label htmlFor="font-pref" className="flex-1 font-medium text-muted-foreground"><Type className="inline-block mr-2 h-5 w-5" /> Preferred Font (Upcoming)</Label>
-                        <Select value={preferredFont} onValueChange={setPreferredFont} disabled>
-                            <SelectTrigger id="font-pref" className="w-[180px]"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="sans">Sans-Serif</SelectItem><SelectItem value="serif">Serif</SelectItem><SelectItem value="mono">Monospace</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex items-center justify-between"><Label htmlFor="text-size" className="flex-1 font-medium text-muted-foreground"><Text className="inline-block mr-2 h-5 w-5" /> Text Size (Upcoming)</Label>
-                        <Select value={textSize} onValueChange={setTextSize} disabled>
-                            <SelectTrigger id="text-size" className="w-[180px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="small">Small</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="large">Large</SelectItem>
-                                <SelectItem value="xl">XL</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {/* --- FIX END --- */}
-                </div>
-            </section>
-            <Separator />
-            
-            {/* UI Customization Section */}
-            <section className="space-y-6">
-                <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Brush className="mr-2 h-5 w-5 text-muted-foreground"/> UI Customization {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
-                <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
-                    {/* --- FIX START: Connect CustomModeToggle to state and handler --- */}
-                    <div className="flex items-center justify-between">
-                        <Label className="flex-1 font-medium">Appearance</Label>
-                        <CustomModeToggle 
-                          value={settings.uiCustomizationPreferences.theme}
-                          onChange={handleThemeChange}
-                          disabled={isSaving}
-                        />
-                    </div>
-                     {/* --- FIX END --- */}
-                    <div className="flex items-center justify-between"><Label htmlFor="animations" className="flex-1 cursor-pointer font-medium">Enable Animations</Label><Switch id="animations" checked={settings.uiCustomizationPreferences.animationsEnabled} onCheckedChange={(c) => handleSettingChange('uiCustomizationPreferences', 'animationsEnabled', c)} disabled={isSaving}/></div>
-                    <div className="flex items-center justify-between"><Label htmlFor="layout" className="flex-1 font-medium">Default Layout</Label>
-                        <Select value={settings.uiCustomizationPreferences.layout} onValueChange={(v) => handleSettingChange('uiCustomizationPreferences', 'layout', v as 'list' | 'grid')} disabled={isSaving}>
-                            <SelectTrigger id="layout" className="w-[180px]"><SelectValue /></SelectTrigger>
-                            <SelectContent><SelectItem value="list">List View</SelectItem><SelectItem value="grid">Grid View</SelectItem></SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </section>
-            <Separator />
-            
-            {/* Danger Zone Section */}
+            {/* 7. Danger Zone Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-destructive"><AlertTriangle className="mr-2 h-5 w-5" /> Danger Zone</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm border-destructive dark:border-red-700/70 space-y-8">
@@ -333,7 +342,7 @@ export default function Body() {
             </section>
             <Separator />
 
-            {/* Session Section */}
+            {/* 8. Session Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><LogOut className="mr-2 h-5 w-5 text-muted-foreground" /> Session</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700">

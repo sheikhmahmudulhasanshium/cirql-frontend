@@ -16,7 +16,6 @@ export interface NotificationPreferencesDto {
 
 export interface AccountSettingsPreferencesDto {
   isPrivate: boolean;
-  // The 'theme' property was correctly moved out of here.
 }
 
 export interface SecuritySettingsPreferencesDto {
@@ -27,6 +26,9 @@ export interface SecuritySettingsPreferencesDto {
 export interface AccessibilityOptionsPreferencesDto {
   highContrastMode: boolean;
   screenReaderSupport: boolean;
+  // Updated with the latest font options
+  font: 'default' | 'serif' | 'mono' | 'inter';
+  textSize: 'small' | 'medium' | 'large' | 'xl';
 }
 
 export interface ContentPreferencesDto {
@@ -36,9 +38,7 @@ export interface ContentPreferencesDto {
 export interface UiCustomizationPreferencesDto {
   layout: 'list' | 'grid';
   animationsEnabled: boolean;
-  // --- FIX START: Add the missing 'theme' property ---
   theme: 'light' | 'dark' | 'system';
-  // --- FIX END ---
 }
 
 // This is the main DTO for the entire settings object returned by the API
@@ -57,7 +57,6 @@ export interface SettingsDto {
 }
 
 // This type is used for PATCH requests to update settings.
-// It makes all nested properties optional.
 export type UpdateSettingDto = {
   isDefault?: boolean;
   notificationPreferences?: Partial<NotificationPreferencesDto>;
