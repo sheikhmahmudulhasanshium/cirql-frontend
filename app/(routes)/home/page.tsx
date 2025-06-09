@@ -4,6 +4,7 @@ import BasicPageProvider from "@/components/providers/basic-page-provider";
 import Header from "../components/header";
 import Footer from "../components/footer";
 import type { Metadata } from 'next';
+import Body from "./body";
 
 // --- FIX: DELETE THIS IMPORT ---
 // import { useGetMySettings } from "@/components/hooks/settings/get-settings";
@@ -22,10 +23,7 @@ export default function Home() {
       header={<Header />}
       footer={<Footer />}
     >
-      <div className="flex flex-col justify-center items-center text-center p-4 flex-grow">
-        <h1 className="text-3xl font-bold mb-4">Welcome to the Home Page!</h1>
-        <p>The `AuthProvider` is now responsible for applying your settings globally.</p>
-      </div>
+      <Body />
     </BasicPageProvider>
   );
 }
