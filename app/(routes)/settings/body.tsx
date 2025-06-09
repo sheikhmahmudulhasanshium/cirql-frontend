@@ -1,10 +1,12 @@
+// frontend/app/(dashboard)/settings/components/Body.tsx
+
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes'; // Import useTheme
 
 // Shadcn UI Imports
-import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -22,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     BellRing, ShieldCheck, UserCog, Accessibility, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
-    LogIn, History
+    LogIn, History, Text, Type
 } from 'lucide-react';
 
 // Auth Context & API Hooks
@@ -32,17 +34,12 @@ import { useGetMySettings } from '@/components/hooks/settings/get-settings';
 import { resetMySettings } from '@/components/hooks/settings/delete-settings';
 import { updateMySettings } from '@/components/hooks/settings/patch-settings';
 import { SignOutButton } from '@/components/auth/sign-out-button';
-
-// FIX: Import the new custom SignOutButton component
-
-
-// --- START: DEFINITIONS OUTSIDE THE COMPONENT ---
+import { CustomModeToggle } from '@/components/auth/custom-mode-toggle';
 
 type EditableSettings = Omit<SettingsDto, '_id' | 'userId' | 'createdAt' | 'updatedAt'>;
 type SettingsObjectKey = {
   [K in keyof EditableSettings]: EditableSettings[K] extends object ? K : never;
 }[keyof EditableSettings];
-
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function debounce<F extends (...args: any[]) => any>(func: F, delay: number): (...args: Parameters<F>) => void {
@@ -54,11 +51,11 @@ function debounce<F extends (...args: any[]) => any>(func: F, delay: number): (.
     }, delay);
   };
 }
-// --- END: DEFINITIONS OUTSIDE THE COMPONENT ---
 
 export default function Body() {
-    const { user, isLoading: authIsLoading, logout } = useAuth();
+    const { user, isLoading: authIsLoading } = useAuth();
     const router = useRouter();
+    const { setTheme: applyTheme } = useTheme(); // For applying theme on load
 
     const { settings, setSettings, isLoading: isLoadingData, error } = useGetMySettings();
     const [isSaving, setIsSaving] = useState(false);
@@ -67,7 +64,17 @@ export default function Body() {
     const [notificationSound, setNotificationSound] = useState(true);
     const [activeStatusVisibility, setActiveStatusVisibility] = useState('everyone');
     const [saveSearchHistory, setSaveSearchHistory] = useState(true);
+    const [preferredFont, setPreferredFont] = useState('sans'); // Placeholder
+    const [textSize, setTextSize] = useState('medium'); // Placeholder
 
+
+    // --- FIX START: Sync theme from server on initial load ---
+    useEffect(() => {
+        if (settings?.uiCustomizationPreferences?.theme) {
+            applyTheme(settings.uiCustomizationPreferences.theme);
+        }
+    }, [settings?.uiCustomizationPreferences?.theme, applyTheme]);
+    // --- FIX END ---
 
     const debouncedSaveSettings = useMemo(
         () => debounce(async (payload: UpdateSettingDto) => {
@@ -75,14 +82,18 @@ export default function Body() {
             setIsSaving(true);
             try {
                 const savedSettings = await updateMySettings(payload);
-                setSettings(savedSettings); // Sync with confirmed server state
+                setSettings(savedSettings);
+                // Also apply theme from saved settings to ensure consistency
+                if (savedSettings.uiCustomizationPreferences.theme) {
+                    applyTheme(savedSettings.uiCustomizationPreferences.theme);
+                }
             } catch (err) {
                 console.error("Failed to save settings:", err);
             } finally {
                 setIsSaving(false);
             }
         }, 1500),
-        [user?._id, setSettings]
+        [user?._id, setSettings, applyTheme]
     );
 
     const handleSettingChange = <K extends SettingsObjectKey>(
@@ -102,6 +113,12 @@ export default function Body() {
         setSettings(newSettings);
         debouncedSaveSettings({ [category]: newSettings[category] });
     };
+    
+    // --- FIX START: New handler specifically for theme changes ---
+    const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+        handleSettingChange('uiCustomizationPreferences', 'theme', theme);
+    };
+    // --- FIX END ---
 
     const handleReset = async () => {
         if (!user || !window.confirm("Are you sure you want to reset all settings to their default values?")) {
@@ -111,12 +128,19 @@ export default function Body() {
         try {
             const resetData = await resetMySettings();
             setSettings(resetData);
+            // Apply the default theme after reset
+            if (resetData.uiCustomizationPreferences.theme) {
+                applyTheme(resetData.uiCustomizationPreferences.theme);
+            }
         } catch (err) {
             console.error("Failed to reset settings:", err);
         } finally {
             setIsSaving(false);
         }
     };
+    
+    // ... (rest of the component's JSX, loading states, etc.)
+    // Only showing the relevant JSX sections that changed below
     
     if (authIsLoading) {
         return (
@@ -180,7 +204,7 @@ export default function Body() {
                 <Button variant="outline" onClick={handleReset} disabled={isSaving}><Undo className="mr-2 h-4 w-4" /> {isSaving ? 'Resetting...' : 'Reset to Defaults'}</Button>
             </div>
             <Separator />
-
+            
             {/* Notifications Section */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><BellRing className="mr-2 h-5 w-5 text-muted-foreground"/> Notifications {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
@@ -203,12 +227,11 @@ export default function Body() {
                             <SelectContent><SelectItem value="everyone">Everyone</SelectItem><SelectItem value="friends">Friends Only</SelectItem><SelectItem value="none">No One</SelectItem></SelectContent>
                         </Select>
                     </div>
-                    <div className="flex items-center justify-between"><Label className="flex-1 font-medium">Appearance</Label><ModeToggle /></div>
                 </div>
             </section>
             <Separator />
 
-            {/* New Data & Privacy Section (Placeholder) */}
+            {/* Data & Privacy Section (Placeholder) */}
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-muted-foreground"><History className="mr-2 h-5 w-5"/> Data & Privacy (Upcoming)</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -240,6 +263,25 @@ export default function Body() {
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
                     <div className="flex items-center justify-between"><Label htmlFor="high-contrast" className="flex-1 cursor-pointer font-medium">High Contrast Mode</Label><Switch id="high-contrast" checked={settings.accessibilityOptionsPreferences.highContrastMode} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'highContrastMode', c)} disabled={isSaving}/></div>
                     <div className="flex items-center justify-between"><Label htmlFor="screen-reader" className="flex-1 cursor-pointer font-medium">Screen Reader Support</Label><Switch id="screen-reader" checked={settings.accessibilityOptionsPreferences.screenReaderSupport} onCheckedChange={(c) => handleSettingChange('accessibilityOptionsPreferences', 'screenReaderSupport', c)} disabled={isSaving}/></div>
+                    {/* --- FIX START: Placeholder Font and Text Size Settings --- */}
+                    <div className="flex items-center justify-between"><Label htmlFor="font-pref" className="flex-1 font-medium text-muted-foreground"><Type className="inline-block mr-2 h-5 w-5" /> Preferred Font (Upcoming)</Label>
+                        <Select value={preferredFont} onValueChange={setPreferredFont} disabled>
+                            <SelectTrigger id="font-pref" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent><SelectItem value="sans">Sans-Serif</SelectItem><SelectItem value="serif">Serif</SelectItem><SelectItem value="mono">Monospace</SelectItem></SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex items-center justify-between"><Label htmlFor="text-size" className="flex-1 font-medium text-muted-foreground"><Text className="inline-block mr-2 h-5 w-5" /> Text Size (Upcoming)</Label>
+                        <Select value={textSize} onValueChange={setTextSize} disabled>
+                            <SelectTrigger id="text-size" className="w-[180px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="small">Small</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="large">Large</SelectItem>
+                                <SelectItem value="xl">XL</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {/* --- FIX END --- */}
                 </div>
             </section>
             <Separator />
@@ -248,6 +290,16 @@ export default function Body() {
             <section className="space-y-6">
                 <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Brush className="mr-2 h-5 w-5 text-muted-foreground"/> UI Customization {isSaving && <span className="ml-2 text-xs text-muted-foreground animate-pulse">(Saving...)</span>}</h2>
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
+                    {/* --- FIX START: Connect CustomModeToggle to state and handler --- */}
+                    <div className="flex items-center justify-between">
+                        <Label className="flex-1 font-medium">Appearance</Label>
+                        <CustomModeToggle 
+                          value={settings.uiCustomizationPreferences.theme}
+                          onChange={handleThemeChange}
+                          disabled={isSaving}
+                        />
+                    </div>
+                     {/* --- FIX END --- */}
                     <div className="flex items-center justify-between"><Label htmlFor="animations" className="flex-1 cursor-pointer font-medium">Enable Animations</Label><Switch id="animations" checked={settings.uiCustomizationPreferences.animationsEnabled} onCheckedChange={(c) => handleSettingChange('uiCustomizationPreferences', 'animationsEnabled', c)} disabled={isSaving}/></div>
                     <div className="flex items-center justify-between"><Label htmlFor="layout" className="flex-1 font-medium">Default Layout</Label>
                         <Select value={settings.uiCustomizationPreferences.layout} onValueChange={(v) => handleSettingChange('uiCustomizationPreferences', 'layout', v as 'list' | 'grid')} disabled={isSaving}>
@@ -287,7 +339,6 @@ export default function Body() {
                 <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700">
                     <div className="flex items-center justify-between">
                         <div className="flex-1"><h3 className="text-md font-medium">Sign Out</h3><p className="text-sm text-muted-foreground">End your current session on this device.</p></div>
-                        {/* Using the new custom component */}
                         <SignOutButton
                           variant="outline"
                           className="text-destructive border-destructive hover:bg-destructive/10 hover:text-destructive"

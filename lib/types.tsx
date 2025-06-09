@@ -5,10 +5,10 @@ export interface NavMenu{
     href:string,
     label:string
 }
+// frontend/src/lib/types.ts
 
-// lib/types.ts
+// These types should mirror the DTOs from your NestJS backend.
 
-// --- Sub-document DTOs ---
 export interface NotificationPreferencesDto {
   emailNotifications: boolean;
   pushNotifications: boolean;
@@ -16,12 +16,12 @@ export interface NotificationPreferencesDto {
 
 export interface AccountSettingsPreferencesDto {
   isPrivate: boolean;
-  theme: string;
+  // The 'theme' property was correctly moved out of here.
 }
 
 export interface SecuritySettingsPreferencesDto {
   enable2FA: boolean;
-  recoveryMethod: string;
+  recoveryMethod: 'email' | 'phone';
 }
 
 export interface AccessibilityOptionsPreferencesDto {
@@ -30,18 +30,18 @@ export interface AccessibilityOptionsPreferencesDto {
 }
 
 export interface ContentPreferencesDto {
-  theme: string;
   interests: string[];
 }
 
 export interface UiCustomizationPreferencesDto {
-  layout: string;
+  layout: 'list' | 'grid';
   animationsEnabled: boolean;
+  // --- FIX START: Add the missing 'theme' property ---
+  theme: 'light' | 'dark' | 'system';
+  // --- FIX END ---
 }
 
-// --- Main DTOs ---
-
-// This is the full Settings object returned by the API
+// This is the main DTO for the entire settings object returned by the API
 export interface SettingsDto {
   _id: string;
   userId: string;
@@ -52,10 +52,18 @@ export interface SettingsDto {
   accessibilityOptionsPreferences: AccessibilityOptionsPreferencesDto;
   contentPreferences: ContentPreferencesDto;
   uiCustomizationPreferences: UiCustomizationPreferencesDto;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string; // or Date
+  updatedAt: string; // or Date
 }
 
-// This is the type for the PATCH request body for updates.
-// It's a partial object of the main DTO, without the read-only fields.
-export type UpdateSettingDto = Partial<Omit<SettingsDto, '_id' | 'userId' | 'createdAt' | 'updatedAt'>>;
+// This type is used for PATCH requests to update settings.
+// It makes all nested properties optional.
+export type UpdateSettingDto = {
+  isDefault?: boolean;
+  notificationPreferences?: Partial<NotificationPreferencesDto>;
+  accountSettingsPreferences?: Partial<AccountSettingsPreferencesDto>;
+  securitySettingsPreferences?: Partial<SecuritySettingsPreferencesDto>;
+  accessibilityOptionsPreferences?: Partial<AccessibilityOptionsPreferencesDto>;
+  contentPreferences?: Partial<ContentPreferencesDto>;
+  uiCustomizationPreferences?: Partial<UiCustomizationPreferencesDto>;
+};
