@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export default function Notifications() {
-  // --- FIX: DELETE THIS HOOK CALL ---
+  // --- FIX: DELETE THIS HOOK CALL. It's not allowed in a Server Component. ---
   // const {}=useGetMySettings()
 
   return (

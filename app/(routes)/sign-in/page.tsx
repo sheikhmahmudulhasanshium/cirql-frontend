@@ -78,7 +78,7 @@ function SignInContent() {
         </Link>
         <div className="text-center">
           {/* Optional: Add your logo here */}
-          <h1 className="text-4xl font-bold">Sign in to CiRQL</h1>
+          <h1 className="text-4xl font-bold text-shadow-accent text-shadow-2xs">Sign in to CiRQL</h1>
           <p className="mt-2 text-muted-foreground">Access your account or join the community.</p>
         </div>
         {errorParam && (
@@ -89,7 +89,7 @@ function SignInContent() {
         <Button onClick={handleGoogleLogin} size="lg" className="w-full">
           <Chrome className="mr-2 h-5 w-5" /> Sign in with Google
         </Button>
-        <p className="text-xs text-center text-muted-foreground px-8">
+        <p className="text-xs text-center text-blue-950 px-8 text-shadow-accent text-shadow-2xs">
           By signing in, you agree to our{' '}
           <Link href="/terms-and-conditions" className="underline hover:text-primary">Terms of Service</Link> and{' '}
           <Link href="/privacy-policy" className="underline hover:text-primary">Privacy Policy</Link>.

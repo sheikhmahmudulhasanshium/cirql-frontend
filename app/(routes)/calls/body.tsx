@@ -5,7 +5,7 @@ const Body = () => {
     return ( 
         <BasicBodyProvider>
             <div className=" flex flex-1 justify-between min-h-svh  w-full">
-                Chats page
+                Call history page
             </div>
         </BasicBodyProvider>
      );
