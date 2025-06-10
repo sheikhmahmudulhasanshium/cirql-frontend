@@ -33,14 +33,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  // FIX: Simplified logout function. Its only job is to clear state and storage.
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_TOKEN_KEY);
     setUser(null);
     setIsAuthenticated(false);
 
     // Optional: Inform the backend, but don't wait for it.
-    // Wrap in try/catch so a failed backend call doesn't break the frontend logout.
     apiClient.post('/auth/logout').catch(err => {
       console.error("AuthContext: Backend logout call failed, but user is logged out on the client.", err);
     });
@@ -48,41 +46,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     router.push('/sign-in');
   }, [router]);
 
-  // FIX: This function now has a single purpose: fetch user data if a token exists.
-  // It relies on the apiClient interceptor to add the header.
   const fetchUser = useCallback(async () => {
     try {
       const { data } = await apiClient.get<User>('/auth/status');
       setUser(data);
       setIsAuthenticated(true);
     } catch (error) {
-      console.error("AuthContext: Token validation failed.", error);
+      // This internal log is fine, it helps trace the logout trigger.
+      console.log("AuthContext: Token validation failed, triggering logout.", error);
       // If fetching fails, the token is invalid. Log the user out.
       logout();
     }
   }, [logout]);
 
-  // FIX: Simplified login function.
   const login = useCallback(async (newToken: string) => {
-    // 1. Save the token to storage. This is its primary job.
     localStorage.setItem(AUTH_TOKEN_KEY, newToken);
-    // 2. Fetch the user to update the state.
     await fetchUser();
   }, [fetchUser]);
 
-  // FIX: Renamed for clarity. This is the initial check on app load.
   const checkAuth = useCallback(async () => {
     const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
     if (storedToken) {
-      // If a token exists, try to validate it by fetching the user.
       await fetchUser();
     }
-    // No matter what, we're done with the initial load.
+    // If there's no token, we just finish loading without fetching a user.
     setIsLoading(false);
   }, [fetchUser]);
 
-  // This effect runs only once on initial app load.
   useEffect(() => {
+    // This effect runs only once on initial app load.
     setIsLoading(true);
     checkAuth();
   }, [checkAuth]);
