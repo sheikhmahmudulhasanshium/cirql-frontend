@@ -1,92 +1,118 @@
-"use client";
+'use client';
 
-import React, { createContext, useState, useEffect, ReactNode, useContext, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { createContext, useReducer, Dispatch, useContext, ReactNode, useCallback } from 'react';
 import apiClient from '@/lib/apiClient';
 
-// User and Context interfaces remain the same.
 export interface User {
   _id: string;
   email?: string;
   firstName?: string;
   lastName?: string;
   picture?: string;
+  roles: string[];
+  is2FAEnabled: boolean;
 }
 
-export interface AuthContextType {
-  isAuthenticated: boolean;
+export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';
+
+interface AuthState {
   user: User | null;
-  isLoading: boolean;
-  login: (token: string) => Promise<void>;
-  logout: () => void; // No longer needs to be async from the component's perspective
-  checkAuth: () => Promise<void>;
+  token: string | null;
+  status: AuthStatus;
+  isAdmin: boolean;
 }
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export type AuthAction =
+  | { type: 'LOGIN'; payload: { token: string; user: User } }
+  | { type: 'LOGOUT' }
+  | { type: 'SET_STATUS'; payload: AuthStatus }
+  | { type: 'SET_PARTIAL_LOGIN'; payload: { token: string } }
+  | { type: 'UPDATE_USER'; payload: { user: User } };
 
-// Define a constant for the localStorage key to prevent typos.
-const AUTH_TOKEN_KEY = 'authToken';
+const initialState: AuthState = {
+  user: null,
+  token: null,
+  status: 'loading',
+  isAdmin: false,
+};
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const router = useRouter();
+const checkIsAdmin = (user: User | null): boolean => {
+  return user?.roles?.includes('admin') || user?.roles?.includes('owner') || false;
+};
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    setUser(null);
-    setIsAuthenticated(false);
+const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'LOGIN':
+      localStorage.setItem('authToken', action.payload.token);
+      return {
+        ...state,
+        user: action.payload.user,
+        token: action.payload.token,
+        status: 'authenticated',
+        isAdmin: checkIsAdmin(action.payload.user),
+      };
+    case 'LOGOUT':
+      localStorage.removeItem('authToken');
+      return {
+        ...state,
+        user: null,
+        token: null,
+        status: 'unauthenticated',
+        isAdmin: false,
+      };
+    case 'SET_STATUS':
+      return {
+        ...state,
+        status: action.payload,
+      };
+    case 'SET_PARTIAL_LOGIN':
+      localStorage.setItem('authToken', action.payload.token);
+      return {
+        ...state,
+        token: action.payload.token,
+        status: '2fa_required',
+        user: null,
+        isAdmin: false,
+      };
+    case 'UPDATE_USER':
+      return {
+        ...state,
+        user: action.payload.user,
+        isAdmin: checkIsAdmin(action.payload.user),
+      };
+    default:
+      return state;
+  }
+};
 
-    // Optional: Inform the backend, but don't wait for it.
-    apiClient.post('/auth/logout').catch(err => {
-      console.error("AuthContext: Backend logout call failed, but user is logged out on the client.", err);
-    });
-    
-    router.push('/sign-in');
-  }, [router]);
+export const AuthContext = createContext<{
+  state: AuthState;
+  dispatch: Dispatch<AuthAction>;
+  refreshUser: () => Promise<void>;
+} | undefined>(undefined);
 
-  const fetchUser = useCallback(async () => {
-    try {
-      const { data } = await apiClient.get<User>('/auth/status');
-      setUser(data);
-      setIsAuthenticated(true);
-    } catch (error) {
-      // This internal log is fine, it helps trace the logout trigger.
-      console.log("AuthContext: Token validation failed, triggering logout.", error);
-      // If fetching fails, the token is invalid. Log the user out.
-      logout();
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [state, dispatch] = useReducer(authReducer, initialState);
+
+  const refreshUser = useCallback(async () => {
+    if (state.token) {
+      try {
+        const response = await apiClient.get('/auth/status');
+        dispatch({ type: 'UPDATE_USER', payload: { user: response.data } });
+      } catch {
+        dispatch({ type: 'LOGOUT' });
+      }
     }
-  }, [logout]);
-
-  const login = useCallback(async (newToken: string) => {
-    localStorage.setItem(AUTH_TOKEN_KEY, newToken);
-    await fetchUser();
-  }, [fetchUser]);
-
-  const checkAuth = useCallback(async () => {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-    if (storedToken) {
-      await fetchUser();
-    }
-    // If there's no token, we just finish loading without fetching a user.
-    setIsLoading(false);
-  }, [fetchUser]);
-
-  useEffect(() => {
-    // This effect runs only once on initial app load.
-    setIsLoading(true);
-    checkAuth();
-  }, [checkAuth]);
+  }, [state.token, dispatch]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, isLoading, login, logout, checkAuth }}>
+    <AuthContext.Provider value={{ state, dispatch, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

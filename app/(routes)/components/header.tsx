@@ -3,6 +3,7 @@ import Image from "next/image";
 import Navbar from "./navbar"; // This will now be the Navbar with icons only
 import Searchbar from "./searchbar"; // Import the dedicated Searchbar
 import Link from "next/link";
+import HeaderAvatarComponent from "./header-avatar-button";
 // import { ModeToggle } from "@/components/mode-toggle"; // Assuming you might add this back
 
 const Header = () => {
@@ -47,6 +48,8 @@ const Header = () => {
                     <UserCircle2 className="h-6 w-6" />
                 </Button>
                 */}
+                <HeaderAvatarComponent/>
+                    
             </div>
         </header>
     );

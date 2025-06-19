@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import apiClient from '@/lib/apiClient';
-import { SettingsDto } from '@/lib/types';
+import { SettingsDto } from '@/lib/types'; // Assuming this type exists
 import { useAuth } from '@/components/contexts/AuthContext';
 
 // This is the hook that fetches settings for the currently authenticated user
 export const useGetMySettings = () => {
-  // --- FIX #1: Get the authentication status from the AuthContext ---
-  const { user, isLoading: authIsLoading } = useAuth();
+  // FIX: Destructure 'state' from useAuth, then get the user and status from it.
+  const { state } = useAuth();
+  const { user, status: authStatus } = state;
+  const authIsLoading = authStatus === 'loading';
 
   const [settings, setSettings] = useState<SettingsDto | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // Start as true to reflect initial check
@@ -46,8 +48,8 @@ export const useGetMySettings = () => {
       }
     };
 
-    // --- FIX #2: The core logic change ---
-    // This condition prevents the API call unless authentication is resolved and successful.
+    // The core logic change: This condition prevents the API call
+    // unless authentication is resolved and successful.
     if (authIsLoading) {
       // If auth is still loading, we are also "loading" settings. Do nothing yet.
       setIsLoading(true);

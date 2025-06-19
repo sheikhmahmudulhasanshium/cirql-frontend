@@ -1,14 +1,15 @@
-"use client"; 
-import BasicBodyProvider from "@/components/providers/basic-body-provider";
+import BasicBodyProvider from '@/components/providers/basic-body-provider';
+import Announcements from '../components/announcement';
 
 const Body = () => {
-    return ( 
+    
+    return (
         <BasicBodyProvider>
-            <div className=" flex flex-1 justify-between min-h-svh  w-full">
-                Notification page
-            </div>
+            <Announcements/>
         </BasicBodyProvider>
-     );
+        
+    )
+    
 }
  
 export default Body;

@@ -7,7 +7,12 @@ import { useAuth } from '@/components/contexts/AuthContext';
 
 const SignOutPage = () => {
   const router = useRouter();
-  const { logout, isAuthenticated, isLoading } = useAuth();
+  // FIX: Destructure 'state' and 'dispatch' from the useAuth hook.
+  const { state, dispatch } = useAuth();
+  const { status } = state;
+  const isAuthenticated = status === 'authenticated';
+  const isLoading = status === 'loading';
+
   const isLoggingOut = useRef(false); // Prevent multiple logout calls
 
   useEffect(() => {
@@ -19,13 +24,15 @@ const SignOutPage = () => {
     if (isAuthenticated && !isLoggingOut.current) {
       isLoggingOut.current = true;
       console.log("SignOutPage: Performing sign out...");
-      logout(); // This will eventually redirect via AuthContext
+      // FIX: Call dispatch with the LOGOUT action instead of a logout function.
+      dispatch({ type: 'LOGOUT' });
+      // The AuthInitializer will handle the redirect to /sign-in
     } else if (!isAuthenticated && !isLoggingOut.current) {
       // If already signed out or never authenticated, and not in the process of logging out
       console.log("SignOutPage: User already signed out or not authenticated, redirecting to /sign-in.");
       router.push('/sign-in');
     }
-  }, [isAuthenticated, logout, router, isLoading]); // Added isLoading
+  }, [isAuthenticated, dispatch, router, isLoading]); // Changed logout to dispatch
 
   // UI shown while AuthContext's logout is processing or if already signed out by the time this renders
   if (isLoading || isLoggingOut.current) {

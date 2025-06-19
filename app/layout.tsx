@@ -4,7 +4,8 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import Script from 'next/script';
 import type { Metadata } from 'next';
 import { AuthProvider } from "../components/contexts/AuthContext";
-
+import { Toaster } from "@/components/ui/sonner"
+import { AuthInitializer } from "@/components/providers/AuthInitializer";
 const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -188,9 +189,13 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-        > <AuthProvider>
-          <main className="flex flex-col min-h-screen">{children}</main> </AuthProvider>
-        </ThemeProvider>
+        > <AuthProvider>            <AuthInitializer>
+
+          <main className="flex flex-col min-h-screen">{children}</main>             </AuthInitializer>
+</AuthProvider>
+        </ThemeProvider>        
+        <Toaster />
+
       </body>
     </html>
   );

@@ -3,8 +3,8 @@
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useUserSettings } from "../hooks/settings/get-settings-by-id";
-import { useTheme } from "next-themes"; // --- FIX: Import the useTheme hook ---
+import { useUserSettings } from "../hooks/settings/get-settings-by-id"; // Assuming this exists
+import { useTheme } from "next-themes";
 
 interface BasicBodyProviderProps {
     children: ReactNode;
@@ -12,35 +12,35 @@ interface BasicBodyProviderProps {
 
 const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     const router = useRouter();
-    const { user, isLoading: authIsLoading } = useAuth();
-    const { data: settings, isLoading: settingsIsLoading, error } = useUserSettings(user?._id);
-    const { setTheme } = useTheme(); // --- FIX: Get the setter function from the hook ---
+    // FIX: Destructure state from useAuth, then get the user and status.
+    const { state } = useAuth();
+    const { user, status: authStatus } = state;
+    const authIsLoading = authStatus === 'loading';
 
-    // --- FIX: Add a new useEffect to apply the theme when settings are loaded ---
+    const { data: settings, isLoading: settingsIsLoading, error } = useUserSettings(user?._id);
+    const { setTheme } = useTheme();
+
     useEffect(() => {
-        // When the settings data is successfully loaded...
         if (settings) {
-            // ...tell the next-themes provider to apply the theme from user settings.
             setTheme(settings.uiCustomizationPreferences.theme);
         }
-    }, [settings, setTheme]); // This effect runs whenever the settings data changes.
-    // --- END OF FIX ---
+    }, [settings, setTheme]);
 
-
-    // This effect handles redirecting unauthenticated users
+    // This effect is now handled more robustly by the AuthInitializer,
+    // but keeping it here provides a good secondary check.
     useEffect(() => {
         if (!authIsLoading && !user) {
             router.push('/sign-in');
         }
     }, [user, authIsLoading, router]);
 
-    // --- All loading/error states and class name logic below remains the same ---
     if (authIsLoading) {
         return <main className="bg-background text-foreground"><p className="text-center p-10">Authenticating...</p></main>;
     }
 
     if (!user) {
-        return null; // Redirecting
+        // This will be briefly rendered while the redirect happens.
+        return null; 
     }
 
     if (settingsIsLoading) {

@@ -1,28 +1,26 @@
+// src/components/auth/SignOutButton.tsx
 "use client";
 
 import React from "react";
-import { useAuth } from "@/components/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-// Corrected: Import ButtonProps from the same location as Button
-import type { ComponentProps } from "react"; // Or import ButtonProps directly if available and preferred
+import type { ComponentProps } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
-// Define ButtonProps based on React's ComponentProps if not directly exported,
-// or use the exported type if available.
-// For shadcn/ui, ButtonProps might not be explicitly exported, so using ComponentProps<'button'> is a robust way.
-// However, if your ui/button.tsx *does* export ButtonProps, use that.
 type ButtonProps = ComponentProps<typeof Button>;
 
-
-interface SignOutButtonProps extends Omit<ButtonProps, 'onClick' | 'children'> { // Omit onClick and children
+interface SignOutButtonProps extends Omit<ButtonProps, 'onClick' | 'children'> {
   children?: React.ReactNode;
   onSignOut?: () => void;
 }
 
 export const SignOutButton = ({ children, onSignOut, ...props }: SignOutButtonProps) => {
-  const { logout } = useAuth();
+  const { dispatch } = useAuth();
 
-  const handleSignOut = async () => {
-    await logout();
+  const handleSignOut = () => {
+    // You can optionally inform the backend, but it's not strictly necessary.
+    // apiClient.post('/auth/logout').catch(err => console.error("Backend logout failed"));
+    
+    dispatch({ type: 'LOGOUT' });
     if (onSignOut) {
       onSignOut();
     }
