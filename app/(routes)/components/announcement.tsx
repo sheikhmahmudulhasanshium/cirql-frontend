@@ -20,7 +20,7 @@ import {
 const Announcements = () => {
     // State for the current page
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5); // You can make this dynamic if needed
+    const [itemsPerPage] = useState(8); // You can make this dynamic if needed
 
     // Get user state from the AuthContext
     const { state } = useAuth();

@@ -8,7 +8,7 @@ const Footer = () => {
     
 
     return (
-        <footer className="bg-accent dark:bg-accent-dark text-accent-foreground dark:text-accent-foreground-dark w-full  ">
+        <footer className="bg-accent dark:bg-accent-dark text-accent-foreground dark:text-accent-foreground-dark w-full  border-t-2 border-t-accent dark:border-t-accent-foreground-dark ">
             {/* 
                 Consider if `absolute` positioning is truly needed. 
                 If the page content can be shorter than the viewport, `absolute` works.

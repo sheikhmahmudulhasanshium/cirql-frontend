@@ -129,3 +129,9 @@ export function isApiErrorResponse(obj: unknown): obj is ApiErrorResponse {
         typeof (obj as ApiErrorResponse).error === 'string'
     );
 }
+
+export enum Role {
+  User = 'user',
+  Admin = 'admin',
+  Owner = 'owner',
+}
