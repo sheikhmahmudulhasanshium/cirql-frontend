@@ -189,7 +189,8 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-        > <AuthProvider>            <AuthInitializer>
+        > <AuthProvider>            
+          <AuthInitializer>
 
           <main className="flex flex-col min-h-screen">{children}</main>             </AuthInitializer>
 </AuthProvider>
