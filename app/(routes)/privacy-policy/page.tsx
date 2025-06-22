@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy - CiRQL',
   description: 'Read the CiRQL Privacy Policy to understand how we collect, use, and protect your personal information when you use our services, including information about cookies and authentication tokens.',
-  robots: 'noindex, follow', // Good practice for legal pages not to be primary SEO targets
+ // robots: 'noindex, follow', // Good practice for legal pages not to be primary SEO targets
 };
 
 export default function PrivacyPolicyPage() {

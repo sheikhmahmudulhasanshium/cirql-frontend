@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Terms and Conditions',
   description: 'Please read the CiRQL Terms and Conditions carefully before using our services. Your access and use is conditioned on your acceptance of these terms.',
-  robots: 'noindex, follow',
+ // robots: 'noindex, follow',
 };
 
 export default function TermsAndConditionsPage() {
