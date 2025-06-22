@@ -71,12 +71,6 @@ const structuredData = {
       },
       "isAccessibleForFree": true, // Assuming it's free
       "keywords": "community platform, private groups, messaging, social networking, CiRQL, group network, collaboration tool", // Updated keywords
-      // featureList can be added if specific features are highlighted
-      // "featureList": [
-      //   "Private group creation",
-      //   "Seamless messaging",
-      //   "Community networking"
-      // ]
     }
   ]
 };
@@ -125,10 +119,12 @@ export default function RootLayout({
         {/* --- Google Analytics Snippet --- */}
          {gaId && (
           <>
-            <Script strategy="afterInteractive" async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></Script>
+            {/* CORRECTED: Changed strategy to load script in the <head> for verification */}
+            <Script strategy="beforeInteractive" async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}></Script>
             <Script
               id="ga-inline-script"
-              strategy="afterInteractive"
+              // CORRECTED: Changed strategy to load script in the <head> for verification
+              strategy="beforeInteractive"
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -146,7 +142,8 @@ export default function RootLayout({
          {gtmId && (
           <Script
             id="google-tag-manager-head"
-            strategy="afterInteractive"
+            // CORRECTED: Changed strategy to load script in the <head> for proper placement
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -173,6 +170,7 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* This GTM noscript tag is correctly placed at the beginning of the body */}
         {gtmId && (
           <noscript>
             <iframe
