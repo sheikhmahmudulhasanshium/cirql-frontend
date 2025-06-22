@@ -32,8 +32,6 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/gapi": "^0.0.47",
-    "@types/google.accounts": "^0.0.17",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/passport": "^1.0.17",

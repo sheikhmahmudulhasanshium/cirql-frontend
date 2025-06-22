@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react'; // FIX: Added useRef
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ type SettingsObjectKey = {
   [K in keyof EditableSettings]: EditableSettings[K] extends object ? K : never;
 }[keyof EditableSettings];
 
+// Debounce function remains the same
 function debounce<F extends (...args: Parameters<F>) => ReturnType<F>>(
   func: F,
   delay: number,
@@ -65,6 +66,15 @@ export default function Body() {
     const [activeStatusVisibility, setActiveStatusVisibility] = useState('everyone');
     const [saveSearchHistory, setSaveSearchHistory] = useState(true);
 
+    // --- FIX START: Accumulate pending changes ---
+    const [pendingChanges, setPendingChanges] = useState<UpdateSettingDto>({});
+    // Use a ref to get the latest state inside the debounced function without re-creating it
+    const pendingChangesRef = useRef(pendingChanges);
+    useEffect(() => {
+        pendingChangesRef.current = pendingChanges;
+    }, [pendingChanges]);
+    // --- FIX END ---
+
     useEffect(() => {
         const body = document.body;
         if (settings) {
@@ -82,28 +92,39 @@ export default function Body() {
         }
     }, [settings, applyTheme]);
 
+    // --- FIX: Modified debounced save logic ---
     const debouncedSaveSettings = useMemo(
-        () => debounce(async (payload: UpdateSettingDto) => {
-            if (!user?._id) return;
+        () => debounce(async () => {
+            if (!user?._id || Object.keys(pendingChangesRef.current).length === 0) {
+                return;
+            }
             setIsSaving(true);
             try {
-                const savedSettings = await updateMySettings(payload);
+                // Send the accumulated changes
+                const savedSettings = await updateMySettings(pendingChangesRef.current);
+                // Update the main settings state with the authoritative server response
                 setSettings(savedSettings);
+                // Clear the pending changes queue
+                setPendingChanges({});
             } catch (err) {
                 console.error("Failed to save settings:", err);
+                // Optionally, you could show an error toast to the user here
             } finally {
                 setIsSaving(false);
             }
         }, 1500),
-        [user?._id, setSettings]
+        [user?._id, setSettings] // Dependencies are correct
     );
 
+    // --- FIX: Modified change handler ---
     const handleSettingChange = <K extends SettingsObjectKey>(
         category: K,
         settingKey: keyof EditableSettings[K],
         value: EditableSettings[K][keyof EditableSettings[K]]
     ) => {
         if (!settings) return;
+
+        // 1. Optimistically update the UI immediately
         const newSettings = {
             ...settings,
             [category]: {
@@ -112,7 +133,19 @@ export default function Body() {
             },
         };
         setSettings(newSettings);
-        debouncedSaveSettings({ [category]: newSettings[category] });
+        
+        // 2. Accumulate this change into the pending changes object
+        const changeToSave = {
+            ...pendingChanges,
+            [category]: {
+                ...(pendingChanges[category] || {}), // Keep existing pending changes in the same category
+                [settingKey]: value,
+            },
+        };
+        setPendingChanges(changeToSave);
+
+        // 3. Trigger the debounced save (it will use the latest pendingChanges via the ref)
+        debouncedSaveSettings();
     };
     
     const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
@@ -127,6 +160,7 @@ export default function Body() {
         try {
             const resetData = await resetMySettings();
             setSettings(resetData);
+            setPendingChanges({}); // Clear any pending changes on reset
         } catch (err) {
             console.error("Failed to reset settings:", err);
         } finally {
@@ -141,6 +175,9 @@ export default function Body() {
             setIsDisable2faDialogOpen(true);
         }
     };
+    
+    // The rest of your component's JSX and logic is perfectly fine and requires no changes.
+    // ... (All JSX from your original file)
     
     if (authIsLoading) {
         return (

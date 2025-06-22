@@ -4,6 +4,7 @@ import Footer from "../components/footer";
 import { Mail } from "lucide-react";
 import Header from "../components/header-sign-out";
 import { ContactForm } from "./contact-form";
+
 const Contacts = () => {
     return ( 
         <BasicPageProvider header={<Header/>} footer={<Footer/>}>
@@ -11,13 +12,12 @@ const Contacts = () => {
                 <div className="container mx-auto px-4 py-16 sm:py-24">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
                         
-                        {/* Column 1: Informational Text */}
                         <div className="flex flex-col justify-center">
                             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">
                                 Contact Us
                             </h1>
                             <p className="mt-4 text-lg text-muted-foreground">
-                                To ensure your message is delivered securely, we use Google to send emails directly from your account. Please fill out the form and sign in when prompted.
+                                We&apos;d love to hear from you! Please fill out the form, and we&apos;ll get back to you as soon as possible.
                             </p>
                             <div className="mt-8">
                                <div className="flex items-center gap-4">
@@ -34,7 +34,6 @@ const Contacts = () => {
                             </div>
                         </div>
 
-                        {/* Column 2: The Contact Form */}
                         <div>
                             <ContactForm />
                         </div>
