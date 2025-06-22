@@ -17,10 +17,10 @@ export default function PrivacyPolicyPage() {
     >
       <div className="container mx-auto px-4 py-8 prose lg:prose-xl"> {/* Using Tailwind CSS prose for styling */}
         <h1>Privacy Policy for CiRQL</h1>
-        <p><strong>Last Updated: [Date - MAKE SURE TO FILL THIS IN]</strong></p>
+        <p><strong>Last Updated: 22 JUNE 2025</strong></p>
 
         {/* Line 22 from error report */}
-        <p>Welcome to CiRQL (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), accessible at https://cirql.vercel.app/ (or your actual domain). We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us at [Your Contact Email Address - FILL IN].</p>
+        <p>Welcome to CiRQL (&quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), accessible at https://cirql.vercel.app/ . We are committed to protecting your personal information and your right to privacy. If you have any questions or concerns about this privacy notice, or our practices with regards to your personal information, please contact us at contact.cirql@gmail.com.</p>
 
         <p>This Privacy Policy governs the privacy policies and practices of our Website. Please read this Privacy Policy carefully. By using our Website, you agree to the terms of this Privacy Policy.</p>
 
@@ -115,8 +115,8 @@ export default function PrivacyPolicyPage() {
         <h2>11. CONTACT US</h2>
         <p>If you have any questions about this Privacy Policy, please contact us:</p>
         <ul>
-            <li>By email: [Your Contact Email Address - FILL IN]</li>
-            <li>By visiting this page on our website: <a href="/contacts">https://cirql.vercel.app/contacts</a> (or your actual contact page link)</li>
+            <li>By email: contact.cirql@gmail.com</li>
+            <li>By visiting this page on our website: <a href="/contacts">https://cirql.vercel.app/contacts</a></li>
             <li>[Optionally add: By mail: Your Physical Address if applicable]</li>
         </ul>
       </div>

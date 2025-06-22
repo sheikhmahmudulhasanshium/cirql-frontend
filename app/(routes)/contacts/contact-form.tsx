@@ -155,7 +155,7 @@ export function ContactForm() {
                     </div>
                     <div className="space-y-2">
                         {/* --- FIX: Replaced the ' apostrophe with the ' HTML entity --- */}
-                        <Label htmlFor="email">Your Email (used in &lsqo;From&rsqo; field)</Label>
+                        <Label htmlFor="email">Your Email (used in From field)</Label>
                         <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
                         {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
                     </div>
