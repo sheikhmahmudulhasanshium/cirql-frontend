@@ -1,9 +1,8 @@
+// components/admin/admin-sidebar.tsx
 'use client';
 
-// NEW: Import useEffect, useState from React and createPortal from react-dom
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -12,12 +11,14 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
-  LucideProps
+  LucideProps,
+  Inbox, // --- NEW: Import the Inbox icon ---
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
-export type AdminView = 'dashboard' | 'users' | 'content' | 'settings';
+// --- MODIFIED: Add 'messages' to the type ---
+export type AdminView = 'dashboard' | 'users' | 'content' | 'settings' | 'messages';
 
 interface NavItem {
   id: AdminView;
@@ -25,12 +26,15 @@ interface NavItem {
   icon: React.ComponentType<LucideProps>;
 }
 
+// --- MODIFIED: Add the new navigation item ---
 const navItems: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'users', label: 'Manage Users', icon: Users },
   { id: 'content', label: 'Manage Content', icon: FileText },
+  { id: 'messages', label: 'Contact Inbox', icon: Inbox }, // <-- ADDED THIS LINE
 ];
 
+// The rest of the file remains unchanged...
 interface SidebarProps {
   isCollapsed: boolean;
   setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
@@ -91,25 +95,20 @@ const Sidebar = ({
   isMobileMenuOpen,
   setMobileMenuOpen,
 }: SidebarProps) => {
-
-  // NEW: State to ensure the portal is only created on the client-side
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-
   const mobileSidebarContent = (
     <div className="md:hidden">
-      {/* Backdrop */}
       {isMobileMenuOpen && (
         <div 
           onClick={() => setMobileMenuOpen(false)}
           className="fixed inset-0 z-40 bg-black/60"
         />
       )}
-      {/* Sliding Panel */}
       <aside className={cn(
         "fixed top-0 left-0 h-full w-64 bg-background z-50 flex flex-col",
         "transform transition-transform duration-300 ease-in-out",
@@ -130,8 +129,6 @@ const Sidebar = ({
 
   return (
     <>
-      {/* --- DESKTOP SIDEBAR --- */}
-      {/* This renders normally within the layout */}
       <aside className={cn(
         "hidden bg-background border-r md:flex md:flex-col",
         isCollapsed ? "w-20" : "w-64"
@@ -145,8 +142,6 @@ const Sidebar = ({
         <SidebarNav isCollapsed={isCollapsed} activeView={activeView} setActiveView={setActiveView} />
       </aside>
 
-      {/* --- MOBILE SIDEBAR PORTAL --- */}
-      {/* This "teleports" the mobile sidebar to be a direct child of <body> */}
       {isMounted ? createPortal(mobileSidebarContent, document.body) : null}
     </>
   );

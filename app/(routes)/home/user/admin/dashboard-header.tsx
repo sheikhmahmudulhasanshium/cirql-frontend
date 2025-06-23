@@ -1,3 +1,4 @@
+// components/admin/dashboard-header.tsx
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ const getTitle = (view: AdminView) => {
         dashboard: 'Dashboard',
         users: 'User Management',
         content: 'Content Management',
+        messages: 'Contact Form Inbox', // --- NEW: Add the title for the new view ---
         settings: 'Application Settings'
     };
     return titles[view];
@@ -21,7 +23,6 @@ const getTitle = (view: AdminView) => {
 
 const DashboardHeader = ({ setMobileMenuOpen, activeView }: DashboardHeaderProps) => {
   return (
-    // FIX: Standardized height to h-14 and added consistent padding
     <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6">
       <Button
         size="icon"

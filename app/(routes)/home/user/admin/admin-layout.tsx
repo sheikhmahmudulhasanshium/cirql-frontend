@@ -1,3 +1,4 @@
+// components/admin/admin-layout.tsx
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +9,7 @@ import DashboardHome from './dashboard-home';
 import ManageUsers from './admin-manage-users';
 import ManageContent from './admin-manage-content';
 import AppSettings from './admin-settings';
+import AdminMessages from './admin-messages'; // --- NEW: Import the messages component ---
 
 const AdminLayout = () => {
   useAuth();
@@ -20,6 +22,7 @@ const AdminLayout = () => {
       case 'dashboard': return <DashboardHome />;
       case 'users': return <ManageUsers />;
       case 'content': return <ManageContent />;
+      case 'messages': return <AdminMessages />; // --- NEW: Add the case for the new view ---
       case 'settings': return <AppSettings />;
       default: return <DashboardHome />;
     }

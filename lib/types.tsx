@@ -135,3 +135,52 @@ export enum Role {
   Admin = 'admin',
   Owner = 'owner',
 }
+
+// lib/types.ts
+
+// ... keep all your existing types (SettingsDto, etc.) ...
+
+// --- NEW: Add these types for the Support Ticketing System ---
+
+export enum TicketCategory {
+  COMPLAINT = 'Complaint',
+  REVIEW = 'Review',
+  SUGGESTION = 'Suggestion',
+  FEEDBACK = 'Feedback',
+  TECHNICAL_SUPPORT = 'Technical Support',
+  OTHER = 'Other',
+}
+
+export enum TicketStatus {
+  OPEN = 'Open',
+  PENDING_USER_REPLY = 'Pending User Reply',
+  CLOSED = 'Closed',
+}
+
+// Type for a single message within a ticket
+export interface TicketMessage {
+  _id: string;
+  content: string;
+  attachments: string[];
+  sender: {
+    _id: string;
+    firstName?: string;
+    picture?: string;
+    roles: string[]; // Helps identify admin replies
+  };
+  createdAt: string;
+}
+
+// Type for the list view on the main /contacts page
+export interface TicketSummary {
+  _id: string;
+  subject: string;
+  status: TicketStatus;
+  category: TicketCategory;
+  updatedAt: string;
+}
+
+// Type for the detailed conversation view
+export interface TicketDetails extends TicketSummary {
+  messages: TicketMessage[];
+}
