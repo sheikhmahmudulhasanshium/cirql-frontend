@@ -2,6 +2,7 @@ import BasicPageProvider from "@/components/providers/basic-page-provider";
 import Header from "@/app/(routes)/components/header-sign-out"; // Adjust path if necessary
 import Footer from "@/app/(routes)/components/footer";           // Adjust path if necessary
 import type { Metadata } from 'next';
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: 'Terms and Conditions',
@@ -85,7 +86,7 @@ export default function TermsAndConditionsPage() {
         <ul>
             {/* User's email details are preserved as requested */}
             <li>By email: contact.cirql@gmail.com</li>
-            <li>By visiting this page on our website: <a href="/contacts">https://cirql.vercel.app/contacts</a></li>
+            <li>By visiting this page on our website: <Link href="/contacts">https://cirql.vercel.app/contacts</Link></li>
         </ul>
       </div>
     </BasicPageProvider>
