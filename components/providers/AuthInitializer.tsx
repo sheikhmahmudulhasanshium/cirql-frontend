@@ -1,4 +1,4 @@
-// components/AuthInitializer.tsx (FINAL VERSION)
+// components/providers/AuthInitializer.tsx
 
 'use client';
 
@@ -15,18 +15,11 @@ import {
   defaultRedirectPath
 } from '@/lib/auth-routes';
 
-/**
- * Helper function to check if a given pathname matches a dynamic route pattern.
- * e.g., matches '/profile/123' with '/profile/[id]'
- */
 function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
-  if (!pattern.includes('[')) return false; // Not a dynamic pattern
-
+  if (!pattern.includes('[')) return false;
   const pathSegments = pathname.split('/').filter(Boolean);
   const patternSegments = pattern.split('/').filter(Boolean);
-
   if (pathSegments.length !== patternSegments.length) return false;
-
   return patternSegments.every((segment, i) => {
     return segment.startsWith('[') || segment === pathSegments[i];
   });
@@ -42,7 +35,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     setIsMounted(true);
   }, []);
 
-  // Effect to initialize auth state from token (remains unchanged)
+  // Effect to initialize auth state from token
   useEffect(() => {
     if (state.status !== 'loading') return;
     const initializeAuth = async () => {
@@ -61,7 +54,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
         if (err.response?.status === 401) {
           try {
             const payload = JSON.parse(atob(storedToken.split('.')[1]));
-            if (payload.isTwoFactorAuthenticated === false) {
+            if (payload.isTwoFactorAuthenticationComplete === false) {
               dispatch({ type: 'SET_PARTIAL_LOGIN', payload: { token: storedToken } });
               return;
             }
@@ -81,18 +74,12 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
 
     const isAuthPage = authRoutes.includes(pathname);
     const is2FAPage = pathname === twoFactorAuthRoute;
-
-    // A page is considered public IF AND ONLY IF:
-    // 1. It is NOT in the explicit `protectedRoutes` list.
-    // 2. It IS in the `publicRoutes` list (or matches a dynamic public route).
     const isExplicitlyProtected = protectedRoutes.includes(pathname);
     const isConsideredPublic = !isExplicitlyProtected && publicRoutes.some(route =>
       route === pathname || isDynamicRouteMatch(pathname, route)
     );
 
     // --- Redirection Rules ---
-
-    // 1. For fully authenticated users
     if (state.status === 'authenticated') {
       if (isAuthPage || is2FAPage) {
         router.push(defaultRedirectPath);
@@ -100,7 +87,6 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
-    // 2. For users who must complete 2FA
     if (state.status === '2fa_required') {
       if (!is2FAPage) {
         router.push(twoFactorAuthRoute);
@@ -108,11 +94,11 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
       return;
     }
 
-    // 3. For unauthenticated users
     if (state.status === 'unauthenticated') {
-      // If the page is NOT public and NOT an auth-related page, it's a protected route.
-      // Redirect them to sign in.
       if (!isConsideredPublic && !isAuthPage && !is2FAPage) {
+        // --- THIS IS THE KEY CHANGE ---
+        // Before redirecting to sign-in, save the current path.
+        localStorage.setItem('preLoginRedirectPath', pathname);
         router.push('/sign-in');
       }
     }

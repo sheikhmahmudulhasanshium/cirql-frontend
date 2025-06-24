@@ -130,17 +130,13 @@ export function isApiErrorResponse(obj: unknown): obj is ApiErrorResponse {
     );
 }
 
+// src/lib/types.ts
+
 export enum Role {
   User = 'user',
   Admin = 'admin',
   Owner = 'owner',
 }
-
-// lib/types.ts
-
-// ... keep all your existing types (SettingsDto, etc.) ...
-
-// --- NEW: Add these types for the Support Ticketing System ---
 
 export enum TicketCategory {
   COMPLAINT = 'Complaint',
@@ -148,6 +144,7 @@ export enum TicketCategory {
   SUGGESTION = 'Suggestion',
   FEEDBACK = 'Feedback',
   TECHNICAL_SUPPORT = 'Technical Support',
+  INVESTMENT_OFFER = 'Investment Offer',
   OTHER = 'Other',
 }
 
@@ -157,30 +154,45 @@ export enum TicketStatus {
   CLOSED = 'Closed',
 }
 
-// Type for a single message within a ticket
-export interface TicketMessage {
-  _id: string;
-  content: string;
-  attachments: string[];
-  sender: {
-    _id: string;
-    firstName?: string;
-    picture?: string;
-    roles: string[]; // Helps identify admin replies
-  };
-  createdAt: string;
-}
-
-// Type for the list view on the main /contacts page
+// Type for the list view (both user and admin)
 export interface TicketSummary {
   _id: string;
   subject: string;
+  category: string;
   status: TicketStatus;
-  category: TicketCategory;
   updatedAt: string;
+  hasUnseenMessages: boolean; // For the notification dot
+  // The following are for the admin list view specifically
+  user?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  };
+  guestName?: string;
+  guestEmail?: string;
+}
+
+// Type for individual messages within a conversation
+export interface TicketMessage {
+  _id: string;
+  sender: {
+    _id:string;
+    firstName?: string;
+    picture?: string;
+    roles: Role[];
+  };
+  content: string;
+  createdAt: string;
 }
 
 // Type for the detailed conversation view
-export interface TicketDetails extends TicketSummary {
+export interface TicketDetails {
+  _id: string;
+  subject: string;
+  status: TicketStatus;
   messages: TicketMessage[];
+  // Timestamps to help the client calculate unseen messages
+  lastSeenByUserAt: string | null;
+  lastSeenByAdminAt: string | null;
 }

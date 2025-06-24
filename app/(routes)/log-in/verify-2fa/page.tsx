@@ -1,3 +1,4 @@
+// app/(routes)/log-in/verify-2fa/page.tsx
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SignOutButton } from '@/components/auth/sign-out-button';
+import { defaultRedirectPath } from '@/lib/auth-routes';
 
 function Verify2faContent() {
   const router = useRouter();
@@ -40,8 +42,17 @@ function Verify2faContent() {
     try {
       const response = await apiClient.post('/auth/2fa/authenticate', { code });
       const { accessToken, user } = response.data;
+
+      // --- THIS IS THE KEY CHANGE ---
+      // 1. Get the saved path from localStorage, or use the default.
+      const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
+      // 2. IMPORTANT: Clean up the stored path.
+      localStorage.removeItem('preLoginRedirectPath');
+      
       dispatch({ type: 'LOGIN', payload: { token: accessToken, user } });
-      router.push('/home');
+
+      // 3. Redirect to the determined path.
+      router.push(redirectPath);
       toast.success('Successfully authenticated!');
     } catch {
       toast.error('Invalid or expired authentication code. Please try again.');
