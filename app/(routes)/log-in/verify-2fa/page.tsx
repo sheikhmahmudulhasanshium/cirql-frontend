@@ -3,7 +3,7 @@
 
 import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/components/contexts/AuthContext';
+import { useAuth, User } from '@/components/contexts/AuthContext';
 import apiClient from '@/lib/apiClient';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SignOutButton } from '@/components/auth/sign-out-button';
-import { defaultRedirectPath } from '@/lib/auth-routes';
 
 function Verify2faContent() {
   const router = useRouter();
@@ -20,6 +19,16 @@ function Verify2faContent() {
   const { state, dispatch } = useAuth();
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleLoginSuccess = (user: User) => {
+    if (user.accountStatus === 'banned') {
+      router.push('/banned');
+    } else {
+      const redirectPath = localStorage.getItem('preLoginRedirectPath') || '/home';
+      localStorage.removeItem('preLoginRedirectPath');
+      router.push(redirectPath);
+    }
+  };
 
   useEffect(() => {
     const tokenFromUrl = searchParams.get('token');
@@ -31,7 +40,6 @@ function Verify2faContent() {
   useEffect(() => {
     if (state.status !== 'loading' && state.status !== '2fa_required') {
       router.push('/sign-in');
-      toast.error('Invalid session state for 2FA verification.');
     }
   }, [state.status, router]);
   
@@ -42,18 +50,9 @@ function Verify2faContent() {
     try {
       const response = await apiClient.post('/auth/2fa/authenticate', { code });
       const { accessToken, user } = response.data;
-
-      // --- THIS IS THE KEY CHANGE ---
-      // 1. Get the saved path from localStorage, or use the default.
-      const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
-      // 2. IMPORTANT: Clean up the stored path.
-      localStorage.removeItem('preLoginRedirectPath');
-      
       dispatch({ type: 'LOGIN', payload: { token: accessToken, user } });
-
-      // 3. Redirect to the determined path.
-      router.push(redirectPath);
       toast.success('Successfully authenticated!');
+      handleLoginSuccess(user);
     } catch {
       toast.error('Invalid or expired authentication code. Please try again.');
       setCode('');
@@ -62,6 +61,7 @@ function Verify2faContent() {
     }
   };
   
+  // --- START OF FIX: This section ensures the component always returns valid JSX ---
   if (state.status === 'loading') {
     return <div className="flex items-center justify-center min-h-screen">Loading Session...</div>;
   }
@@ -109,6 +109,7 @@ function Verify2faContent() {
       </main>
     </div>
   );
+  // --- END OF FIX ---
 }
 
 export default function Verify2faPage() {

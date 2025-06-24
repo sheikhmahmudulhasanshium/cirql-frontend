@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AdminUser, useAdminUsers, UserFilters } from '@/components/hooks/users/get-users-by-admin';
-import { ManageRolesDialog } from './admin-manage-roles-dialog';
 import { useDebounce } from '@/components/hooks/use-debounce';
 import { Badge } from '@/components/ui/badge';
+// --- FIX: Import the named export 'ManageUserDialog' ---
+import { ManageUserDialog } from './admin-manage-user-dialog';
 
-export default function ManageUsers() {
-  // --- FIX: Replaced useState with a constant since setPage was unused ---
+// --- FIX: Use a named export for this component ---
+export function ManageUsers() {
   const page = 1;
   const [filters, setFilters] = useState<UserFilters>({});
   
@@ -23,7 +24,6 @@ export default function ManageUsers() {
     search: debouncedSearch,
   }), [filters.accountStatus, debouncedSearch]);
 
-  // --- FIX: Removed unused 'pagination' from destructuring ---
   const { users, isLoading, error, refetch } = useAdminUsers(page, 10, stableFilters);
   
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
@@ -85,7 +85,7 @@ export default function ManageUsers() {
               </div>
               <Button size="sm" onClick={() => handleManageClick(user)} className="w-full sm:w-auto">
                 <UserCog className="mr-2 h-4 w-4" />
-                Manage Roles
+                Manage User
               </Button>
             </div>
           </div>
@@ -113,6 +113,7 @@ export default function ManageUsers() {
                 <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
+                    {/* --- FIX: Corrected typo in closing tag --- */}
                     <SelectItem value="banned">Banned</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
@@ -122,7 +123,7 @@ export default function ManageUsers() {
 
       {renderContent()}
       
-      <ManageRolesDialog
+      <ManageUserDialog
         user={selectedUser}
         isOpen={isDialogOpen}
         onClose={closeDialog}

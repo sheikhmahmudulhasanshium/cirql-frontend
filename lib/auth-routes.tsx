@@ -1,4 +1,4 @@
-// lib/auth-routes.ts (CORRECTED)
+// lib/auth-routes.ts
 
 /**
  * An array of routes that are accessible to the public.
@@ -9,12 +9,13 @@ export const publicRoutes: string[] = [
   '/about',
   '/faq',
   '/contacts',
+  '/banned', // --- ADDED ---
   '/sitemap.xml',
   '/privacy-policy',
   '/terms-and-conditions',
   '/sign-out',
   '/search',
-  '/profile/[id]', // Dynamic public route
+  '/profile/[id]',
 ];
 
 /**
@@ -23,9 +24,8 @@ export const publicRoutes: string[] = [
  */
 export const protectedRoutes: string[] = [
   '/home',
-  '/profile/me', // The exception to the dynamic public route
-  '/settings',    // <-- MOVED HERE
-  // Add other pages that need auth, like '/dashboard'
+  '/profile/me',
+  '/settings',
 ];
 
 /**
@@ -36,7 +36,6 @@ export const authRoutes: string[] = [
   '/sign-in',
   '/auth/google/callback',
   '/log-in',
-  // We will handle /log-in/verify-2fa separately using its own constant
 ];
 
 /**

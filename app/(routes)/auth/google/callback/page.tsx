@@ -1,12 +1,11 @@
-// app/auth/google/callback/page.tsx
+// app/(routes)/auth/google/callback/page.tsx
 'use client';
 
-import { useEffect, Suspense, useRef } from 'react';
+import { useEffect, Suspense, useRef, useCallback } from 'react'; // Import useCallback
 import { useSearchParams, useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
 import { toast } from 'sonner';
-import { useAuth } from '@/components/contexts/AuthContext';
-import { defaultRedirectPath } from '@/lib/auth-routes';
+import { useAuth, User } from '@/components/contexts/AuthContext';
 
 function AuthCallbackHandler() {
   const router = useRouter();
@@ -14,14 +13,24 @@ function AuthCallbackHandler() {
   const { dispatch } = useAuth();
   const hasProcessed = useRef(false);
 
+  // --- FIX: Wrap in useCallback for a stable function reference ---
+  const handleLoginSuccess = useCallback((user: User) => {
+    if (user.accountStatus === 'banned') {
+      router.push('/banned');
+    } else {
+      const redirectPath = localStorage.getItem('preLoginRedirectPath') || '/home';
+      localStorage.removeItem('preLoginRedirectPath');
+      router.push(redirectPath);
+    }
+  }, [router]); // router is a stable dependency
+
   useEffect(() => {
     if (hasProcessed.current) return;
+    hasProcessed.current = true;
 
     const token = searchParams.get('token');
     const error = searchParams.get('error');
     
-    hasProcessed.current = true;
-
     if (error) {
       toast.error(`Authentication failed: ${error}. Please try again.`);
       router.push('/sign-in');
@@ -32,19 +41,10 @@ function AuthCallbackHandler() {
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       apiClient.get('/auth/status')
         .then(response => {
-          const user = response.data;
-          
-          // --- THIS IS THE KEY CHANGE ---
-          // 1. Get the saved path from localStorage, or use the default.
-          const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
-          // 2. IMPORTANT: Clean up the stored path.
-          localStorage.removeItem('preLoginRedirectPath');
-          
+          const user = response.data as User;
           dispatch({ type: 'LOGIN', payload: { token, user } });
-          
-          // 3. Redirect to the determined path.
-          router.push(redirectPath);
           toast.success('Successfully logged in!');
+          handleLoginSuccess(user);
         })
         .catch(err => {
           console.error("Failed to fetch user status after callback", err);
@@ -56,7 +56,8 @@ function AuthCallbackHandler() {
       toast.error('Authentication callback was incomplete.');
       router.push('/sign-in');
     }
-  }, [router, searchParams, dispatch]);
+    // --- FIX: Add handleLoginSuccess to dependency array ---
+  }, [router, searchParams, dispatch, handleLoginSuccess]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

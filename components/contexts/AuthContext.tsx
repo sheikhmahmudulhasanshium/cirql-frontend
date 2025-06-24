@@ -1,3 +1,5 @@
+// components/contexts/AuthContext.tsx
+
 'use client';
 
 import { createContext, useReducer, Dispatch, useContext, ReactNode, useCallback } from 'react';
@@ -11,6 +13,9 @@ export interface User {
   picture?: string;
   roles: string[];
   is2FAEnabled: boolean;
+  // --- NEW PROPERTIES ---
+  accountStatus: 'active' | 'banned' | 'inactive';
+  banReason?: string;
 }
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';

@@ -1,12 +1,11 @@
 // components/providers/AuthInitializer.tsx
-
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import apiClient from '@/lib/apiClient';
 import { usePathname, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, User } from '../contexts/AuthContext';
 import {
   publicRoutes,
   protectedRoutes,
@@ -35,7 +34,16 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     setIsMounted(true);
   }, []);
 
-  // Effect to initialize auth state from token
+  const handleLoginSuccess = useCallback((user: User) => {
+    if (user.accountStatus === 'banned') {
+      router.push('/banned');
+    } else {
+      const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
+      localStorage.removeItem('preLoginRedirectPath');
+      router.push(redirectPath);
+    }
+  }, [router]);
+
   useEffect(() => {
     if (state.status !== 'loading') return;
     const initializeAuth = async () => {
@@ -45,28 +53,27 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
         return;
       }
       try {
-        const response = await apiClient.get('/auth/status', {
-          headers: { Authorization: `Bearer ${storedToken}` },
-        });
-        dispatch({ type: 'LOGIN', payload: { token: storedToken, user: response.data } });
-      } catch (error) {
-        const err = error as AxiosError;
-        if (err.response?.status === 401) {
+        const response = await apiClient.get('/auth/status');
+        const user = response.data as User;
+        dispatch({ type: 'LOGIN', payload: { token: storedToken, user } });
+        handleLoginSuccess(user);
+      } catch (err) {
+        const axiosError = err as AxiosError;
+        if (axiosError.response?.status === 401) {
           try {
             const payload = JSON.parse(atob(storedToken.split('.')[1]));
             if (payload.isTwoFactorAuthenticationComplete === false) {
               dispatch({ type: 'SET_PARTIAL_LOGIN', payload: { token: storedToken } });
               return;
             }
-          } catch { /* ignore parse error */ }
+          } catch { /* ignore */ }
         }
         dispatch({ type: 'LOGOUT' });
       }
     };
     initializeAuth();
-  }, [state.status, dispatch]);
+  }, [state.status, dispatch, handleLoginSuccess]);
 
-  // Main redirection logic effect
   useEffect(() => {
     if (!isMounted || state.status === 'loading') {
       return;
@@ -74,39 +81,41 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
 
     const isAuthPage = authRoutes.includes(pathname);
     const is2FAPage = pathname === twoFactorAuthRoute;
-    const isExplicitlyProtected = protectedRoutes.includes(pathname);
-    const isConsideredPublic = !isExplicitlyProtected && publicRoutes.some(route =>
-      route === pathname || isDynamicRouteMatch(pathname, route)
-    );
+    const isBannedPage = pathname === '/banned';
 
-    // --- Redirection Rules ---
     if (state.status === 'authenticated') {
-      if (isAuthPage || is2FAPage) {
-        router.push(defaultRedirectPath);
+      if (state.user?.accountStatus === 'banned') {
+        if (!isBannedPage) router.push('/banned');
+      } else {
+        if (isAuthPage || is2FAPage || isBannedPage) router.push(defaultRedirectPath);
       }
       return;
     }
 
     if (state.status === '2fa_required') {
-      if (!is2FAPage) {
-        router.push(twoFactorAuthRoute);
-      }
+      if (!is2FAPage) router.push(twoFactorAuthRoute);
       return;
     }
 
     if (state.status === 'unauthenticated') {
+      const isExplicitlyProtected = protectedRoutes.includes(pathname);
+      const isConsideredPublic = !isExplicitlyProtected && publicRoutes.some(route =>
+        route === pathname || isDynamicRouteMatch(pathname, route)
+      );
       if (!isConsideredPublic && !isAuthPage && !is2FAPage) {
-        // --- THIS IS THE KEY CHANGE ---
-        // Before redirecting to sign-in, save the current path.
         localStorage.setItem('preLoginRedirectPath', pathname);
         router.push('/sign-in');
       }
     }
-  }, [state.status, pathname, router, isMounted]);
+  }, [state.status, state.user, pathname, router, isMounted]);
 
   if (!isMounted || state.status === 'loading') {
     return <main className="bg-background text-foreground"><p className="text-center p-10">Loading Application...</p></main>;
   }
 
+  if (state.status === 'authenticated' && state.user?.accountStatus === 'banned' && pathname !== '/banned') {
+    return null; // Prevent flicker of protected pages for a banned user during redirect
+  }
+  
   return <>{children}</>;
 };

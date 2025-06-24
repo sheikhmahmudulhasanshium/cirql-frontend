@@ -6,10 +6,10 @@ import { useAuth } from '@/components/contexts/AuthContext';
 import Sidebar, { AdminView } from './admin-sidebar';
 import DashboardHeader from './dashboard-header';
 import DashboardHome from './dashboard-home';
-import ManageUsers from './admin-manage-users';
 import ManageContent from './admin-manage-content';
 import AppSettings from './admin-settings';
 import AdminMessages from './admin-messages'; // --- NEW: Import the messages component ---
+import { ManageUsers } from './admin-manage-users';
 
 const AdminLayout = () => {
   useAuth();
