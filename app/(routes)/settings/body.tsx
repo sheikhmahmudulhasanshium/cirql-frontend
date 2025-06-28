@@ -154,7 +154,8 @@ export default function Body() {
         setPendingChanges(prev => {
             const newChanges = { ...prev };
             const currentCategoryChanges = newChanges[category] || {};
-            // @ts-ignore
+            // FIX: Use @ts-expect-error instead of @ts-ignore.
+            // @ts-expect-error TS has difficulty correlating the generic 'category' with the specific 'settingKey' under the 'UpdateSettingDto' type.
             currentCategoryChanges[settingKey] = value;
             newChanges[category] = currentCategoryChanges;
             return newChanges;

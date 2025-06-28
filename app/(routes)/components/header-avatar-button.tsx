@@ -1,3 +1,4 @@
+// src/app/(routes)/components/header-avatar-button.tsx
 'use client';
 
 import { useState, useEffect } from "react";
@@ -57,6 +58,8 @@ const HeaderAvatarComponent = () => {
             window.location.reload();
 
         } catch (error) {
+            // FIX: Use the 'error' variable for logging to resolve the no-unused-vars error.
+            console.error("Failed to save theme preference:", error);
             toast.error("Failed to save theme preference.");
             // If saving fails, revert the optimistic changes.
             setOptimisticTheme(originalTheme);
