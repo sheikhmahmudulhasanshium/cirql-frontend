@@ -1,5 +1,4 @@
-// frontend/src/components/hooks/settings/get-settings-by-id.ts
-
+// src/components/hooks/settings/get-settings-by-id.ts
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import apiClient from '@/lib/apiClient';
@@ -12,7 +11,6 @@ export const useUserSettings = (userId: string | null | undefined) => {
 
   useEffect(() => {
     if (!userId) {
-      // No need to fetch, ensure state is clean
       setData(null);
       setIsLoading(false);
       setError(null);
@@ -32,18 +30,15 @@ export const useUserSettings = (userId: string | null | undefined) => {
           { signal: controller.signal }
         );
         setData(response.data);
-      } catch (err: unknown) { // --- FIX: Catch error as `unknown` instead of `any` ---
+      } catch (err: unknown) {
         if (axios.isCancel(err)) {
           console.log('Request canceled');
           return;
         }
         
-        // --- FIX: Type-safe error handling ---
-        // Check if the error is an instance of Error to safely access .message
         if (err instanceof Error) {
           setError(err);
         } else {
-          // If it's something else (e.g., `throw "string"`), create a new Error.
           setError(new Error('An unknown error occurred'));
         }
       } finally {

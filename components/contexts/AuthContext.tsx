@@ -1,5 +1,4 @@
-// components/contexts/AuthContext.tsx
-
+// src/components/contexts/AuthContext.tsx
 'use client';
 
 import { createContext, useReducer, Dispatch, useContext, ReactNode, useCallback } from 'react';
@@ -7,13 +6,13 @@ import apiClient from '@/lib/apiClient';
 
 export interface User {
   _id: string;
+  id?: string;
   email?: string;
   firstName?: string;
   lastName?: string;
   picture?: string;
   roles: string[];
   is2FAEnabled: boolean;
-  // --- NEW PROPERTIES ---
   accountStatus: 'active' | 'banned' | 'inactive';
   banReason?: string;
 }
@@ -42,13 +41,14 @@ const initialState: AuthState = {
 };
 
 const checkIsAdmin = (user: User | null): boolean => {
-  return user?.roles?.includes('admin') || user?.roles?.includes('owner') || false;
+  return user?.roles?.some(role => ['admin', 'owner'].includes(role)) || false;
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
       localStorage.setItem('authToken', action.payload.token);
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
       return {
         ...state,
         user: action.payload.user,
@@ -58,20 +58,16 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
       };
     case 'LOGOUT':
       localStorage.removeItem('authToken');
+      delete apiClient.defaults.headers.common['Authorization'];
       return {
-        ...state,
-        user: null,
-        token: null,
+        ...initialState,
         status: 'unauthenticated',
-        isAdmin: false,
       };
     case 'SET_STATUS':
-      return {
-        ...state,
-        status: action.payload,
-      };
+      return { ...state, status: action.payload };
     case 'SET_PARTIAL_LOGIN':
       localStorage.setItem('authToken', action.payload.token);
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
       return {
         ...state,
         token: action.payload.token,
@@ -100,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const refreshUser = useCallback(async () => {
-    if (state.token) {
+    if (state.status === 'authenticated' && state.token) {
       try {
         const response = await apiClient.get('/auth/status');
         dispatch({ type: 'UPDATE_USER', payload: { user: response.data } });
@@ -108,7 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         dispatch({ type: 'LOGOUT' });
       }
     }
-  }, [state.token, dispatch]);
+  }, [state.status, state.token, dispatch]);
 
   return (
     <AuthContext.Provider value={{ state, dispatch, refreshUser }}>

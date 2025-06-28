@@ -1,4 +1,4 @@
-// components/admin/admin-manage-tickets.tsx
+// components/admin/admin-messages.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,26 +6,10 @@ import apiClient from '@/lib/apiClient';
 import { Loader2, ServerCrash, Inbox, User, Mail, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { TicketSummary } from '@/lib/types'; // Using the correct TicketSummary from lib/types
 
-// Combined Ticket Type for Admin View
-interface AdminTicket {
-  _id: string;
-  subject: string;
-  category: string;
-  status: string;
-  updatedAt: string;
-  user?: { // This will exist for logged-in users
-    _id: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-  };
-  guestName?: string; // This will exist for guests
-  guestEmail?: string;
-}
-
-const AdminManageTickets = () => {
-  const [tickets, setTickets] = useState<AdminTicket[]>([]);
+const AdminMessages = () => {
+  const [tickets, setTickets] = useState<TicketSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -34,6 +18,7 @@ const AdminManageTickets = () => {
     setIsLoading(true);
     apiClient.get('/support/admin/tickets')
       .then(res => {
+        // The API returns a list of TicketSummary, which matches our type
         setTickets(res.data);
       })
       .catch(() => {
@@ -44,10 +29,10 @@ const AdminManageTickets = () => {
       });
   }, []);
 
-  const getSubmitterInfo = (ticket: AdminTicket) => {
+  const getSubmitterInfo = (ticket: TicketSummary) => {
     if (ticket.user) {
       return {
-        name: `${ticket.user.firstName || ''} ${ticket.user.lastName || ''}`.trim(),
+        name: `${ticket.user.firstName || ''} ${ticket.user.lastName || ''}`.trim() || 'Unnamed User',
         detail: ticket.user.email || 'Registered User',
         icon: <User className="h-5 w-5 text-primary" />,
       };
@@ -100,11 +85,14 @@ const AdminManageTickets = () => {
         return (
           <div key={ticket._id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
+                 {ticket.hasUnseenMessages && (
+                  <span className="h-2.5 w-2.5 bg-blue-500 rounded-full flex-shrink-0 self-start mt-1.5" title="New messages"></span>
+                 )}
                 <div className="flex-shrink-0">{submitter.icon}</div>
-                <div>
-                  <p className="font-semibold">{ticket.subject}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="min-w-0">
+                  <p className="font-semibold truncate">{ticket.subject}</p>
+                  <p className="text-sm text-muted-foreground truncate">
                     From: {submitter.name} ({submitter.detail})
                   </p>
                 </div>
@@ -129,4 +117,4 @@ const AdminManageTickets = () => {
   );
 };
 
-export default AdminManageTickets;
+export default AdminMessages;

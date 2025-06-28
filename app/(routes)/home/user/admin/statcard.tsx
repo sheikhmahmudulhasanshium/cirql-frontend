@@ -3,10 +3,14 @@
 
 import { LucideProps } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+// --- FIX: Import ReactNode to use as a type ---
+import { ReactNode } from 'react';
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  // --- FIX: Changed type from 'string | number' to 'ReactNode' ---
+  // This allows passing strings, numbers, or complex JSX elements like a styled <span>.
+  value: ReactNode;
   icon: React.ComponentType<LucideProps>;
   description?: string;
   isLoading?: boolean;
@@ -24,6 +28,7 @@ const StatCard = ({ title, value, icon: Icon, description, isLoading }: StatCard
         <Icon className="h-5 w-5 text-muted-foreground" />
       </div>
       <div>
+        {/* This div now correctly renders a string, number, or JSX element */}
         <div className="text-2xl font-bold">{value}</div>
         {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>

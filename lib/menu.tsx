@@ -2,7 +2,7 @@
 
 // @/lib/menu.tsx
 
-import { BellIcon, HomeIcon, MessageSquareIcon, PhoneIcon,  } from "lucide-react";
+import {HomeIcon, MessageSquareIcon, PhoneIcon,  } from "lucide-react";
 import { NavMenu } from "./types";
 
 
@@ -11,7 +11,7 @@ export const navbarMenu: NavMenu[] = [
     { href: '/chats', label: 'Chats', icon: <MessageSquareIcon /> },
     { href: '/calls', label: 'Calls', icon: <PhoneIcon /> },
 
-    { href: '/notifications', label: 'Notifications', icon: <BellIcon /> },
+    //{ href: '/notifications', label: 'Notifications', icon: <BellIcon /> },
 
    // { href: '/settings', label: 'Settings', icon: <SettingsIcon /> },
 ];

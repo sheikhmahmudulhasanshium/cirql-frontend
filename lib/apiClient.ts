@@ -35,8 +35,8 @@ apiClient.interceptors.response.use(
       const status = error.response.status;
       const url = error.config.url;
       if (status === 401 && url && url.endsWith('/auth/status')) {
-        // This is an expected error for an invalid/expired token, no need to log it as a big red error.
-        // The AuthInitializer will handle the logout.
+        // This is an expected error for an invalid/expired token.
+        // The AuthInitializer will handle the logout. No need to log it.
       } else {
         console.error(`[apiClient] Response Error: ${status} for ${url}`, error.response.data);
       }

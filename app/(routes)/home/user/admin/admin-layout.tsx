@@ -1,15 +1,16 @@
-// components/admin/admin-layout.tsx
+// app/(routes)/home/user/admin/admin-layout.tsx
 'use client';
 
 import { useState } from 'react';
 import { useAuth } from '@/components/contexts/AuthContext';
+// FIX: Corrected import path
+import AdminManageAnnouncements from './admin-manage-announcements';
 import Sidebar, { AdminView } from './admin-sidebar';
-import DashboardHeader from './dashboard-header';
 import DashboardHome from './dashboard-home';
-import ManageContent from './admin-manage-content';
-import AppSettings from './admin-settings';
-import AdminMessages from './admin-messages'; // --- NEW: Import the messages component ---
 import { ManageUsers } from './admin-manage-users';
+import AdminMessages from './admin-messages';
+import AppSettings from './admin-settings';
+import DashboardHeader from './dashboard-header';
 
 const AdminLayout = () => {
   useAuth();
@@ -21,8 +22,8 @@ const AdminLayout = () => {
     switch (activeView) {
       case 'dashboard': return <DashboardHome />;
       case 'users': return <ManageUsers />;
-      case 'content': return <ManageContent />;
-      case 'messages': return <AdminMessages />; // --- NEW: Add the case for the new view ---
+      case 'content': return <AdminManageAnnouncements />;
+      case 'messages': return <AdminMessages />;
       case 'settings': return <AppSettings />;
       default: return <DashboardHome />;
     }

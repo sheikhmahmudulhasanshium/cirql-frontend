@@ -1,9 +1,13 @@
+// src/components/hooks/settings/patch-settings.ts
 import apiClient from '@/lib/apiClient';
-import { SettingsDto, UpdateSettingDto } from '@/lib/types';
+import { SettingsDto, UpdateSettingDto, UpdateThemeDto } from '@/lib/types';
 
 export const updateMySettings = async (updates: UpdateSettingDto): Promise<SettingsDto> => {
-  // Simple, clean, and the token is added automatically.
-  // Error handling is managed by the try/catch in the component.
   const { data } = await apiClient.patch<SettingsDto>('/settings/me', updates);
   return data;
+};
+
+export const updateMyTheme = async (updates: UpdateThemeDto): Promise<SettingsDto> => {
+    const { data } = await apiClient.patch<SettingsDto>('/settings/theme', updates);
+    return data;
 };

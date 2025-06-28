@@ -1,4 +1,4 @@
-// components/providers/AuthInitializer.tsx
+// src/components/providers/AuthInitializer.tsx
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
@@ -13,6 +13,7 @@ import {
   twoFactorAuthRoute,
   defaultRedirectPath
 } from '@/lib/auth-routes';
+import { Loader2 } from 'lucide-react';
 
 function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
   if (!pattern.includes('[')) return false;
@@ -23,6 +24,13 @@ function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
     return segment.startsWith('[') || segment === pathSegments[i];
   });
 }
+
+const FullScreenLoader = ({ message }: { message: string }) => (
+    <main className="bg-background text-foreground flex flex-col items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">{message}</p>
+    </main>
+);
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { state, dispatch } = useAuth();
@@ -56,23 +64,24 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
         const response = await apiClient.get('/auth/status');
         const user = response.data as User;
         dispatch({ type: 'LOGIN', payload: { token: storedToken, user } });
-        handleLoginSuccess(user);
       } catch (err) {
         const axiosError = err as AxiosError;
         if (axiosError.response?.status === 401) {
-          try {
-            const payload = JSON.parse(atob(storedToken.split('.')[1]));
-            if (payload.isTwoFactorAuthenticationComplete === false) {
-              dispatch({ type: 'SET_PARTIAL_LOGIN', payload: { token: storedToken } });
-              return;
-            }
-          } catch { /* ignore */ }
+            try {
+                if (storedToken && storedToken.split('.').length === 3) {
+                    const payload = JSON.parse(atob(storedToken.split('.')[1]));
+                    if (payload.isTwoFactorAuthenticationComplete === false) {
+                        dispatch({ type: 'SET_PARTIAL_LOGIN', payload: { token: storedToken } });
+                        return;
+                    }
+                }
+            } catch { /* ignore parsing errors, proceed to logout */ }
         }
         dispatch({ type: 'LOGOUT' });
       }
     };
     initializeAuth();
-  }, [state.status, dispatch, handleLoginSuccess]);
+  }, [state.status, dispatch]);
 
   useEffect(() => {
     if (!isMounted || state.status === 'loading') {
@@ -87,7 +96,9 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
       if (state.user?.accountStatus === 'banned') {
         if (!isBannedPage) router.push('/banned');
       } else {
-        if (isAuthPage || is2FAPage || isBannedPage) router.push(defaultRedirectPath);
+        if (state.user && (isAuthPage || is2FAPage || isBannedPage)) {
+            handleLoginSuccess(state.user);
+        }
       }
       return;
     }
@@ -98,23 +109,31 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     }
 
     if (state.status === 'unauthenticated') {
-      const isExplicitlyProtected = protectedRoutes.includes(pathname);
-      const isConsideredPublic = !isExplicitlyProtected && publicRoutes.some(route =>
+      const isExplicitlyProtected = protectedRoutes.some(route =>
+        pathname.startsWith(route) && (pathname.length === route.length || pathname[route.length] === '/')
+      );
+      
+      const isPublic = publicRoutes.some(route =>
         route === pathname || isDynamicRouteMatch(pathname, route)
       );
-      if (!isConsideredPublic && !isAuthPage && !is2FAPage) {
+
+      if (isExplicitlyProtected && !isPublic) {
         localStorage.setItem('preLoginRedirectPath', pathname);
         router.push('/sign-in');
       }
     }
-  }, [state.status, state.user, pathname, router, isMounted]);
+  }, [state.status, state.user, pathname, router, isMounted, handleLoginSuccess]);
 
   if (!isMounted || state.status === 'loading') {
-    return <main className="bg-background text-foreground"><p className="text-center p-10">Loading Application...</p></main>;
+    return <FullScreenLoader message="Initializing Session..." />;
+  }
+  
+  if (state.status === '2fa_required' && pathname !== twoFactorAuthRoute) {
+    return <FullScreenLoader message="Redirecting to 2FA verification..." />;
   }
 
   if (state.status === 'authenticated' && state.user?.accountStatus === 'banned' && pathname !== '/banned') {
-    return null; // Prevent flicker of protected pages for a banned user during redirect
+    return <FullScreenLoader message="Redirecting..." />;
   }
   
   return <>{children}</>;

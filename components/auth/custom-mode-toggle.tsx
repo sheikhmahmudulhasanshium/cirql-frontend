@@ -1,11 +1,9 @@
+// src/components/auth/custom-mode-toggle.tsx
 "use client"
 
 import * as React from "react"
-// --- FIX START: Import the Check icon ---
-import { Moon, Sun, Check } from "lucide-react"
-// --- FIX END ---
+import { Moon, Sun, Check } from "lucide-react" // Removed 'Laptop'
 import { useTheme } from "next-themes"
-
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -21,12 +19,11 @@ interface CustomModeToggleProps {
 }
 
 export function CustomModeToggle({ value, onChange, disabled }: CustomModeToggleProps) {
-  // We still use useTheme to apply the theme change to the UI instantly.
   const { setTheme } = useTheme();
 
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme); // Apply theme visually
-    onChange(newTheme); // Trigger the save logic in the parent
+    setTheme(newTheme);
+    onChange(newTheme);
   };
 
   return (
@@ -39,21 +36,18 @@ export function CustomModeToggle({ value, onChange, disabled }: CustomModeToggle
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        {/* --- FIX START: Use the 'value' prop to show a checkmark --- */}
-        <DropdownMenuItem onClick={() => handleThemeChange("light")}>
+        <DropdownMenuItem onSelect={() => handleThemeChange("light")}>
           {value === 'light' ? <Check className="mr-2 h-4 w-4" /> : <div className="mr-2 h-4 w-4" />}
           Light
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange("dark")}>
+        <DropdownMenuItem onSelect={() => handleThemeChange("dark")}>
           {value === 'dark' ? <Check className="mr-2 h-4 w-4" /> : <div className="mr-2 h-4 w-4" />}
           Dark
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => handleThemeChange("system")}>
-          {/* Changed 'Custom' to 'System' to match value */}
+        <DropdownMenuItem onSelect={() => handleThemeChange("system")}>
           {value === 'system' ? <Check className="mr-2 h-4 w-4" /> : <div className="mr-2 h-4 w-4" />}
           System
         </DropdownMenuItem>
-        {/* --- FIX END --- */}
       </DropdownMenuContent>
     </DropdownMenu>
   )

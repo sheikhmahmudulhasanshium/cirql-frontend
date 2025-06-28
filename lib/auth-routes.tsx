@@ -1,5 +1,4 @@
-// lib/auth-routes.ts
-
+// src/lib/auth-routes.ts
 /**
  * An array of routes that are accessible to the public.
  * These do not require authentication.
@@ -9,13 +8,16 @@ export const publicRoutes: string[] = [
   '/about',
   '/faq',
   '/contacts',
-  '/banned', // --- ADDED ---
+  '/banned',
   '/sitemap.xml',
   '/privacy-policy',
   '/terms-and-conditions',
   '/sign-out',
   '/search',
   '/profile/[id]',
+  '/announcements',
+  '/announcements/[id]',
+  '/users/directory',
 ];
 
 /**
@@ -26,6 +28,8 @@ export const protectedRoutes: string[] = [
   '/home',
   '/profile/me',
   '/settings',
+  '/admin/analytics',
+  '/notifications',
 ];
 
 /**
@@ -36,12 +40,13 @@ export const authRoutes: string[] = [
   '/sign-in',
   '/auth/google/callback',
   '/log-in',
+  '/reset-password',
 ];
 
 /**
  * The path for the 2FA verification page.
  */
-export const twoFactorAuthRoute: string = '/log-in/verify-2fa';
+export const twoFactorAuthRoute: string = '/log-in/2fa';
 
 /**
  * The default redirect path after a user logs in.

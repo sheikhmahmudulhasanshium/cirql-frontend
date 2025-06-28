@@ -1,10 +1,12 @@
+// src/components/providers/basic-body-provider.tsx
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useUserSettings } from "../hooks/settings/get-settings-by-id"; // Assuming this exists
+import { useUserSettings } from "../hooks/settings/get-settings-by-id";
 import { useTheme } from "next-themes";
+import { authRoutes, twoFactorAuthRoute } from "@/lib/auth-routes"; // Import auth routes
 
 interface BasicBodyProviderProps {
     children: ReactNode;
@@ -12,7 +14,7 @@ interface BasicBodyProviderProps {
 
 const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     const router = useRouter();
-    // FIX: Destructure state from useAuth, then get the user and status.
+    const pathname = usePathname(); // Get the current path
     const { state } = useAuth();
     const { user, status: authStatus } = state;
     const authIsLoading = authStatus === 'loading';
@@ -26,20 +28,20 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
         }
     }, [settings, setTheme]);
 
-    // This effect is now handled more robustly by the AuthInitializer,
-    // but keeping it here provides a good secondary check.
     useEffect(() => {
-        if (!authIsLoading && !user) {
-            router.push('/sign-in');
+        // FIX: Add a check to prevent redirection if already on an auth page.
+        const isAuthPage = authRoutes.includes(pathname) || pathname === twoFactorAuthRoute;
+        
+        if (!authIsLoading && !user && !isAuthPage) {
+            router.push('/sign-in'); // Corrected path
         }
-    }, [user, authIsLoading, router]);
+    }, [user, authIsLoading, router, pathname]);
 
     if (authIsLoading) {
         return <main className="bg-background text-foreground"><p className="text-center p-10">Authenticating...</p></main>;
     }
 
     if (!user) {
-        // This will be briefly rendered while the redirect happens.
         return null; 
     }
 

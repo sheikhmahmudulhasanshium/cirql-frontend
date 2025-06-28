@@ -1,3 +1,4 @@
+// src/components/auth/Disable2faDialog.tsx
 'use client';
 
 import { useState } from 'react';
@@ -15,6 +16,8 @@ import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/apiClient';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AxiosError } from 'axios';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Disable2faDialogProps {
   isOpen: boolean;
@@ -23,22 +26,36 @@ interface Disable2faDialogProps {
 }
 
 export const Disable2faDialog = ({ isOpen, onClose, onSuccess }: Disable2faDialogProps) => {
-  const [code, setCode] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
+  const { state } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState('');
+
+  // --- THIS IS THE KEY LOGIC ---
+  // Check if the authenticated user has a password set.
+  // We need to cast the user object to include the optional password field for this check.
+  const hasPassword = !!(state.user as { password?: string })?.password;
 
   const handleDisable = async () => {
-    if (code.length < 6) return;
+    // If the user has a password, it must not be empty.
+    if (hasPassword && !password) {
+        toast.error("Password is required to disable 2FA.");
+        return;
+    }
+    
     setIsLoading(true);
-    setError('');
-
     try {
-      await apiClient.post('/auth/2fa/disable', { code });
-      toast.success('Two-factor authentication has been disabled.');
+      // The DTO on the backend is flexible. We can send an empty password
+      // field or a filled one. The backend will handle it correctly.
+      await apiClient.post('/auth/2fa/disable', { password });
+      
+      toast.success('Two-Factor Authentication has been disabled.');
+      setPassword('');
       onSuccess();
       onClose();
-    } catch {
-      setError('Invalid authentication code. Please try again.');
+    } catch (err) {
+      const error = err as AxiosError<{ message: string }>;
+      const errorMessage = error.response?.data?.message || 'Could not disable 2FA. Please try again.';
+      toast.error('Action Failed', { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -50,26 +67,32 @@ export const Disable2faDialog = ({ isOpen, onClose, onSuccess }: Disable2faDialo
         <DialogHeader>
           <DialogTitle>Disable Two-Factor Authentication?</DialogTitle>
           <DialogDescription>
-            For your security, please enter a code from your authenticator app to confirm this action.
+            {hasPassword
+              ? "For your security, please enter your current password to confirm this action."
+              : "Are you sure you want to disable the extra security layer on your account?"}
           </DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-2">
-            <Label htmlFor="disable-code">Authentication Code</Label>
-            <Input
-                id="disable-code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="123456"
-                maxLength={8}
-                autoComplete="one-time-code"
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-        </div>
+
+        {/* Conditionally render the password input */}
+        {hasPassword && (
+          <div className="py-4 space-y-2">
+              <Label htmlFor="password-confirm">Current Password</Label>
+              <Input
+                  id="password-confirm"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  disabled={isLoading}
+              />
+          </div>
+        )}
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button variant="destructive" onClick={handleDisable} disabled={isLoading || code.length < 6}>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
+          <Button variant="destructive" onClick={handleDisable} disabled={isLoading || (hasPassword && !password)}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Disable 2FA
+            Yes, Disable 2FA
           </Button>
         </DialogFooter>
       </DialogContent>
