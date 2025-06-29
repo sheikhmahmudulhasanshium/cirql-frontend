@@ -15,7 +15,10 @@ import DashboardHeader from './dashboard-header';
 const AdminLayout = () => {
   useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  // --- START OF FIX ---
+  // Removed the extra equals sign from this line.
   const [activeView, setActiveView] = useState<AdminView>('dashboard');
+  // --- END OF FIX ---
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const renderContent = () => {
@@ -39,7 +42,7 @@ const AdminLayout = () => {
         isMobileMenuOpen={isMobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
       />
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-col flex-1 min-w-0">
         <DashboardHeader
           setMobileMenuOpen={setMobileMenuOpen}
           activeView={activeView}

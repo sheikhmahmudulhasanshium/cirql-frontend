@@ -6,7 +6,14 @@ import apiClient from '@/lib/apiClient';
 import { Loader2, ServerCrash, Inbox, User, Mail, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { TicketSummary } from '@/lib/types'; // Using the correct TicketSummary from lib/types
+import { TicketSummary } from '@/lib/types';
+// --- START: MODIFICATION ---
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+// --- END: MODIFICATION ---
 
 const AdminMessages = () => {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -15,37 +22,49 @@ const AdminMessages = () => {
   const router = useRouter();
 
   useEffect(() => {
+    // --- START: MODIFICATION ---
+    // More robust useEffect to handle Strict Mode
+    const controller = new AbortController();
     setIsLoading(true);
-    apiClient.get('/support/admin/tickets')
+
+    apiClient.get('/support/admin/tickets', { signal: controller.signal })
       .then(res => {
-        // The API returns a list of TicketSummary, which matches our type
         setTickets(res.data);
       })
-      .catch(() => {
-        setError('Could not load support tickets.');
+      .catch((err) => {
+        if (err.name !== 'CanceledError') {
+          setError('Could not load support tickets.');
+        }
       })
       .finally(() => {
         setIsLoading(false);
       });
+      
+    return () => {
+      controller.abort();
+    };
+    // --- END: MODIFICATION ---
   }, []);
 
+  // --- START: MODIFICATION ---
+  // Updated helper function to match the fixed version
   const getSubmitterInfo = (ticket: TicketSummary) => {
     if (ticket.user) {
       return {
+        isGuest: false,
         name: `${ticket.user.firstName || ''} ${ticket.user.lastName || ''}`.trim() || 'Unnamed User',
-        detail: ticket.user.email || 'Registered User',
-        icon: <User className="h-5 w-5 text-primary" />,
+        picture: ticket.user.picture,
+        fallback: (ticket.user.firstName?.charAt(0) || 'U').toUpperCase(),
       };
     }
-    if (ticket.guestName) {
-      return {
-        name: ticket.guestName,
-        detail: ticket.guestEmail || 'Guest User',
-        icon: <Mail className="h-5 w-5 text-accent-foreground" />,
-      };
-    }
-    return { name: 'Anonymous', detail: 'No submitter info', icon: <User className="h-5 w-5 text-muted-foreground" /> };
+    return {
+      isGuest: true,
+      name: ticket.guestName || 'Anonymous Guest',
+      picture: undefined,
+      fallback: 'G',
+    };
   };
+  // --- END: MODIFICATION ---
 
   if (isLoading) {
     return (
@@ -85,20 +104,34 @@ const AdminMessages = () => {
         return (
           <div key={ticket._id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-4 min-w-0">
-                 {ticket.hasUnseenMessages && (
-                  <span className="h-2.5 w-2.5 bg-blue-500 rounded-full flex-shrink-0 self-start mt-1.5" title="New messages"></span>
-                 )}
-                <div className="flex-shrink-0">{submitter.icon}</div>
-                <div className="min-w-0">
+              {/* --- START: MODIFICATION --- */}
+              {/* This is the new, robust layout for the left side */}
+              <div className="flex items-start gap-3 min-w-0 flex-1">
+                <div className="flex-shrink-0 pt-1">
+                  {submitter.isGuest ? (
+                    <Mail className="h-6 w-6 text-muted-foreground" />
+                  ) : (
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={submitter.picture} />
+                      <AvatarFallback>{submitter.fallback}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="font-semibold truncate">{ticket.subject}</p>
                   <p className="text-sm text-muted-foreground truncate">
-                    From: {submitter.name} ({submitter.detail})
+                    By: {submitter.name}
                   </p>
                 </div>
               </div>
+              {/* --- END: MODIFICATION --- */}
               <div className="text-right flex-shrink-0">
-                <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full">{ticket.status}</div>
+                {ticket.hasUnseenMessages && (
+                  <div className="flex items-center justify-end gap-2 text-xs text-blue-600 font-medium mb-1">
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span> New
+                  </div>
+                )}
+                <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full whitespace-nowrap">{ticket.status}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {new Date(ticket.updatedAt).toLocaleString()}
                 </p>

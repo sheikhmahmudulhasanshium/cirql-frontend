@@ -6,7 +6,15 @@ import apiClient from '@/lib/apiClient';
 import { Loader2, ServerCrash, Inbox, User, Mail, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
-import { TicketSummary } from '@/lib/types'; // Use the updated TicketSummary type
+import { TicketSummary } from '@/lib/types';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/components/ui/avatar";
+// --- START OF FIX: Removed unused 'get' import ---
+// import { get } from 'http'; 
+// --- END OF FIX ---
 
 const AdminManageTickets = () => {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -15,35 +23,47 @@ const AdminManageTickets = () => {
   const router = useRouter();
 
   useEffect(() => {
+    // This is a more robust way to handle the API call in Strict Mode
+    const controller = new AbortController();
     setIsLoading(true);
-    apiClient.get('/support/admin/tickets')
+
+    apiClient.get('/support/admin/tickets', { signal: controller.signal })
       .then(res => {
         setTickets(res.data);
       })
-      .catch(() => {
-        setError('Could not load support tickets.');
+      .catch((err) => {
+        // Don't set an error state if the request was intentionally canceled
+        if (err.name !== 'CanceledError') {
+          setError('Could not load support tickets.');
+        }
       })
       .finally(() => {
         setIsLoading(false);
       });
+      
+    // The cleanup function will run on unmount
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   const getSubmitterInfo = (ticket: TicketSummary) => {
     if (ticket.user) {
       return {
+        isGuest: false,
         name: `${ticket.user.firstName || ''} ${ticket.user.lastName || ''}`.trim() || 'Unnamed User',
-        detail: ticket.user.email || 'Registered User',
-        icon: <User className="h-5 w-5 text-primary" />,
+        detail: ticket.user.email || 'No Email Provided',
+        picture: ticket.user.picture,
+        fallback: (ticket.user.firstName?.charAt(0) || 'U').toUpperCase(),
       };
     }
-    if (ticket.guestName) {
-      return {
-        name: ticket.guestName,
-        detail: ticket.guestEmail || 'Guest User',
-        icon: <Mail className="h-5 w-5 text-accent-foreground" />,
-      };
-    }
-    return { name: 'Anonymous', detail: 'No submitter info', icon: <User className="h-5 w-5 text-muted-foreground" /> };
+    return {
+      isGuest: true,
+      name: ticket.guestName || 'Anonymous Guest',
+      detail: ticket.guestEmail || 'No Email Provided',
+      picture: undefined,
+      fallback: 'G',
+    };
   };
 
   if (isLoading) {
@@ -84,22 +104,35 @@ const AdminManageTickets = () => {
         return (
           <div key={ticket._id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             <div className="flex justify-between items-start gap-4">
-              <div className="flex items-center gap-4 min-w-0"> {/* min-w-0 prevents flexbox overflow */}
+              <div className="flex items-start gap-4 min-w-0">
                  {ticket.hasUnseenMessages ? (
-                  <span className="h-2.5 w-2.5 bg-blue-500 rounded-full flex-shrink-0" title="New messages"></span>
+                  <span className="h-2.5 w-2.5 bg-blue-500 rounded-full flex-shrink-0 mt-1" title="New messages"></span>
                 ) : (
-                  <span className="h-2.5 w-2.5 flex-shrink-0"></span>
+                  <span className="h-2.5 w-2.5 flex-shrink-0 mt-1"></span>
                 )}
-                <div className="flex-shrink-0">{submitter.icon}</div>
-                <div className="min-w-0">
+                <div className="flex-shrink-0">
+                  {submitter.isGuest ? (
+                    <Mail className="h-6 w-6 text-muted-foreground" />
+                  ) : (
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={submitter.picture} />
+                      <AvatarFallback>{submitter.fallback}</AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                {/* --- START OF FIX: Simplified Layout --- */}
+                <div className="min-w-0 flex-1">
                   <p className="font-semibold truncate">{ticket.subject}</p>
+                  {/* The long "From:" line is removed to prevent overflow. */}
+                  {/* We now just show the name, which is much shorter. */}
                   <p className="text-sm text-muted-foreground truncate">
-                    From: {submitter.name} ({submitter.detail})
+                    By: {submitter.name}
                   </p>
                 </div>
+                {/* --- END OF FIX --- */}
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full">{ticket.status}</div>
+                <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full whitespace-nowrap">{ticket.status}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   {new Date(ticket.updatedAt).toLocaleString()}
                 </p>

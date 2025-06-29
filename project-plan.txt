@@ -1,16 +1,33 @@
-Changelog - v1.2.1 (2024-06-29)
-This is a critical security and stability release that overhauls the Two-Factor Authentication (2FA) deactivation process, hardens backend validation, and resolves a series of logic flaws that were causing application crashes and blocking core functionality.
-🔒 Security Enhancements
-Secure OTP-Based 2FA Deactivation Implemented: The entire flow for disabling 2FA has been rebuilt from the ground up to eliminate a critical security and logic flaw.
-Password Verification Removed: The previous, flawed implementation that incorrectly required a password for deactivation has been completely removed.
-New Secure Endpoint (POST /auth/2fa/request-disable-code): A new endpoint has been introduced that allows a logged-in user to request a secure One-Time Passcode (OTP), which is then sent to their registered email address. This step verifies user intent and control over the account.
-Hardened Disable Endpoint (POST /auth/2fa/disable): The final deactivation endpoint no longer accepts a password. It now requires the 6-digit OTP from the email, which is securely verified on the backend against the hashed code in the database before proceeding. This flow is now secure and consistent for all users, regardless of whether they signed up via Google or email/password.
-🐛 Critical Bug Fixes & Stability Improvements
-Fixed 500 Internal Server Error on 2FA Login: Resolved a fatal crash (TypeError: Cannot read properties of undefined (reading 'length')) that occurred during the final step of 2FA login.
-Root Cause: The User schema had select: false on the loginHistory field, preventing it from being fetched from the database. The updateLastLogin service method then crashed when trying to access this non-existent property.
-Solution: The database queries in UsersService (findByIdForAuth and findOneByEmailForAuth) have been updated to explicitly select +loginHistory, ensuring the complete user document is available and preventing the crash.
-Resolved 400 Bad Request on API Calls: Fixed persistent validation errors that were blocking functionality like disabling 2FA.
-Root Cause: A logic mismatch between frontend payloads and backend validation rules. The frontend was sending an empty string ("") for optional fields, which failed validation rules like @MinLength().
-Solution: The frontend logic in Disable2faDialog.tsx was made more intelligent. It now conditionally builds the request payload, completely omitting optional fields when they are not needed, satisfying the backend's @IsOptional() validation rule correctly.
-Corrected TypeScript Type Mismatches: Resolved a build-blocking TypeScript error (Property 'googleId' does not exist on type 'User') in the frontend.
-Solution: The User interface within the frontend's AuthContext.tsx was updated to include the optional googleId property, bringing the frontend type definition in sync with the actual data structure provided by the backend. This ensures type safety and allows for more robust conditional logic in components.
+Changelog - v1.2.2 (2024-06-30)
+minor Update
+ui update for contact and admin panel
+
+
+To-Do: Create "My Activity" Dashboard for Users
+Goal: Give users a personal dashboard where they can see their own activity on the platform, like a "digital footprint." This will include stats like login frequency and total interactions, shown with cool charts and graphs.
+Phase 1: Start Recording User Actions (Backend Only)
+(This phase is completely invisible to users and has zero impact on the UI. It's the "data collection" step.)
+Plan:
+Create an "Activity Log" in the Database: Build a new, separate table (schema) in the database just for recording simple user actions.
+Start Logging Key Events: In the backend code, add a single line of code to the "Activity Log" every time a user does something important, like:
+Logging in.
+Sending a message.
+Viewing a profile.
+Result: The application will begin silently and efficiently collecting activity data in the background.
+Phase 2: Build the User-Facing Dashboard (Future Feature)
+(This is the phase where we build the actual page for the user to see.)
+Plan:
+Build a "Data Summarizer" on the Backend: Create a new API endpoint (e.g., /users/me/activity) that can quickly count and summarize the raw data from the "Activity Log" for a specific user. It will return simple numbers, like { "loginsLast30Days": 10, "messagesSent": 55 }.
+Design the "My Activity" Page: On the frontend, create a new page where users can see their stats.
+Add Charts: Use the Recharts library (which is already in the project) to turn the summarized numbers from the API into nice-looking bar charts and graphs.
+Result: A beautiful, engaging "My Activity" page where users can visualize their own engagement on the platform, similar to features on sites like YouTube or Facebook.
+
+ignore for now
+To-Do: Add "Talking Feedback" for Settings Toggles
+Goal: When a user with a screen reader flips a switch in their settings (like "Dark Mode" or "Private Account"), we want the website to announce the change out loud, for example, "Dark mode enabled."
+Plan:
+Create an "Announcer" Component: Build a special, invisible component that can speak messages to screen readers.
+Add it to the Settings Page: Place this Announcer component on the settings page so it's ready to work.
+Connect the Toggles: Update the logic for the settings toggles. When a switch is flipped, tell the Announcer what to say.
+User Control: The Announcer will only speak if the "Screen Reader Support" switch is turned ON in the user's settings. If it's off, it will stay silent.
+Result: This will make the settings page much more accessible and user-friendly for visually impaired users without changing the website's appearance or SEO.

@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
 import { useAuth } from '@/components/contexts/AuthContext';
-// --- FIX: Import the Role enum ---
 import { TicketDetails, TicketMessage, TicketStatus, Role } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,7 +17,6 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
 const MessageBubble = ({ message, isUserMessage }: { message: TicketMessage, isUserMessage: boolean }) => {
-  // --- FIX: Use the imported Role enum for type-safe checking ---
   const isAdminReply = message.sender.roles.includes(Role.Admin) || message.sender.roles.includes(Role.Owner);
   
   return (
@@ -31,7 +29,10 @@ const MessageBubble = ({ message, isUserMessage }: { message: TicketMessage, isU
       )}
       <div className={`flex flex-col ${isUserMessage ? 'items-end' : 'items-start'}`}>
         <div className={`p-3 rounded-lg max-w-md md:max-w-xl ${isUserMessage ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-          <p className="text-sm" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+          {/* --- START OF FIX --- */}
+          {/* Added the 'break-words' class to handle long, unbroken strings */}
+          <p className="text-sm break-words" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+          {/* --- END OF FIX --- */}
         </div>
         <p className="text-xs text-muted-foreground mt-1">
           {isAdminReply && !isUserMessage ? `${message.sender.firstName} (Support)` : message.sender.firstName}

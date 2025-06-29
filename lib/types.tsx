@@ -277,6 +277,7 @@ export interface TicketSummary {
     firstName?: string;
     lastName?: string;
     email?: string;
+    picture?: string;
   };
   guestName?: string;
   guestEmail?: string;
