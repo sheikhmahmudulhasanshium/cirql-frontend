@@ -2,7 +2,37 @@ Changelog - v1.2.2 (2024-06-30)
 minor Update
 ui update for contact and admin panel
 
-
+To-Do: Create a Throttled & Efficient "My Activity" Dashboard for Users
+Goal: Give users a personal activity dashboard, but do it in a way that prevents server overload and minimizes database costs.
+Phase 1: Safe & Low-Cost Data Recording (Backend Only)
+(This phase is designed to be extremely lightweight and will not crash your server.)
+Plan:
+Create an "Activity Log" with Safeguards:
+Use a Capped Collection: When creating the new table (schema) in MongoDB, we will define it as a "Capped Collection." This is a crucial step. A capped collection has a fixed size (e.g., 20MB). When it gets full, it automatically deletes the oldest entries to make room for new ones.
+Result: Your database will never grow infinitely large with log data. This keeps storage costs predictable and low, and prevents performance from degrading over time.
+Use a "Fire-and-Forget" Logging Service:
+The new ActivityLogService on the backend will be designed to be non-blocking. When a user logs in, the logEvent call will be sent to the database, but the main login process will not wait for it to finish.
+Result: Even if the database is slow for a moment, it will never slow down or crash the user's main action (like logging in or sending a message).
+Be Selective about What to Log:
+We will only log a few, high-value events to start. We will avoid logging extremely frequent actions (like every single click).
+Initial Events to Log:
+User Login
+User Profile View (throttled - see next point)
+Ticket Message Sent
+Result: We collect meaningful data without spamming the database with millions of trivial events.
+Throttle High-Frequency Events (Optional but Recommended):
+For actions that could happen very quickly (like a user repeatedly viewing profiles), we can add a "throttler" on the backend. This means the backend will only record one VIEW_PROFILE event for a specific user every, for example, 30 seconds.
+Result: This prevents a single hyperactive user from overwhelming the logging system, further protecting your server.
+Phase 2: Efficient Data Reading (Future Feature)
+(This phase ensures that showing the dashboard to the user is also fast and cheap.)
+Plan:
+Backend Summarizes, Frontend Displays:
+The backend API endpoint will do all the heavy lifting. It will use highly optimized database commands (the "Aggregation Pipeline") to count and summarize the logs.
+It will not send thousands of raw log entries to the frontend. It will send a tiny, pre-calculated summary like { "totalLogins": 15 }.
+Result: The amount of data transferred is minimal, which is fast for the user and cheap for your server costs. The frontend's job remains simple: just display the numbers it's given.
+Cache the Results:
+For the user's activity dashboard, the data doesn't need to be real-time to the millisecond. We can cache the results on the backend for, say, 1 hour. If a user refreshes their activity page 10 times in 30 minutes, we only hit the database once. The other 9 times, we serve the result instantly from memory.
+Result: This dramatically reduces the number of database queries, which is the biggest factor in both server stress and cost.
 To-Do: Create "My Activity" Dashboard for Users
 Goal: Give users a personal dashboard where they can see their own activity on the platform, like a "digital footprint." This will include stats like login frequency and total interactions, shown with cool charts and graphs.
 Phase 1: Start Recording User Actions (Backend Only)

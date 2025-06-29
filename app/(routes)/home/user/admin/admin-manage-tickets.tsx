@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/apiClient';
-import { Loader2, ServerCrash, Inbox, User, Mail, LifeBuoy } from 'lucide-react';
+import { Loader2, ServerCrash, Inbox, Mail, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { TicketSummary } from '@/lib/types';
