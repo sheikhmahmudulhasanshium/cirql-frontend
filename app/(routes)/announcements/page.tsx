@@ -1,15 +1,16 @@
-import BasicPageProvider from "@/components/providers/basic-page-provider";
-import Header from "../components/header-sign-out";
-import Footer from "../components/footer";
+// app/(routes)/announcements/page.tsx
+// This file is now a simple Server Component.
 
-const AnnouncementsPage = () => {
-    return ( 
-        <BasicPageProvider header={<Header/>} footer={<Footer/>}>
-            <div>
+import { Metadata } from "next";
+import Body from "./body";
+// Metadata is safe here. This page doesn't import Header or Footer anymore.
+export const metadata: Metadata = {
+  title: '📢 Announcements',
+  description: 'Stay tuned for updates and announcements from the CiRQL team!',
+};
 
-            </div>
-        </BasicPageProvider>
-     );
+// This page now only needs to render the client-side list.
+// The Header, Footer, and BasicPageProvider are handled by the new layout.tsx.
+export default function AnnouncementsPage() {
+    return <Body />;
 }
- 
-export default AnnouncementsPage;

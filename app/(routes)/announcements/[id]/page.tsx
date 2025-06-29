@@ -1,15 +1,17 @@
-import BasicPageProvider from "@/components/providers/basic-page-provider";
-import Footer from "../../components/footer";
-import Header from "../../components/header-sign-out";
+import { Metadata } from "next";
+import Body from "./body";
+export const metadata: Metadata = {
+  title: ' 📢 Announcement',
+  description: 'Stay tuned for updates and announcements!',
+};
 
 const AnnouncementPage = () => {
-    return ( 
-        <BasicPageProvider header={<Header/>} footer={<Footer/>}>
-            <div>
-
-            </div>
-        </BasicPageProvider>
-     );
+    
+return (                  
+<Body />
+      
+    );          
+    
 }
  
 export default AnnouncementPage;

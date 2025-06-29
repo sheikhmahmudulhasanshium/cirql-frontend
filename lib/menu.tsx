@@ -19,7 +19,8 @@ export const navbarMenu: NavMenu[] = [
 
 export const footerLinks = [
         { href: "/about", label: "About" },
-        { href: "/faq", label: "FAQs" },
+        { href: "/announcements", label: "Announcements" },
+
         { href: "/terms-and-conditions", label: "Terms & Conditions" },
         { href: "/privacy-policy", label: "Privacy Policy" },
         { href: "/sitemap.xml", label: "Sitemap" },
