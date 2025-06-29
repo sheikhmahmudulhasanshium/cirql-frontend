@@ -15,6 +15,7 @@ export interface User {
   is2FAEnabled: boolean;
   accountStatus: 'active' | 'banned' | 'inactive';
   banReason?: string;
+  googleId?: string; // FIX: Added the missing optional property
 }
 
 export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';

@@ -14,10 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import apiClient from '@/lib/apiClient';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MailCheck, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
-import { useAuth } from '../contexts/AuthContext';
 
 interface Disable2faDialogProps {
   isOpen: boolean;
@@ -26,75 +25,117 @@ interface Disable2faDialogProps {
 }
 
 export const Disable2faDialog = ({ isOpen, onClose, onSuccess }: Disable2faDialogProps) => {
-  const { state } = useAuth();
+  const [step, setStep] = useState<'initial' | 'verify'>('initial');
   const [isLoading, setIsLoading] = useState(false);
-  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  // --- THIS IS THE KEY LOGIC ---
-  // Check if the authenticated user has a password set.
-  // We need to cast the user object to include the optional password field for this check.
-  const hasPassword = !!(state.user as { password?: string })?.password;
+  const resetState = () => {
+    setStep('initial');
+    setIsLoading(false);
+    setCode('');
+    setError(null);
+  };
+  
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
+  const handleRequestCode = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await apiClient.post('/auth/2fa/request-disable-code');
+      toast.success("Verification Code Sent", {
+        description: "Please check your email for a 6-digit code."
+      });
+      setStep('verify');
+    } catch (err) {
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'Failed to send code. Please try again.';
+      setError(errorMessage);
+      toast.error('Could not send code', { description: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleDisable = async () => {
-    // If the user has a password, it must not be empty.
-    if (hasPassword && !password) {
-        toast.error("Password is required to disable 2FA.");
-        return;
+    if (code.length !== 6) {
+      setError("Please enter the 6-digit code.");
+      return;
     }
-    
     setIsLoading(true);
+    setError(null);
     try {
-      // The DTO on the backend is flexible. We can send an empty password
-      // field or a filled one. The backend will handle it correctly.
-      await apiClient.post('/auth/2fa/disable', { password });
-      
+      await apiClient.post('/auth/2fa/disable', { code });
       toast.success('Two-Factor Authentication has been disabled.');
-      setPassword('');
-      onSuccess();
-      onClose();
+      onSuccess(); // Refreshes user data
+      handleClose(); // Resets and closes dialog
     } catch (err) {
-      const error = err as AxiosError<{ message: string }>;
-      const errorMessage = error.response?.data?.message || 'Could not disable 2FA. Please try again.';
-      toast.error('Action Failed', { description: errorMessage });
+      const axiosError = err as AxiosError<{ message: string }>;
+      const errorMessage = axiosError.response?.data?.message || 'An error occurred.';
+      setError(errorMessage);
+      toast.error('Verification Failed', { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Disable Two-Factor Authentication?</DialogTitle>
-          <DialogDescription>
-            {hasPassword
-              ? "For your security, please enter your current password to confirm this action."
-              : "Are you sure you want to disable the extra security layer on your account?"}
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Conditionally render the password input */}
-        {hasPassword && (
-          <div className="py-4 space-y-2">
-              <Label htmlFor="password-confirm">Current Password</Label>
-              <Input
-                  id="password-confirm"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={isLoading}
-              />
-          </div>
+        {step === 'initial' && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Confirm 2FA Deactivation</DialogTitle>
+              <DialogDescription>
+                This is a sensitive action. To continue, we need to verify it&apos;s you by sending a code to your registered email address.
+              </DialogDescription>
+            </DialogHeader>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <DialogFooter className='pt-4'>
+              <Button variant="outline" onClick={handleClose} disabled={isLoading}>Cancel</Button>
+              <Button variant="destructive" onClick={handleRequestCode} disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldAlert className="mr-2 h-4 w-4" />}
+                Send Verification Code
+              </Button>
+            </DialogFooter>
+          </>
         )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
-          <Button variant="destructive" onClick={handleDisable} disabled={isLoading || (hasPassword && !password)}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Yes, Disable 2FA
-          </Button>
-        </DialogFooter>
+        {step === 'verify' && (
+           <>
+            <DialogHeader>
+              <DialogTitle>Enter Verification Code</DialogTitle>
+              <DialogDescription>
+                Enter the 6-digit code we sent to your email to finalize deactivation. The code will expire in 2 minutes.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-2">
+                <Label htmlFor="verification-code">Verification Code</Label>
+                <Input
+                    id="verification-code"
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                    placeholder="123456"
+                    maxLength={6}
+                    autoComplete="one-time-code"
+                    className="text-center text-lg tracking-widest"
+                    disabled={isLoading}
+                />
+                {error && <p className="text-sm text-destructive pl-1">{error}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={handleClose} disabled={isLoading}>Cancel</Button>
+              <Button variant="destructive" onClick={handleDisable} disabled={isLoading || code.length !== 6}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MailCheck className="mr-2 h-4 w-4" />}
+                Verify & Disable 2FA
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

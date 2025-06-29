@@ -1,4 +1,3 @@
-// app/(routes)/log-in/2fa/page.tsx
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -43,14 +42,26 @@ function Verify2faContent() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || code.length < 6 || isLoading) return;
+    // Add a check to ensure we have the partial token in our state before proceeding.
+    if (!code || code.length < 6 || isLoading || !state.token) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      // FIX: The API endpoint now correctly identifies the user from the partial token
-      // which is automatically included by the apiClient interceptor.
-      const response = await apiClient.post('/auth/2fa/verify-code', { code });
+      // --- START OF FIX ---
+      // Explicitly pass the partial token from the AuthContext state in the headers.
+      // This guarantees we are sending the correct token for this specific verification
+      // step, rather than relying on a potentially old token in localStorage.
+      const response = await apiClient.post(
+        '/auth/2fa/verify-code',
+        { code },
+        {
+          headers: {
+            Authorization: `Bearer ${state.token}`,
+          },
+        },
+      );
+      // --- END OF FIX ---
       
       const { accessToken, user } = response.data as { accessToken: string, user: User };
       dispatch({ type: 'LOGIN', payload: { token: accessToken, user } });
