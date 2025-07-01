@@ -14,6 +14,8 @@ import {
   defaultRedirectPath
 } from '@/lib/auth-routes';
 import { Loader2 } from 'lucide-react';
+import { SettingsProvider } from '../hooks/settings/get-settings';
+import { TakeABreakReminder } from '@/app/(routes)/components/take-a-break-reminder';
 
 function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
   if (!pattern.includes('[')) return false;
@@ -31,6 +33,19 @@ const FullScreenLoader = ({ message }: { message: string }) => (
         <p className="mt-4 text-muted-foreground">{message}</p>
     </main>
 );
+
+// THIS COMPONENT IS NO LONGER NEEDED, as we are moving the provider up.
+// We can simplify and remove it.
+/*
+const AuthenticatedSessionManager = ({ children }: { children: ReactNode }) => {
+  return (
+    <SettingsProvider>
+      <TakeABreakReminder />
+      {children}
+    </SettingsProvider>
+  );
+};
+*/
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { state, dispatch } = useAuth();
@@ -136,5 +151,14 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     return <FullScreenLoader message="Redirecting..." />;
   }
   
-  return <>{children}</>;
+  // --- THIS IS THE FIX ---
+  // Wrap ALL children with the SettingsProvider. The provider itself will handle
+  // the logic of fetching data only when the user is authenticated.
+  // The TakeABreakReminder must also be inside this provider to get the settings.
+  return (
+      <SettingsProvider>
+        {state.status === 'authenticated' && <TakeABreakReminder />}
+        {children}
+      </SettingsProvider>
+  );
 };

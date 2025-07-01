@@ -20,7 +20,7 @@ import {
     BellRing, ShieldCheck, UserCog, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
     LogIn, Text, Type,
-    View, Loader2, History
+    View, Loader2, History, Coffee
 } from 'lucide-react';
 import { useAuth } from '@/components/contexts/AuthContext';
 import { SettingsDto, UpdateSettingDto } from '@/lib/types';
@@ -110,13 +110,12 @@ export default function Body() {
             try {
                 const savedSettings = await updateMySettings(changesToSave);
                 setSettings(savedSettings);
-                setPendingChanges({}); // Clear changes after successful save
+                setPendingChanges({});
                 toast.success('Settings saved');
             } catch (err) {
-                // FIX: Enhanced error logging for debugging
                 const axiosError = err as AxiosError;
                 const errorDescription = axiosError.response?.data 
-                    ? JSON.stringify(axiosError.response.data) 
+                    ? JSON.stringify(axiosError.response.data, null, 2)
                     : axiosError.message;
                 toast.error('Failed to save settings', { 
                   description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white">{errorDescription}</code></pre>
@@ -134,7 +133,6 @@ export default function Body() {
         }
     }, [settings, applyTheme]);
 
-    // FIX: This function now correctly builds a nested object.
     const handleSettingChange = <K extends SettingsObjectKey>(
         category: K,
         settingKey: keyof EditableSettings[K],
@@ -142,24 +140,24 @@ export default function Body() {
     ) => {
         if (!settings) return;
 
-        // Optimistically update the local UI state for responsiveness
-        setSettings(prev => {
-            if (!prev) return null;
-            const newSettings = { ...prev };
-            newSettings[category] = { ...newSettings[category], [settingKey]: value };
-            return newSettings;
+        setSettings(currentSettings => {
+            if (!currentSettings) return null;
+            return {
+                ...currentSettings,
+                [category]: {
+                    ...(currentSettings[category] as object),
+                    [settingKey]: value,
+                },
+            };
         });
 
-        // Update the pending changes object with the correct nested structure
-        setPendingChanges(prev => {
-            const newChanges = { ...prev };
-            const currentCategoryChanges = newChanges[category] || {};
-            // FIX: Use @ts-expect-error instead of @ts-ignore.
-            // @ts-expect-error TS has difficulty correlating the generic 'category' with the specific 'settingKey' under the 'UpdateSettingDto' type.
-            currentCategoryChanges[settingKey] = value;
-            newChanges[category] = currentCategoryChanges;
-            return newChanges;
-        });
+        setPendingChanges(currentPending => ({
+            ...currentPending,
+            [category]: {
+                ...(currentPending[category] as object),
+                [settingKey]: value,
+            },
+        }));
         
         debouncedSaveSettings();
     };
@@ -219,6 +217,11 @@ export default function Body() {
         );
     }
     
+    const wellbeingSettings = settings.wellbeingPreferences || {
+        isBreakReminderEnabled: false,
+        breakReminderIntervalMinutes: 30,
+    };
+    
     return (
         <>
             <Enable2faDialog
@@ -249,6 +252,33 @@ export default function Body() {
                         <div className="flex items-center justify-between"><Label className="flex-1 font-medium">Appearance</Label><CustomModeToggle value={settings.uiCustomizationPreferences.theme} onChange={handleThemeChange} disabled={isSaving}/></div>
                         <div className="flex items-center justify-between"><Label htmlFor="animations" className="flex-1 cursor-pointer font-medium">Enable Animations</Label><Switch id="animations" checked={settings.uiCustomizationPreferences.animationsEnabled} onCheckedChange={(c) => handleSettingChange('uiCustomizationPreferences', 'animationsEnabled', c)} disabled={isSaving}/></div>
                         <div className="flex items-center justify-between"><Label htmlFor="layout" className="flex-1 font-medium">Default Layout</Label><Select value={settings.uiCustomizationPreferences.layout} onValueChange={(v) => handleSettingChange('uiCustomizationPreferences', 'layout', v as 'list' | 'grid')} disabled={isSaving}><SelectTrigger id="layout" className="w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="list">List View</SelectItem><SelectItem value="grid">Grid View</SelectItem></SelectContent></Select></div>
+                    </div>
+                </section>
+                <Separator />
+
+                <section className="space-y-6">
+                    <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Coffee className="mr-2 h-5 w-5 text-muted-foreground"/> Wellbeing {isSaving && <Loader2 className="ml-2 h-4 w-4 text-muted-foreground animate-spin"/>}</h2>
+                    <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="break-reminder" className="flex-1 cursor-pointer font-medium">Enable “Take a Break” Reminders</Label>
+                            <Switch id="break-reminder" checked={wellbeingSettings.isBreakReminderEnabled} onCheckedChange={(c) => handleSettingChange('wellbeingPreferences', 'isBreakReminderEnabled', c)} disabled={isSaving}/>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor="break-interval" className="flex-1 font-medium">Reminder Interval</Label>
+                            <Select 
+                                value={String(wellbeingSettings.breakReminderIntervalMinutes)} 
+                                onValueChange={(v) => handleSettingChange('wellbeingPreferences', 'breakReminderIntervalMinutes', parseInt(v, 10) as 15 | 30 | 45 | 60)} 
+                                disabled={isSaving || !wellbeingSettings.isBreakReminderEnabled}
+                            >
+                                <SelectTrigger id="break-interval" className="w-[180px]"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="15">Every 15 minutes</SelectItem>
+                                    <SelectItem value="30">Every 30 minutes</SelectItem>
+                                    <SelectItem value="45">Every 45 minutes</SelectItem>
+                                    <SelectItem value="60">Every 60 minutes</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </section>
                 <Separator />

@@ -1,15 +1,12 @@
 // src/lib/types.ts
 import { ReactNode } from "react";
 
-// --- START: MODIFIED FOR V1.1.0 ---
-// Core User type used throughout the app
 export enum Role {
   User = 'user',
   Admin = 'admin',
   Owner = 'owner',
 }
 
-// Updated User type to include new security fields
 export interface User {
   _id: string;
   id: string;
@@ -23,7 +20,6 @@ export interface User {
   banReason?: string;
 }
 
-// Type for the new Admin Analytics Dashboard
 export interface UserAnalyticsData {
   totalUsers: number;
   statusCounts: {
@@ -41,8 +37,14 @@ export interface UserAnalyticsData {
     inactive: number;
   };
 }
-// --- END: MODIFIED FOR V1.1.0 ---
 
+// Add the missing interface for the user's activity summary.
+export interface UserActivitySummaryDto {
+  logins: number;
+  profileViews: number;
+  messagesSent: number;
+  screenTimeMinutes: number;
+}
 
 export interface NavMenu {
     icon: ReactNode,
@@ -53,9 +55,7 @@ export interface NavMenu {
 export interface NotificationPreferencesDto {
   emailNotifications: boolean;
   pushNotifications: boolean;
-  // --- START: MODIFIED FOR V1.1.0 ---
-  allowAnnouncementEmails: boolean; // For granular email control
-  // --- END: MODIFIED FOR V1.1.0 ---
+  allowAnnouncementEmails: boolean;
 }
 
 export interface AccountSettingsPreferencesDto {
@@ -83,6 +83,13 @@ export interface UiCustomizationPreferencesDto {
   theme: 'light' | 'dark' | 'system';
 }
 
+// --- ADDED: New type for Wellbeing settings ---
+export interface WellbeingPreferencesDto {
+  isBreakReminderEnabled: boolean;
+  breakReminderIntervalMinutes: 15 | 30 | 45 | 60;
+}
+// --- END ADDED ---
+
 export interface SettingsDto {
   _id: string;
   userId: string;
@@ -93,6 +100,7 @@ export interface SettingsDto {
   accessibilityOptionsPreferences: AccessibilityOptionsPreferencesDto;
   contentPreferences: ContentPreferencesDto;
   uiCustomizationPreferences: UiCustomizationPreferencesDto;
+  wellbeingPreferences: WellbeingPreferencesDto; // --- ADDED ---
   createdAt: string;
   updatedAt: string;
 }
@@ -105,9 +113,9 @@ export type UpdateSettingDto = {
   accessibilityOptionsPreferences?: Partial<AccessibilityOptionsPreferencesDto>;
   contentPreferences?: Partial<ContentPreferencesDto>;
   uiCustomizationPreferences?: Partial<UiCustomizationPreferencesDto>;
+  wellbeingPreferences?: Partial<WellbeingPreferencesDto>; // --- ADDED ---
 };
 
-// FIX: Added the missing type definition
 export interface UpdateThemeDto {
   theme: 'light' | 'dark' | 'system';
 }
@@ -121,11 +129,11 @@ export enum AnnouncementType {
 
 export interface Announcement {
     _id: string;
-    id: string; // From virtual property
+    id: string;
     title: string;
     content: string;
     type: AnnouncementType;
-    visible: boolean; // Admin can see hidden ones
+    visible: boolean;
     expirationDate?: string | null;
     imageUrl?: string;
     linkUrl?: string;
@@ -145,8 +153,6 @@ export interface CreateAnnouncementDto {
 
 export type UpdateAnnouncementDto = Partial<CreateAnnouncementDto>;
 
-// --- START: MODIFIED FOR V1.1.0 ---
-// New types for the Notification System
 export enum NotificationType {
   WELCOME = 'welcome',
   WELCOME_BACK = 'welcome_back',
@@ -172,7 +178,6 @@ export interface Notification {
   updatedAt: string;
 }
 
-// New types for the Social Module
 export interface PublicProfile {
     id: string;
     firstName?: string;
@@ -186,7 +191,7 @@ export interface SocialProfile {
     friends: PublicProfile[];
     followers: PublicProfile[];
     following: PublicProfile[];
-    blockedUsers: string[]; // Just the IDs
+    blockedUsers: string[];
 }
 
 export enum FriendRequestStatus {
@@ -203,7 +208,6 @@ export interface FriendRequest {
     createdAt: string;
 }
 
-// Helper enum for UI state management of social buttons
 export enum UserRelationStatus {
   SELF,
   FRIENDS,
@@ -212,7 +216,6 @@ export enum UserRelationStatus {
   NOT_FRIENDS,
   BLOCKED,
 }
-// --- END: MODIFIED FOR V1.1.0 ---
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -224,7 +227,6 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   }
 }
-
 
 export interface AnnouncementsFilterParams {
     type?: AnnouncementType;
@@ -295,6 +297,10 @@ export interface TicketMessage {
   createdAt: string;
 }
 
+// src/lib/types.ts
+
+// ... (all your existing types from the top of the file) ...
+
 export interface TicketDetails {
   _id: string;
   subject: string;
@@ -302,4 +308,37 @@ export interface TicketDetails {
   messages: TicketMessage[];
   lastSeenByUserAt: string | null;
   lastSeenByAdminAt: string | null;
+}
+
+// --- ADD THE FOLLOWING NEW TYPES ---
+// src/lib/types.ts
+
+// ... (all existing types) ...
+
+// --- ADD THE FOLLOWING NEW TYPES ---
+
+export type AnalyticsPeriod = '1m' | '12h' | '1d' | '7d' | '30d' | '365d';
+export interface WeeklyGrowthDto {
+  newUsers: number;
+  percentageChange: number;
+}
+
+export interface ActiveUserDto {
+  userId: string;
+  firstName?: string;
+  lastName?: string;
+  picture?: string;
+  activityCount: number;
+}
+
+export interface AdminAnalyticsDto {
+  totalUsers: number;
+  bannedUsers: number;
+  weeklyGrowth: WeeklyGrowthDto;
+  mostActiveUsers: ActiveUserDto[];
+}
+
+export interface GrowthChartDataDto {
+  date: string;
+  count: number;
 }

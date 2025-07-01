@@ -61,3 +61,43 @@ Add it to the Settings Page: Place this Announcer component on the settings page
 Connect the Toggles: Update the logic for the settings toggles. When a switch is flipped, tell the Announcer what to say.
 User Control: The Announcer will only speak if the "Screen Reader Support" switch is turned ON in the user's settings. If it's off, it will stay silent.
 Result: This will make the settings page much more accessible and user-friendly for visually impaired users without changing the website's appearance or SEO.
+
+Changelog - v1.3.0 (2024-07-02)
+This is a major feature release that introduces the "My Activity" dashboard for users and a new "Wellbeing" settings category. It also includes significant backend optimizations for performance and critical bug fixes for frontend state management.
+✨ New Features
+"My Activity" Dashboard for Users
+Users can now navigate to a personal dashboard to view a summary of their platform activity over the last 7 days.
+The dashboard displays key metrics including:
+Total Logins
+Profiles Viewed
+Support Messages Sent
+Total Screen Time (in minutes)
+Activity data is visualized with a new bar chart for an engaging user experience.
+"Take a Break" Wellbeing Reminder
+A new "Wellbeing" section has been added to the user settings page.
+Users can now enable a non-invasive, YouTube-style popup that reminds them to take a break.
+The reminder interval is fully configurable by the user (15, 30, 45, or 60 minutes).
+The popup includes options to "Snooze" the reminder for 5 minutes or "Dismiss" it until the next interval.
+Screen Time Tracking
+A new "heartbeat" system has been implemented on the frontend to efficiently track user screen time in the background. This data populates the "Screen Time" metric on the "My Activity" dashboard.
+🛠️ Backend Improvements & Refactors
+Efficient Activity Logging Service
+A new ActivityModule was created to handle all user activity logging.
+The activity_logs database collection is now a Capped Collection, which prevents the database from growing infinitely, ensuring stable long-term performance and predictable storage costs.
+Logging is performed in a "fire-and-forget" manner to ensure user actions (like logging in) are never slowed down by the logging process.
+Optimized & Cached API Endpoints
+A new endpoint (GET /activity/me) was created to efficiently provide a summary of a user's activity using MongoDB's Aggregation Pipeline.
+A new admin-only endpoint (GET /activity/admin/analytics) was added to provide high-level user statistics.
+A simple, package-free in-memory caching system was implemented in the ActivityService to cache API responses for 1 hour, dramatically reducing database load.
+Robust Settings Updates
+The SettingsService update method was refactored to correctly handle partial updates to nested objects (like wellbeingPreferences). It now uses a type-safe flattening mechanism to update specific fields without overwriting other data in the same nested object.
+🐛 Bug Fixes
+Fixed Settings State Synchronization
+Resolved a critical bug where having multiple <SettingsProvider> instances created two separate sources of truth for user settings. This was the root cause of the "Take a Break" reminder not triggering correctly after being enabled. The redundant provider on the settings page has been removed, ensuring a single global state.
+Fixed Reminder Switch Logic
+Fixed the bug where changing the reminder interval (e.g., from 30 to 15 minutes) would cause the "Enable Reminder" switch to turn off. This was resolved by the backend fix for handling nested object updates.
+Stabilized Reminder Timer
+Corrected the useEffect dependency array in the TakeABreakReminder component. The timer is no longer reset by unrelated state changes, ensuring it fires at the correct user-defined interval.
+⏪ Reverted Features
+Removed "Talking Feedback" Feature
+The Announcer component and its related logic for providing audio feedback to screen reader users have been removed from the settings page to de-scope the feature for now.
