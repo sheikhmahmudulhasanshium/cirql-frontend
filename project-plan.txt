@@ -1,103 +1,39 @@
-Changelog - v1.2.2 (2024-06-30)
-minor Update
-ui update for contact and admin panel
-
-To-Do: Create a Throttled & Efficient "My Activity" Dashboard for Users
-Goal: Give users a personal activity dashboard, but do it in a way that prevents server overload and minimizes database costs.
-Phase 1: Safe & Low-Cost Data Recording (Backend Only)
-(This phase is designed to be extremely lightweight and will not crash your server.)
-Plan:
-Create an "Activity Log" with Safeguards:
-Use a Capped Collection: When creating the new table (schema) in MongoDB, we will define it as a "Capped Collection." This is a crucial step. A capped collection has a fixed size (e.g., 20MB). When it gets full, it automatically deletes the oldest entries to make room for new ones.
-Result: Your database will never grow infinitely large with log data. This keeps storage costs predictable and low, and prevents performance from degrading over time.
-Use a "Fire-and-Forget" Logging Service:
-The new ActivityLogService on the backend will be designed to be non-blocking. When a user logs in, the logEvent call will be sent to the database, but the main login process will not wait for it to finish.
-Result: Even if the database is slow for a moment, it will never slow down or crash the user's main action (like logging in or sending a message).
-Be Selective about What to Log:
-We will only log a few, high-value events to start. We will avoid logging extremely frequent actions (like every single click).
-Initial Events to Log:
-User Login
-User Profile View (throttled - see next point)
-Ticket Message Sent
-Result: We collect meaningful data without spamming the database with millions of trivial events.
-Throttle High-Frequency Events (Optional but Recommended):
-For actions that could happen very quickly (like a user repeatedly viewing profiles), we can add a "throttler" on the backend. This means the backend will only record one VIEW_PROFILE event for a specific user every, for example, 30 seconds.
-Result: This prevents a single hyperactive user from overwhelming the logging system, further protecting your server.
-Phase 2: Efficient Data Reading (Future Feature)
-(This phase ensures that showing the dashboard to the user is also fast and cheap.)
-Plan:
-Backend Summarizes, Frontend Displays:
-The backend API endpoint will do all the heavy lifting. It will use highly optimized database commands (the "Aggregation Pipeline") to count and summarize the logs.
-It will not send thousands of raw log entries to the frontend. It will send a tiny, pre-calculated summary like { "totalLogins": 15 }.
-Result: The amount of data transferred is minimal, which is fast for the user and cheap for your server costs. The frontend's job remains simple: just display the numbers it's given.
-Cache the Results:
-For the user's activity dashboard, the data doesn't need to be real-time to the millisecond. We can cache the results on the backend for, say, 1 hour. If a user refreshes their activity page 10 times in 30 minutes, we only hit the database once. The other 9 times, we serve the result instantly from memory.
-Result: This dramatically reduces the number of database queries, which is the biggest factor in both server stress and cost.
-To-Do: Create "My Activity" Dashboard for Users
-Goal: Give users a personal dashboard where they can see their own activity on the platform, like a "digital footprint." This will include stats like login frequency and total interactions, shown with cool charts and graphs.
-Phase 1: Start Recording User Actions (Backend Only)
-(This phase is completely invisible to users and has zero impact on the UI. It's the "data collection" step.)
-Plan:
-Create an "Activity Log" in the Database: Build a new, separate table (schema) in the database just for recording simple user actions.
-Start Logging Key Events: In the backend code, add a single line of code to the "Activity Log" every time a user does something important, like:
-Logging in.
-Sending a message.
-Viewing a profile.
-Result: The application will begin silently and efficiently collecting activity data in the background.
-Phase 2: Build the User-Facing Dashboard (Future Feature)
-(This is the phase where we build the actual page for the user to see.)
-Plan:
-Build a "Data Summarizer" on the Backend: Create a new API endpoint (e.g., /users/me/activity) that can quickly count and summarize the raw data from the "Activity Log" for a specific user. It will return simple numbers, like { "loginsLast30Days": 10, "messagesSent": 55 }.
-Design the "My Activity" Page: On the frontend, create a new page where users can see their stats.
-Add Charts: Use the Recharts library (which is already in the project) to turn the summarized numbers from the API into nice-looking bar charts and graphs.
-Result: A beautiful, engaging "My Activity" page where users can visualize their own engagement on the platform, similar to features on sites like YouTube or Facebook.
-
-ignore for now
-To-Do: Add "Talking Feedback" for Settings Toggles
-Goal: When a user with a screen reader flips a switch in their settings (like "Dark Mode" or "Private Account"), we want the website to announce the change out loud, for example, "Dark mode enabled."
-Plan:
-Create an "Announcer" Component: Build a special, invisible component that can speak messages to screen readers.
-Add it to the Settings Page: Place this Announcer component on the settings page so it's ready to work.
-Connect the Toggles: Update the logic for the settings toggles. When a switch is flipped, tell the Announcer what to say.
-User Control: The Announcer will only speak if the "Screen Reader Support" switch is turned ON in the user's settings. If it's off, it will stay silent.
-Result: This will make the settings page much more accessible and user-friendly for visually impaired users without changing the website's appearance or SEO.
-
-Changelog - v1.3.0 (2024-07-02)
-This is a major feature release that introduces the "My Activity" dashboard for users and a new "Wellbeing" settings category. It also includes significant backend optimizations for performance and critical bug fixes for frontend state management.
+Changelog - v1.2.2 (July 3, 2025)
+This is a user experience and stability update. We've introduced a highly requested personalization feature, improved UI consistency across the platform, and fixed a critical bug that was affecting user sessions.
 ✨ New Features
-"My Activity" Dashboard for Users
-Users can now navigate to a personal dashboard to view a summary of their platform activity over the last 7 days.
-The dashboard displays key metrics including:
-Total Logins
-Profiles Viewed
-Support Messages Sent
-Total Screen Time (in minutes)
-Activity data is visualized with a new bar chart for an engaging user experience.
-"Take a Break" Wellbeing Reminder
-A new "Wellbeing" section has been added to the user settings page.
-Users can now enable a non-invasive, YouTube-style popup that reminds them to take a break.
-The reminder interval is fully configurable by the user (15, 30, 45, or 60 minutes).
-The popup includes options to "Snooze" the reminder for 5 minutes or "Dismiss" it until the next interval.
-Screen Time Tracking
-A new "heartbeat" system has been implemented on the frontend to efficiently track user screen time in the background. This data populates the "Screen Time" metric on the "My Activity" dashboard.
-🛠️ Backend Improvements & Refactors
-Efficient Activity Logging Service
-A new ActivityModule was created to handle all user activity logging.
-The activity_logs database collection is now a Capped Collection, which prevents the database from growing infinitely, ensuring stable long-term performance and predictable storage costs.
-Logging is performed in a "fire-and-forget" manner to ensure user actions (like logging in) are never slowed down by the logging process.
-Optimized & Cached API Endpoints
-A new endpoint (GET /activity/me) was created to efficiently provide a summary of a user's activity using MongoDB's Aggregation Pipeline.
-A new admin-only endpoint (GET /activity/admin/analytics) was added to provide high-level user statistics.
-A simple, package-free in-memory caching system was implemented in the ActivityService to cache API responses for 1 hour, dramatically reducing database load.
-Robust Settings Updates
-The SettingsService update method was refactored to correctly handle partial updates to nested objects (like wellbeingPreferences). It now uses a type-safe flattening mechanism to update specific fields without overwriting other data in the same nested object.
+Your Dates, Your Way: Customizable Date & Time Formats
+What it is: Users can now visit their Settings page and choose exactly how they want dates and times to be displayed.
+Why it matters: This makes the platform feel more personal and intuitive, catering to international users and individual preferences. Whether you prefer July 2, 2024 or 02/07/2024, the choice is now yours.
+Details:
+A new "Date & Time" section is now available in Settings.
+Options are available for Short Dates, Long Dates, and Time (12-hour vs. 24-hour).
+Your chosen format will now appear everywhere, from notification timestamps to announcement creation dates.
+🛠️ Improvements & Refinements
+Smarter Timestamps (Relative Time)
+What it is: Instead of showing a full date for a recent event, the UI will now use relative terms like "5 minutes ago" or "2 hours ago".
+Why it matters: This provides a much quicker sense of when something happened. For the exact date, users can simply hover their mouse over the relative time.
+Consistent Pagination Controls
+What it is: We've standardized the page navigation controls across all feeds (like Notifications and Announcements).
+Why it matters: The old, complex page links (< 1 ... 4 5 6 ... 10 >) have been replaced with a simple and clear Previous | Page X of Y | Next style, making navigation easier and more predictable.
+Centralized Date Logic (Technical Improvement)
+What it is: We built a single, reliable "date formatting engine" that all parts of the app now use.
+Why it matters: This internal refactor makes the app easier to maintain and ensures that all dates are handled consistently, reducing the chance of future bugs.
 🐛 Bug Fixes
-Fixed Settings State Synchronization
-Resolved a critical bug where having multiple <SettingsProvider> instances created two separate sources of truth for user settings. This was the root cause of the "Take a Break" reminder not triggering correctly after being enabled. The redundant provider on the settings page has been removed, ensuring a single global state.
-Fixed Reminder Switch Logic
-Fixed the bug where changing the reminder interval (e.g., from 30 to 15 minutes) would cause the "Enable Reminder" switch to turn off. This was resolved by the backend fix for handling nested object updates.
-Stabilized Reminder Timer
-Corrected the useEffect dependency array in the TakeABreakReminder component. The timer is no longer reset by unrelated state changes, ensuring it fires at the correct user-defined interval.
-⏪ Reverted Features
-Removed "Talking Feedback" Feature
-The Announcer component and its related logic for providing audio feedback to screen reader users have been removed from the settings page to de-scope the feature for now.
+Critical Authentication Fix
+The Bug: After logging in, users were being treated as "logged out" by the server on subsequent page loads, leading to widespread errors and an inability to access protected content.
+The Fix: We identified and fixed the issue where the user's login session (authentication token) was not being correctly saved in the browser. The login and logout processes are now robust and reliable.
+Impact: This resolves all 401 Unauthorized errors and ensures a stable, uninterrupted user session.
+📝 What's Next (To-Do)
+Cloud-Based File & Image Handling
+Goal: Allow users to upload files like profile pictures, with automatic optimization and fast delivery.
+Plan:
+Integrate cloudflare/upload-thing into our NestJS backend to handle secure file uploads.
+Files will be stored on a cloud service like Cloudflare R2.
+The service will automatically handle resizing, compression, and format conversion (e.g., to WebP).
+A free CDN (Cloudflare) will be used to serve the optimized images, ensuring fast load times for users globally and reducing bandwidth costs on our Vercel hosting.
+In-App Surveys & Feedback System
+Goal: Create a simple and effective way to gather user feedback, vote on new features, and report bugs without leaving the app.
+Plan:
+Integrate Google Forms directly into the frontend.
+We will create specific forms for "System Review," "Feature Polls," and "Bug Reports."
+These forms will be embedded within dedicated pages or modals in the app, providing a seamless experience for the user and an easy way for the admin team to collect and analyze data.

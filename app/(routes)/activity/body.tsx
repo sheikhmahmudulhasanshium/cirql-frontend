@@ -12,6 +12,11 @@ import useMyActivityChart from '@/components/hooks/activity/useMyActivityChart';
 import { Hand, Clock } from 'lucide-react';
 import useUserActivitySummary from '@/components/hooks/activity/useUserActivitySummary';
 
+// --- ADDED: Imports for date formatting ---
+import { useGetMySettings } from '@/components/hooks/settings/get-settings';
+import { formatDate } from '@/lib/date-formatter';
+// --- END ADDED ---
+
 const periodLabels: Record<AnalyticsPeriod, string> = {
   '1m': 'Last Minute',
   '12h': 'Last 12 Hours',
@@ -26,8 +31,23 @@ const Body = () => {
   
   const { data: chartData, isLoading: isChartLoading, error: chartError } = useMyActivityChart(period);
   const { summary, isLoading: isSummaryLoading, error: summaryError } = useUserActivitySummary();
+  // --- ADDED: Get user settings for formatting ---
+  const { settings, isLoading: isSettingsLoading } = useGetMySettings();
   
   const totalActions = chartData.reduce((acc, item) => acc + item.count, 0);
+
+  // --- ADDED: Formatter function for the X-axis ---
+  const tickFormatter = (value: string) => {
+    if (isSettingsLoading || !settings) {
+        // Provide a reasonable fallback while settings load
+        const date = new Date(value);
+        return `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
+    }
+    // A custom, very short format for chart labels, like "MMM d" (e.g., "May 20")
+    // This is better than using the user's full "short date" preference which might be too long.
+    return formatDate(value, 'MMM d');
+  };
+  // --- END ADDED ---
 
   const renderContent = () => {
     if (chartError || summaryError) {
@@ -68,7 +88,16 @@ const Body = () => {
               <ChartContainer config={{}} className="h-full w-full">
                 <ResponsiveContainer>
                   <BarChart data={chartData} margin={{ top: 20, right: 10, left: -10, bottom: 0 }}>
-                    <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
+                    {/* --- THIS IS THE FIX --- */}
+                    <XAxis 
+                        dataKey="date" 
+                        tickLine={false} 
+                        axisLine={false} 
+                        tickMargin={8} 
+                        fontSize={12}
+                        tickFormatter={tickFormatter} // Use our custom formatter
+                    />
+                    {/* --- END OF FIX --- */}
                     <YAxis tickLine={false} axisLine={false} tickMargin={8} width={30} allowDecimals={false} />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
                     <Bar dataKey="count" fill="var(--color-primary)" radius={4} />

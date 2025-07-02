@@ -1,4 +1,3 @@
-// app/(routes)/home/components/announcement-card.tsx
 "use client";
 
 import { Announcement } from '@/lib/types';
@@ -11,8 +10,9 @@ import { useAuth } from '@/components/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import UpdateAnnouncementModal from '@/components/modals/announcements/update-announcement';
 import DeleteAnnouncementModal from '@/components/modals/announcements/delete-announcement';
+import { RelativeTime } from '@/lib/RelativeTime';
+// --- ADDED: Import the RelativeTime component ---
 
-// --- FIX: Added the props interface to define the component's expected props ---
 interface AnnouncementCardProps {
     announcement: Announcement;
     onUpdateSuccess?: () => void;
@@ -22,12 +22,10 @@ interface AnnouncementCardProps {
 const AnnouncementCard = ({ announcement, onUpdateSuccess, onDeleteSuccess }: AnnouncementCardProps) => {
     const { state: { isAdmin } } = useAuth();
 
-    // If the announcement is hidden and the user is not an admin, do not render it.
     if (!announcement.visible && !isAdmin) {
         return null;
     }
 
-    // This component now correctly handles the logic of showing/hiding based on admin status.
     return (
         <div className='rounded-lg border bg-card text-card-foreground shadow-sm hover:bg-accent/50 dark:hover:bg-accent/50 transition-colors duration-200'>
             <div className="relative p-3">
@@ -53,6 +51,12 @@ const AnnouncementCard = ({ announcement, onUpdateSuccess, onDeleteSuccess }: An
                                 )}
                             </div>
                             <h2 className='text-sm text-muted-foreground'>{announcement.content}</h2>
+                            {/* --- THIS IS THE FIX --- */}
+                            {/* Added the RelativeTime component to show "2h ago", etc. */}
+                            <p className="text-xs text-muted-foreground pt-1">
+                                <RelativeTime date={announcement.createdAt} />
+                            </p>
+                            {/* --- END OF FIX --- */}
                         </div>
                     </Link>
                     {isAdmin && (

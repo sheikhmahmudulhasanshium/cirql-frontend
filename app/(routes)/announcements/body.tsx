@@ -4,9 +4,9 @@ import { useMemo, useState, useEffect } from 'react';
 import {
   Loader2,
   ArrowUpDown,
-  ChevronsLeft,
   ListFilter,
-  ChevronsRight, // Added missing ChevronLeft import
+  ChevronLeft, // Using single chevrons for a cleaner look
+  ChevronRight,
 } from 'lucide-react';
 
 // Hooks & Types
@@ -23,15 +23,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
 
 // Page Structure & Content Components
 import BasicPageProvider from '@/components/providers/basic-page-provider';
@@ -50,7 +41,7 @@ enum AnnouncementType {
 }
 
 // ============================================================================
-// Custom Hook to handle all client-side logic
+// Custom Hook to handle all client-side logic (Unchanged)
 // ============================================================================
 const usePublicAnnouncements = ({ itemsPerPage = 5, initialSortBy = 'createdAt:desc' }) => {
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([]);
@@ -108,69 +99,48 @@ const usePublicAnnouncements = ({ itemsPerPage = 5, initialSortBy = 'createdAt:d
 };
 
 // ============================================================================
-// 1. Reusable Pagination Component (Helper)
+// 1. REFINED Pagination Component
 // ============================================================================
 interface AnnouncementsPaginationProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  siblingCount?: number;
 }
 
-const AnnouncementsPagination = ({ currentPage, totalPages, onPageChange, siblingCount = 1 }: AnnouncementsPaginationProps) => {
-    const paginationRange = useMemo(() => {
-        const totalPageNumbers = siblingCount + 5;
-        if (totalPageNumbers >= totalPages) return Array.from({ length: totalPages }, (_, i) => i + 1);
-        const leftSiblingIndex = Math.max(currentPage - siblingCount, 1);
-        const rightSiblingIndex = Math.min(currentPage + siblingCount, totalPages);
-        const shouldShowLeftDots = leftSiblingIndex > 2;
-        const shouldShowRightDots = rightSiblingIndex < totalPages - 2;
-        
-        if (!shouldShowLeftDots && shouldShowRightDots) {
-            // FIX: Changed 'let' to 'const' as the variables are not reassigned.
-            const leftRange = Array.from({ length: 3 + 2 * siblingCount }, (_, i) => i + 1);
-            return [...leftRange, '...', totalPages];
-        }
-        if (shouldShowLeftDots && !shouldShowRightDots) {
-            // FIX: Changed 'let' to 'const'
-            const rightRange = Array.from({ length: 3 + 2 * siblingCount }, (_, i) => totalPages - (3 + 2 * siblingCount) + i + 1);
-            return [1, '...', ...rightRange];
-        }
-        if (shouldShowLeftDots && shouldShowRightDots) {
-            // FIX: Changed 'let' to 'const'
-            const middleRange = Array.from({ length: rightSiblingIndex - leftSiblingIndex + 1 }, (_, i) => leftSiblingIndex + i);
-            return [1, '...', ...middleRange, '...', totalPages];
-        }
-        return [];
-    }, [totalPages, currentPage, siblingCount]);
-
+const AnnouncementsPagination = ({ currentPage, totalPages, onPageChange }: AnnouncementsPaginationProps) => {
     if (totalPages <= 1) return null;
 
     return (
-        <Pagination>
-            <PaginationContent>
-                <PaginationItem>
-                    <Button variant="ghost" size="icon" onClick={() => onPageChange(1)} disabled={currentPage === 1} aria-label="Go to first page"><ChevronsLeft className="h-4 w-4" /></Button>
-                </PaginationItem>
-                <PaginationItem>
-                    <PaginationPrevious onClick={() => onPageChange(currentPage - 1)} className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''} />
-                </PaginationItem>
-                {paginationRange.map((page, index) =>
-                    typeof page === 'string' ? <PaginationEllipsis key={`ellipsis-${index}`} /> : <PaginationItem key={page}><PaginationLink onClick={() => onPageChange(page)} isActive={currentPage === page}>{page}</PaginationLink></PaginationItem>
-                )}
-                <PaginationItem>
-                    <PaginationNext onClick={() => onPageChange(currentPage + 1)} className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''} />
-                </PaginationItem>
-                <PaginationItem>
-                    <Button variant="ghost" size="icon" onClick={() => onPageChange(totalPages)} disabled={currentPage === totalPages} aria-label="Go to last page"><ChevronsRight className="h-4 w-4" /></Button>
-                </PaginationItem>
-            </PaginationContent>
-        </Pagination>
+        <div className="flex items-center justify-center gap-2">
+            <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                aria-label="Go to previous page"
+            >
+                <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="text-sm font-medium w-24 text-center">
+                Page {currentPage} of {totalPages}
+            </div>
+
+            <Button
+                variant="outline"
+                size="icon"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                aria-label="Go to next page"
+            >
+                <ChevronRight className="h-4 w-4" />
+            </Button>
+        </div>
     );
 };
 
 // ============================================================================
-// 2. Core Content Component
+// 2. Core Content Component (Unchanged)
 // ============================================================================
 export const AnnouncementsBody = () => {
   const {
@@ -277,7 +247,7 @@ export const AnnouncementsBody = () => {
 };
 
 // ============================================================================
-// 3. Main Page Layout Component (The final exported component)
+// 3. Main Page Layout Component (Unchanged)
 // ============================================================================
 const Body = () => {
   return (

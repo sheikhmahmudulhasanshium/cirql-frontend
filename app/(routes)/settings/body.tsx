@@ -1,9 +1,9 @@
-// src/app/(routes)/settings/body.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import Link from 'next/link'; // --- ADDED: Import Link for navigation ---
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -20,7 +20,9 @@ import {
     BellRing, ShieldCheck, UserCog, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
     LogIn, Text, Type,
-    View, Loader2, History, Coffee
+    View, Loader2, History, Coffee,
+    CalendarDays,
+    LineChart, // --- ADDED: Import a suitable icon ---
 } from 'lucide-react';
 import { useAuth } from '@/components/contexts/AuthContext';
 import { SettingsDto, UpdateSettingDto } from '@/lib/types';
@@ -34,6 +36,15 @@ import { SignOutButton } from '@/components/auth/sign-out-button';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AxiosError } from 'axios';
+import {
+    shortDateFormatLabels,
+    shortDateFormatMap,
+    longDateFormatLabels,
+    longDateFormatMap,
+    timeFormatLabels,
+    timeFormatMap,
+    formatDate,
+} from '@/lib/date-formatter';
 
 type EditableSettings = Omit<SettingsDto, '_id' | 'userId' | 'createdAt' | 'updatedAt'>;
 type SettingsObjectKey = {
@@ -85,47 +96,37 @@ export default function Body() {
     const { state, refreshUser } = useAuth();
     const { user, status: authStatus } = state;
     const authIsLoading = authStatus === 'loading';
-
     const router = useRouter();
     const { setTheme: applyTheme } = useTheme();
-
     const { settings, setSettings, isLoading: isLoadingData, error } = useGetMySettings();
     const [isSaving, setIsSaving] = useState(false);
     const [isEnable2faDialogOpen, setIsEnable2faDialogOpen] = useState(false);
     const [isDisable2faDialogOpen, setIsDisable2faDialogOpen] = useState(false);
-    
     const [pendingChanges, setPendingChanges] = useState<UpdateSettingDto>({});
     const pendingChangesRef = useRef(pendingChanges);
+    const SAMPLE_DATE = '2025-04-01T13:30:00.000Z';
 
     useEffect(() => {
         pendingChangesRef.current = pendingChanges;
     }, [pendingChanges]);
-    
-    const debouncedSaveSettings = useMemo(
-        () => debounce(async () => {
-            const changesToSave = pendingChangesRef.current;
-            if (!user?._id || Object.keys(changesToSave).length === 0) return;
-            
-            setIsSaving(true);
-            try {
-                const savedSettings = await updateMySettings(changesToSave);
-                setSettings(savedSettings);
-                setPendingChanges({});
-                toast.success('Settings saved');
-            } catch (err) {
-                const axiosError = err as AxiosError;
-                const errorDescription = axiosError.response?.data 
-                    ? JSON.stringify(axiosError.response.data, null, 2)
-                    : axiosError.message;
-                toast.error('Failed to save settings', { 
-                  description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white">{errorDescription}</code></pre>
-                });
-            } finally {
-                setIsSaving(false);
-            }
-        }, 1500),
-        [user?._id, setSettings]
-    );
+
+    const debouncedSaveSettings = useMemo(() => debounce(async () => {
+        const changesToSave = pendingChangesRef.current;
+        if (!user?._id || Object.keys(changesToSave).length === 0) return;
+        setIsSaving(true);
+        try {
+            const savedSettings = await updateMySettings(changesToSave);
+            setSettings(savedSettings);
+            setPendingChanges({});
+            toast.success('Settings saved');
+        } catch (err) {
+            const axiosError = err as AxiosError;
+            const errorDescription = axiosError.response?.data ? JSON.stringify(axiosError.response.data, null, 2) : axiosError.message;
+            toast.error('Failed to save settings', { description: <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4"><code className="text-white">{errorDescription}</code></pre> });
+        } finally {
+            setIsSaving(false);
+        }
+    }, 1500), [user?._id, setSettings]);
 
     useEffect(() => {
         if (settings?.uiCustomizationPreferences?.theme) {
@@ -133,32 +134,13 @@ export default function Body() {
         }
     }, [settings, applyTheme]);
 
-    const handleSettingChange = <K extends SettingsObjectKey>(
-        category: K,
-        settingKey: keyof EditableSettings[K],
-        value: EditableSettings[K][keyof EditableSettings[K]]
-    ) => {
+    const handleSettingChange = <K extends SettingsObjectKey>(category: K, settingKey: keyof EditableSettings[K], value: EditableSettings[K][keyof EditableSettings[K]]) => {
         if (!settings) return;
-
         setSettings(currentSettings => {
             if (!currentSettings) return null;
-            return {
-                ...currentSettings,
-                [category]: {
-                    ...(currentSettings[category] as object),
-                    [settingKey]: value,
-                },
-            };
+            return { ...currentSettings, [category]: { ...(currentSettings[category] as object), [settingKey]: value } };
         });
-
-        setPendingChanges(currentPending => ({
-            ...currentPending,
-            [category]: {
-                ...(currentPending[category] as object),
-                [settingKey]: value,
-            },
-        }));
-        
+        setPendingChanges(currentPending => ({ ...currentPending, [category]: { ...(currentPending[category] as object), [settingKey]: value } }));
         debouncedSaveSettings();
     };
     
@@ -169,7 +151,6 @@ export default function Body() {
 
     const handleReset = async () => {
         if (!user || !window.confirm("Are you sure you want to reset all settings to their default values?")) return;
-        
         setIsSaving(true);
         try {
             const resetData = await resetMySettings();
@@ -201,9 +182,7 @@ export default function Body() {
              <div className="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8 flex flex-col items-center justify-center text-center min-h-[200px] border rounded-lg">
                 <h1 className="text-2xl font-semibold mb-3">Access Your Settings</h1>
                 <p className="text-muted-foreground mb-6">Please sign in to manage your account preferences.</p>
-                <Button onClick={() => router.push('/sign-in')}>
-                    <LogIn className="mr-2 h-4 w-4" /> Sign In
-                </Button>
+                <Button onClick={() => router.push('/sign-in')}><LogIn className="mr-2 h-4 w-4" /> Sign In</Button>
             </div>
         );
     }
@@ -224,16 +203,8 @@ export default function Body() {
     
     return (
         <>
-            <Enable2faDialog
-                isOpen={isEnable2faDialogOpen}
-                onClose={() => setIsEnable2faDialogOpen(false)}
-                onSuccess={refreshUser}
-            />
-            <Disable2faDialog
-                isOpen={isDisable2faDialogOpen}
-                onClose={() => setIsDisable2faDialogOpen(false)}
-                onSuccess={refreshUser}
-            />
+            <Enable2faDialog isOpen={isEnable2faDialogOpen} onClose={() => setIsEnable2faDialogOpen(false)} onSuccess={refreshUser} />
+            <Disable2faDialog isOpen={isDisable2faDialogOpen} onClose={() => setIsDisable2faDialogOpen(false)} onSuccess={refreshUser} />
             <div className="container mx-auto max-w-3xl p-4 sm:p-6 lg:p-8 space-y-10 min-w-0">
                 <div className="flex items-center space-x-4 mb-6 p-4 border-b dark:border-slate-700">
                     <Avatar className="h-16 w-16 sm:h-20 sm:w-20"><AvatarImage src={user.picture || ''} alt={user.firstName || 'User'} /><AvatarFallback>{user.firstName?.substring(0, 2).toUpperCase() || 'U'}</AvatarFallback></Avatar>
@@ -255,7 +226,48 @@ export default function Body() {
                     </div>
                 </section>
                 <Separator />
+                
+                <section className="space-y-6">
+                    <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center">
+                        <CalendarDays className="mr-2 h-5 w-5 text-muted-foreground"/> Date & Time
+                        {isSaving && <Loader2 className="ml-2 h-4 w-4 text-muted-foreground animate-spin"/>}
+                    </h2>
+                    <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-8">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                            <Label htmlFor="short-date-format" className="font-medium sm:w-1/3">Short Date</Label>
+                            <div className="w-full sm:w-2/3">
+                                <Select value={settings.dateTimePreferences.shortDateFormat} onValueChange={(v) => handleSettingChange('dateTimePreferences', 'shortDateFormat', v)} disabled={isSaving}>
+                                    <SelectTrigger id="short-date-format"><SelectValue /></SelectTrigger>
+                                    <SelectContent>{Object.entries(shortDateFormatLabels).map(([key, label]) => (<SelectItem key={key} value={key}>{label}</SelectItem>))}</SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground mt-2">Preview: {formatDate(SAMPLE_DATE, shortDateFormatMap[settings.dateTimePreferences.shortDateFormat])}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                            <Label htmlFor="long-date-format" className="font-medium sm:w-1/3">Long Date</Label>
+                             <div className="w-full sm:w-2/3">
+                                <Select value={settings.dateTimePreferences.longDateFormat} onValueChange={(v) => handleSettingChange('dateTimePreferences', 'longDateFormat', v)} disabled={isSaving}>
+                                    <SelectTrigger id="long-date-format"><SelectValue /></SelectTrigger>
+                                    <SelectContent>{Object.entries(longDateFormatLabels).map(([key, label]) => (<SelectItem key={key} value={key}>{label}</SelectItem>))}</SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground mt-2">Preview: {formatDate(SAMPLE_DATE, longDateFormatMap[settings.dateTimePreferences.longDateFormat])}</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+                            <Label htmlFor="time-format" className="font-medium sm:w-1/3">Time</Label>
+                             <div className="w-full sm:w-2/3">
+                                <Select value={settings.dateTimePreferences.timeFormat} onValueChange={(v) => handleSettingChange('dateTimePreferences', 'timeFormat', v)} disabled={isSaving}>
+                                    <SelectTrigger id="time-format"><SelectValue /></SelectTrigger>
+                                    <SelectContent>{Object.entries(timeFormatLabels).map(([key, label]) => (<SelectItem key={key} value={key}>{label}</SelectItem>))}</SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground mt-2">Preview: {formatDate(SAMPLE_DATE, timeFormatMap[settings.dateTimePreferences.timeFormat])}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
+                <Separator />
+                
                 <section className="space-y-6">
                     <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center"><Coffee className="mr-2 h-5 w-5 text-muted-foreground"/> Wellbeing {isSaving && <Loader2 className="ml-2 h-4 w-4 text-muted-foreground animate-spin"/>}</h2>
                     <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
@@ -279,6 +291,21 @@ export default function Body() {
                                 </SelectContent>
                             </Select>
                         </div>
+                        {/* --- THIS IS THE FIX --- */}
+                        <Separator />
+                        <div className="flex items-center justify-between">
+                           <div>
+                                <h3 className="text-md font-medium">My Activity</h3>
+                                <p className="text-sm text-muted-foreground">View your engagement statistics.</p>
+                           </div>
+                           <Link href="/activity" passHref>
+                                <Button variant="outline">
+                                    <LineChart className="mr-2 h-4 w-4" />
+                                    View My Activity
+                                </Button>
+                           </Link>
+                        </div>
+                        {/* --- END OF FIX --- */}
                     </div>
                 </section>
                 <Separator />

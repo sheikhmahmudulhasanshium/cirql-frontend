@@ -1,16 +1,16 @@
-// src/app/(routes)/home/user/admin/admin-manage-announcements.tsx
 'use client';
 
 import { useState, useMemo } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
 import { Eye, EyeOff } from "lucide-react";
-
 import useAnnouncementsWithFilter from '@/components/hooks/announcements/get-announcement-with-filter';
 import CreateAnnouncementModal from '@/components/modals/announcements/create-announcement-modal';
 import { Skeleton } from '@/components/ui/skeleton';
 import UpdateAnnouncementModal from '@/components/modals/announcements/update-announcement';
 import DeleteAnnouncementModal from '@/components/modals/announcements/delete-announcement';
+import { FormattedDate } from '@/lib/FormattedDate';
+// --- ADDED: Import our custom date formatting component ---
 
 const AdminManageAnnouncements = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,7 +50,9 @@ const AdminManageAnnouncements = () => {
             <div className="flex-grow">
               <p className="font-semibold text-lg">{announcement.title}</p>
               <p className="text-sm text-muted-foreground">
-                Created on: {new Date(announcement.createdAt).toLocaleDateString()}
+                {/* --- THIS IS THE FIX --- */}
+                Created on: <FormattedDate date={announcement.createdAt} formatType="short" />
+                {/* --- END OF FIX --- */}
               </p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto">
@@ -59,7 +61,6 @@ const AdminManageAnnouncements = () => {
                 {announcement.visible ? 'Visible' : 'Hidden'}
               </Badge>
               <div className="flex gap-2 justify-end flex-grow sm:flex-grow-0">
-                {/* --- FIX: Pass the full 'announcement' object instead of 'announcementId' --- */}
                 <UpdateAnnouncementModal announcement={announcement} onUpdateSuccess={refetch} />
                 <DeleteAnnouncementModal announcementId={announcement._id} onDeleteSuccess={refetch} />
               </div>

@@ -3,7 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useAuth } from '@/components/contexts/AuthContext';
 import useAnnouncementsWithFilter from '@/components/hooks/announcements/get-announcement-with-filter';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+// --- MODIFICATION: Removed PaginationLink as it's no longer needed ---
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Skeleton } from '@/components/ui/skeleton';
 import AnnouncementCard from './announcement-card';
 
@@ -28,7 +29,10 @@ const AnnouncementFeed = () => {
     };
 
     const handlePageChange = (page: number) => {
-        setCurrentPage(page);
+        // Ensure page number is within valid bounds
+        if (page > 0 && page <= totalPages) {
+            setCurrentPage(page);
+        }
     };
 
     const totalPages = total ? Math.ceil(total / 8) : 0;
@@ -62,25 +66,38 @@ const AnnouncementFeed = () => {
                 ))}
             </div>
 
+            {/* --- THIS IS THE FIX --- */}
+            {/* Replaced the old pagination logic with the new simplified style */}
             {totalPages > 1 && (
                 <div className="py-8">
                     <Pagination>
                         <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if (currentPage > 1) handlePageChange(currentPage - 1); }} className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''} />
-                        </PaginationItem>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <PaginationItem key={page}>
-                            <PaginationLink href="#" onClick={(e) => { e.preventDefault(); handlePageChange(page); }} isActive={currentPage === page}>{page}</PaginationLink>
+                            <PaginationItem>
+                                <PaginationPrevious 
+                                    href="#" 
+                                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} 
+                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''} 
+                                />
                             </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) handlePageChange(currentPage + 1); }} className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''} />
-                        </PaginationItem>
+                            
+                            <PaginationItem>
+                                <span className="text-sm font-medium px-4">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                            </PaginationItem>
+
+                            <PaginationItem>
+                                <PaginationNext 
+                                    href="#" 
+                                    onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }} 
+                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : ''} 
+                                />
+                            </PaginationItem>
                         </PaginationContent>
                     </Pagination>
                 </div>
             )}
+            {/* --- END OF FIX --- */}
         </div>
     );
 };

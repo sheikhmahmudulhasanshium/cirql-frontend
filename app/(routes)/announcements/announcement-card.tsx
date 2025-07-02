@@ -16,6 +16,9 @@ import DeleteAnnouncementModal from '@/components/modals/announcements/delete-an
 
 // Icons
 import { EllipsisVertical, EyeOff } from 'lucide-react';
+import { RelativeTime } from '@/lib/RelativeTime';
+
+// --- ADDED: Import the RelativeTime component ---
 
 // --- Color map for the left border strip ---
 const typeColorMap: Record<string, string> = {
@@ -67,8 +70,6 @@ const AnnouncementCard = ({ announcement, onUpdateSuccess, onDeleteSuccess }: An
                             </AvatarFallback>
                         </Avatar>
 
-                        {/* --- THIS IS THE KEY CHANGE --- */}
-                        {/* Added `text-start` to ensure text is always left-aligned */}
                         <div className='flex flex-col gap-1.5 text-start'>
                             <div className="flex flex-wrap items-center gap-2">
                                 <h3 className='font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors'>
@@ -84,6 +85,12 @@ const AnnouncementCard = ({ announcement, onUpdateSuccess, onDeleteSuccess }: An
                             <p className='text-sm text-muted-foreground line-clamp-2'>
                                 {announcement.content}
                             </p>
+                            
+                            {/* --- THIS IS THE FIX --- */}
+                            <p className="text-xs text-muted-foreground pt-1">
+                                <RelativeTime date={announcement.createdAt} />
+                            </p>
+                            {/* --- END OF FIX --- */}
                         </div>
                     </Link>
 
@@ -108,5 +115,4 @@ const AnnouncementCard = ({ announcement, onUpdateSuccess, onDeleteSuccess }: An
     );
 }
 
-// --- FIX: Corrected the export syntax ---
 export default AnnouncementCard;

@@ -14,6 +14,8 @@ import {
   ShieldAlert,
   BellRing,
 } from 'lucide-react';
+import { RelativeTime } from "@/lib/RelativeTime";
+// --- ADDED: Import the RelativeTime component ---
 
 interface NotificationCardProps {
   notification: Notification;
@@ -80,9 +82,13 @@ export function NotificationCard({ notification }: NotificationCardProps) {
                         )}
                     </div>
                     <p className='text-sm text-muted-foreground'>{notification.message}</p>
+                    
+                    {/* --- THIS IS THE FIX --- */}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(notification.createdAt).toLocaleString()}
+                      <RelativeTime date={notification.createdAt} />
                     </p>
+                    {/* --- END OF FIX --- */}
+
                 </div>
             </div>
         </div>

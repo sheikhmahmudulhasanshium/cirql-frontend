@@ -1,111 +1,116 @@
-// src/components/contexts/AuthContext.tsx
 'use client';
 
-import { createContext, useReducer, Dispatch, useContext, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useCallback } from 'react';
 import apiClient from '@/lib/apiClient';
 
 export interface User {
   _id: string;
-  id?: string;
   email?: string;
   firstName?: string;
   lastName?: string;
   picture?: string;
-  roles: string[];
+  roles: Role[];
   is2FAEnabled: boolean;
-  accountStatus: 'active' | 'banned' | 'inactive';
+  accountStatus: 'active' | 'banned';
   banReason?: string;
-  googleId?: string; // FIX: Added the missing optional property
 }
 
-export type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';
+export enum Role {
+  User = 'user',
+  Admin = 'admin',
+  Owner = 'owner',
+}
 
 interface AuthState {
+  status: 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';
   user: User | null;
   token: string | null;
-  status: AuthStatus;
   isAdmin: boolean;
 }
 
-export type AuthAction =
+type AuthAction =
   | { type: 'LOGIN'; payload: { token: string; user: User } }
-  | { type: 'LOGOUT' }
-  | { type: 'SET_STATUS'; payload: AuthStatus }
   | { type: 'SET_PARTIAL_LOGIN'; payload: { token: string } }
-  | { type: 'UPDATE_USER'; payload: { user: User } };
+  | { type: 'LOGOUT' }
+  | { type: 'SET_STATUS'; payload: 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required' };
 
 const initialState: AuthState = {
+  status: 'loading',
   user: null,
   token: null,
-  status: 'loading',
   isAdmin: false,
-};
-
-const checkIsAdmin = (user: User | null): boolean => {
-  return user?.roles?.some(role => ['admin', 'owner'].includes(role)) || false;
 };
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
+      // --- START OF FIX ---
+      // When a user logs in, we must save the token to localStorage.
       localStorage.setItem('authToken', action.payload.token);
+      // --- END OF FIX ---
       apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
       return {
         ...state,
+        status: 'authenticated',
         user: action.payload.user,
         token: action.payload.token,
-        status: 'authenticated',
-        isAdmin: checkIsAdmin(action.payload.user),
+        isAdmin: action.payload.user.roles.includes(Role.Admin) || action.payload.user.roles.includes(Role.Owner),
+      };
+    case 'SET_PARTIAL_LOGIN':
+      // --- START OF FIX ---
+      // Also save the partial token for the 2FA step.
+      localStorage.setItem('authToken', action.payload.token);
+      // --- END OF FIX ---
+      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
+      return {
+        ...state,
+        status: '2fa_required',
+        user: null,
+        token: action.payload.token,
+        isAdmin: false,
       };
     case 'LOGOUT':
+      // --- START OF FIX ---
+      // When a user logs out, we must clear the token from localStorage.
       localStorage.removeItem('authToken');
+      // --- END OF FIX ---
       delete apiClient.defaults.headers.common['Authorization'];
       return {
         ...initialState,
         status: 'unauthenticated',
       };
     case 'SET_STATUS':
-      return { ...state, status: action.payload };
-    case 'SET_PARTIAL_LOGIN':
-      localStorage.setItem('authToken', action.payload.token);
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
       return {
         ...state,
-        token: action.payload.token,
-        status: '2fa_required',
-        user: null,
-        isAdmin: false,
-      };
-    case 'UPDATE_USER':
-      return {
-        ...state,
-        user: action.payload.user,
-        isAdmin: checkIsAdmin(action.payload.user),
+        status: action.payload,
       };
     default:
       return state;
   }
 };
 
-export const AuthContext = createContext<{
+interface AuthContextType {
   state: AuthState;
-  dispatch: Dispatch<AuthAction>;
+  dispatch: React.Dispatch<AuthAction>;
   refreshUser: () => Promise<void>;
-} | undefined>(undefined);
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const refreshUser = useCallback(async () => {
-    if (state.status === 'authenticated' && state.token) {
-      try {
-        const response = await apiClient.get('/auth/status');
-        dispatch({ type: 'UPDATE_USER', payload: { user: response.data } });
-      } catch {
-        dispatch({ type: 'LOGOUT' });
-      }
+    if (state.status !== 'authenticated' || !state.token) return;
+    try {
+      const response = await apiClient.get('/auth/status');
+      const user = response.data as User;
+      dispatch({ type: 'LOGIN', payload: { token: state.token, user } });
+    } catch (error) {
+      console.error("Failed to refresh user, logging out.", error);
+      dispatch({ type: 'LOGOUT' });
     }
-  }, [state.status, state.token, dispatch]);
+  }, [state.status, state.token]);
 
   return (
     <AuthContext.Provider value={{ state, dispatch, refreshUser }}>
@@ -114,9 +119,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

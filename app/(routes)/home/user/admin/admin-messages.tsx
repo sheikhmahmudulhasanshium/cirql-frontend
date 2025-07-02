@@ -1,4 +1,3 @@
-// components/admin/admin-messages.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,13 +6,13 @@ import { Loader2, ServerCrash, Inbox, Mail, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
 import { TicketSummary } from '@/lib/types';
-// --- START: MODIFICATION ---
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/components/ui/avatar";
-// --- END: MODIFICATION ---
+import { FormattedDate } from '@/lib/FormattedDate';
+// --- ADDED: Import our custom date formatting component ---
 
 const AdminMessages = () => {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -22,8 +21,6 @@ const AdminMessages = () => {
   const router = useRouter();
 
   useEffect(() => {
-    // --- START: MODIFICATION ---
-    // More robust useEffect to handle Strict Mode
     const controller = new AbortController();
     setIsLoading(true);
 
@@ -43,11 +40,8 @@ const AdminMessages = () => {
     return () => {
       controller.abort();
     };
-    // --- END: MODIFICATION ---
   }, []);
 
-  // --- START: MODIFICATION ---
-  // Updated helper function to match the fixed version
   const getSubmitterInfo = (ticket: TicketSummary) => {
     if (ticket.user) {
       return {
@@ -64,7 +58,6 @@ const AdminMessages = () => {
       fallback: 'G',
     };
   };
-  // --- END: MODIFICATION ---
 
   if (isLoading) {
     return (
@@ -104,8 +97,6 @@ const AdminMessages = () => {
         return (
           <div key={ticket._id} className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
             <div className="flex justify-between items-start gap-4">
-              {/* --- START: MODIFICATION --- */}
-              {/* This is the new, robust layout for the left side */}
               <div className="flex items-start gap-3 min-w-0 flex-1">
                 <div className="flex-shrink-0 pt-1">
                   {submitter.isGuest ? (
@@ -124,7 +115,6 @@ const AdminMessages = () => {
                   </p>
                 </div>
               </div>
-              {/* --- END: MODIFICATION --- */}
               <div className="text-right flex-shrink-0">
                 {ticket.hasUnseenMessages && (
                   <div className="flex items-center justify-end gap-2 text-xs text-blue-600 font-medium mb-1">
@@ -133,7 +123,9 @@ const AdminMessages = () => {
                 )}
                 <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full whitespace-nowrap">{ticket.status}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(ticket.updatedAt).toLocaleString()}
+                  {/* --- THIS IS THE FIX --- */}
+                  <FormattedDate date={ticket.updatedAt} formatType="short" />
+                  {/* --- END OF FIX --- */}
                 </p>
               </div>
             </div>

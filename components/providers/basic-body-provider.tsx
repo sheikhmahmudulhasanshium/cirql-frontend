@@ -1,12 +1,12 @@
-// src/components/providers/basic-body-provider.tsx
 "use client";
 
 import { useRouter, usePathname } from "next/navigation";
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useUserSettings } from "../hooks/settings/get-settings-by-id";
+// --- THIS IS THE FIX: Import the new context hook ---
+import { useGetMySettings } from "../hooks/settings/get-settings";
 import { useTheme } from "next-themes";
-import { authRoutes, twoFactorAuthRoute } from "@/lib/auth-routes"; // Import auth routes
+import { authRoutes, twoFactorAuthRoute } from "@/lib/auth-routes";
 
 interface BasicBodyProviderProps {
     children: ReactNode;
@@ -14,12 +14,13 @@ interface BasicBodyProviderProps {
 
 const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     const router = useRouter();
-    const pathname = usePathname(); // Get the current path
+    const pathname = usePathname();
     const { state } = useAuth();
     const { user, status: authStatus } = state;
     const authIsLoading = authStatus === 'loading';
 
-    const { data: settings, isLoading: settingsIsLoading, error } = useUserSettings(user?._id);
+    // --- THIS IS THE FIX: Use the global context hook instead of the old one ---
+    const { settings, isLoading: settingsIsLoading, error } = useGetMySettings();
     const { setTheme } = useTheme();
 
     useEffect(() => {
@@ -29,11 +30,10 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     }, [settings, setTheme]);
 
     useEffect(() => {
-        // FIX: Add a check to prevent redirection if already on an auth page.
         const isAuthPage = authRoutes.includes(pathname) || pathname === twoFactorAuthRoute;
         
         if (!authIsLoading && !user && !isAuthPage) {
-            router.push('/sign-in'); // Corrected path
+            router.push('/sign-in');
         }
     }, [user, authIsLoading, router, pathname]);
 
@@ -41,8 +41,10 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
         return <main className="bg-background text-foreground"><p className="text-center p-10">Authenticating...</p></main>;
     }
 
+    // This check is important. If the user is not logged in, we shouldn't try to render styled content.
+    // The AuthInitializer will handle showing the correct public page or redirecting.
     if (!user) {
-        return null; 
+        return <>{children}</>; 
     }
 
     if (settingsIsLoading) {
@@ -73,9 +75,10 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
         xl: 'text-xl',
     };
 
+    // Use a simpler class for default, as theme is handled by next-themes
     const colorClasses = accessibilityOptionsPreferences.highContrastMode
         ? 'bg-white text-black dark:bg-black dark:text-white'
-        : 'bg-accent text-accent-foreground';
+        : 'bg-background text-foreground';
 
     const fontClass = fontMap[accessibilityOptionsPreferences.font] || 'font-sans';
     const textSizeClass = textSizeMap[accessibilityOptionsPreferences.textSize] || 'text-base';

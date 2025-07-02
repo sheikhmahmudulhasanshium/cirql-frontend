@@ -1,4 +1,3 @@
-// src/lib/types.ts
 import { ReactNode } from "react";
 
 export enum Role {
@@ -38,7 +37,6 @@ export interface UserAnalyticsData {
   };
 }
 
-// Add the missing interface for the user's activity summary.
 export interface UserActivitySummaryDto {
   logins: number;
   profileViews: number;
@@ -83,12 +81,10 @@ export interface UiCustomizationPreferencesDto {
   theme: 'light' | 'dark' | 'system';
 }
 
-// --- ADDED: New type for Wellbeing settings ---
 export interface WellbeingPreferencesDto {
   isBreakReminderEnabled: boolean;
   breakReminderIntervalMinutes: 15 | 30 | 45 | 60;
 }
-// --- END ADDED ---
 
 export interface SettingsDto {
   _id: string;
@@ -100,7 +96,14 @@ export interface SettingsDto {
   accessibilityOptionsPreferences: AccessibilityOptionsPreferencesDto;
   contentPreferences: ContentPreferencesDto;
   uiCustomizationPreferences: UiCustomizationPreferencesDto;
-  wellbeingPreferences: WellbeingPreferencesDto; // --- ADDED ---
+  wellbeingPreferences: WellbeingPreferencesDto;
+  // --- UPDATED: Full dateTimePreferences object ---
+  dateTimePreferences: {
+    shortDateFormat: string;
+    longDateFormat: string;
+    timeFormat: string;
+  };
+  // --- END UPDATED ---
   createdAt: string;
   updatedAt: string;
 }
@@ -113,7 +116,14 @@ export type UpdateSettingDto = {
   accessibilityOptionsPreferences?: Partial<AccessibilityOptionsPreferencesDto>;
   contentPreferences?: Partial<ContentPreferencesDto>;
   uiCustomizationPreferences?: Partial<UiCustomizationPreferencesDto>;
-  wellbeingPreferences?: Partial<WellbeingPreferencesDto>; // --- ADDED ---
+  wellbeingPreferences?: Partial<WellbeingPreferencesDto>;
+  // --- UPDATED: Full optional dateTimePreferences object ---
+  dateTimePreferences?: {
+    shortDateFormat?: string;
+    longDateFormat?: string;
+    timeFormat?: string;
+  };
+  // --- END UPDATED ---
 };
 
 export interface UpdateThemeDto {
@@ -297,10 +307,6 @@ export interface TicketMessage {
   createdAt: string;
 }
 
-// src/lib/types.ts
-
-// ... (all your existing types from the top of the file) ...
-
 export interface TicketDetails {
   _id: string;
   subject: string;
@@ -310,14 +316,8 @@ export interface TicketDetails {
   lastSeenByAdminAt: string | null;
 }
 
-// --- ADD THE FOLLOWING NEW TYPES ---
-// src/lib/types.ts
-
-// ... (all existing types) ...
-
-// --- ADD THE FOLLOWING NEW TYPES ---
-
 export type AnalyticsPeriod = '1m' | '12h' | '1d' | '7d' | '30d' | '365d';
+
 export interface WeeklyGrowthDto {
   newUsers: number;
   percentageChange: number;
