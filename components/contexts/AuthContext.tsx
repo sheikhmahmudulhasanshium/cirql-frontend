@@ -44,11 +44,9 @@ const initialState: AuthState = {
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'LOGIN':
-      // --- START OF FIX ---
-      // When a user logs in, we must save the token to localStorage.
-      localStorage.setItem('authToken', action.payload.token);
-      // --- END OF FIX ---
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', action.payload.token);
+      }
       return {
         ...state,
         status: 'authenticated',
@@ -57,11 +55,9 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAdmin: action.payload.user.roles.includes(Role.Admin) || action.payload.user.roles.includes(Role.Owner),
       };
     case 'SET_PARTIAL_LOGIN':
-      // --- START OF FIX ---
-      // Also save the partial token for the 2FA step.
-      localStorage.setItem('authToken', action.payload.token);
-      // --- END OF FIX ---
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${action.payload.token}`;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', action.payload.token);
+      }
       return {
         ...state,
         status: '2fa_required',
@@ -70,11 +66,13 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAdmin: false,
       };
     case 'LOGOUT':
-      // --- START OF FIX ---
-      // When a user logs out, we must clear the token from localStorage.
-      localStorage.removeItem('authToken');
+      // --- START OF FIX: Clear ALL session-related data from localStorage ---
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('authToken');
+        // This is the crucial missing piece.
+        localStorage.removeItem('preLoginRedirectPath');
+      }
       // --- END OF FIX ---
-      delete apiClient.defaults.headers.common['Authorization'];
       return {
         ...initialState,
         status: 'unauthenticated',
@@ -101,11 +99,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   const refreshUser = useCallback(async () => {
-    if (state.status !== 'authenticated' || !state.token) return;
+    const tokenFromState = state.token;
+    if (state.status !== 'authenticated' || !tokenFromState) return;
+
     try {
       const response = await apiClient.get('/auth/status');
       const user = response.data as User;
-      dispatch({ type: 'LOGIN', payload: { token: state.token, user } });
+      dispatch({ type: 'LOGIN', payload: { token: tokenFromState, user } });
     } catch (error) {
       console.error("Failed to refresh user, logging out.", error);
       dispatch({ type: 'LOGOUT' });

@@ -6,7 +6,6 @@ import type { Metadata } from 'next';
 import { AuthProvider } from "../components/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner"
 import { AuthInitializer } from "@/components/providers/AuthInitializer";
-import { NotificationProvider } from "@/components/contexts/NotificationContext";
 const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -188,17 +187,15 @@ export default function RootLayout({
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
-        > <AuthProvider> 
-          <NotificationProvider>
-           
-          <AuthInitializer>
-
-          <main className="flex flex-col min-h-screen">{children}</main>             
-          </AuthInitializer>           
-           </NotificationProvider>
-
-</AuthProvider>
-        </ThemeProvider>        
+        >
+          {/* --- START OF FIX: Simplified Provider Structure --- */}
+          <AuthProvider>
+            <AuthInitializer>
+              <main className="flex flex-col min-h-screen">{children}</main>
+            </AuthInitializer>
+          </AuthProvider>
+          {/* --- END OF FIX --- */}
+        </ThemeProvider>          
         <Toaster />
 
       </body>

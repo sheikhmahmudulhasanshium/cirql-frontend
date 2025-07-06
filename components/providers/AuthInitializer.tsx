@@ -1,11 +1,10 @@
-// src/components/providers/AuthInitializer.tsx
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
-import apiClient from '@/lib/apiClient';
+import { useEffect, useState, useCallback, ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useAuth, User } from '../contexts/AuthContext';
+import apiClient from '@/lib/apiClient';
 import {
   publicRoutes,
   protectedRoutes,
@@ -16,6 +15,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import { SettingsProvider } from '../hooks/settings/get-settings';
 import { TakeABreakReminder } from '@/app/(routes)/components/take-a-break-reminder';
+import { NotificationProvider } from '../contexts/NotificationContext';
 
 function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
   if (!pattern.includes('[')) return false;
@@ -34,18 +34,16 @@ const FullScreenLoader = ({ message }: { message: string }) => (
     </main>
 );
 
-// THIS COMPONENT IS NO LONGER NEEDED, as we are moving the provider up.
-// We can simplify and remove it.
-/*
-const AuthenticatedSessionManager = ({ children }: { children: ReactNode }) => {
+const AuthenticatedAppManager = ({ children }: { children: ReactNode }) => {
   return (
     <SettingsProvider>
-      <TakeABreakReminder />
-      {children}
+      <NotificationProvider>
+        <TakeABreakReminder />
+        {children}
+      </NotificationProvider>
     </SettingsProvider>
   );
 };
-*/
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { state, dispatch } = useAuth();
@@ -63,9 +61,14 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     } else {
       const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
       localStorage.removeItem('preLoginRedirectPath');
-      router.push(redirectPath);
+      
+      // --- START OF FIX: Force a hard reload to the destination ---
+      // This ensures a completely fresh application state after login.
+      // We use window.location.assign which is equivalent to a user click.
+      window.location.assign(redirectPath);
+      // --- END OF FIX ---
     }
-  }, [router]);
+  }, []); // router is stable and doesn't need to be in dependencies
 
   useEffect(() => {
     if (state.status !== 'loading') return;
@@ -139,26 +142,24 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     }
   }, [state.status, state.user, pathname, router, isMounted, handleLoginSuccess]);
 
+  // The loading screens remain crucial for a good UX during transitions
   if (!isMounted || state.status === 'loading') {
     return <FullScreenLoader message="Initializing Session..." />;
   }
-  
-  if (state.status === '2fa_required' && pathname !== twoFactorAuthRoute) {
-    return <FullScreenLoader message="Redirecting to 2FA verification..." />;
-  }
-
   if (state.status === 'authenticated' && state.user?.accountStatus === 'banned' && pathname !== '/banned') {
     return <FullScreenLoader message="Redirecting..." />;
   }
+  // This loader is shown briefly after the Google callback while the hard reload is initiated.
+  if (state.status === 'authenticated' && authRoutes.includes(pathname)) {
+    return <FullScreenLoader message="Login successful, redirecting..." />;
+  }
+  if (state.status === '2fa_required' && pathname !== twoFactorAuthRoute) {
+    return <FullScreenLoader message="Redirecting to 2FA verification..." />;
+  }
   
-  // --- THIS IS THE FIX ---
-  // Wrap ALL children with the SettingsProvider. The provider itself will handle
-  // the logic of fetching data only when the user is authenticated.
-  // The TakeABreakReminder must also be inside this provider to get the settings.
-  return (
-      <SettingsProvider>
-        {state.status === 'authenticated' && <TakeABreakReminder />}
-        {children}
-      </SettingsProvider>
-  );
+  if (state.status === 'authenticated') {
+    return <AuthenticatedAppManager>{children}</AuthenticatedAppManager>;
+  }
+
+  return <>{children}</>;
 };

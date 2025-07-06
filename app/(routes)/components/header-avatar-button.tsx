@@ -1,4 +1,3 @@
-// src/app/(routes)/components/header-avatar-button.tsx
 'use client';
 
 import { useState, useEffect } from "react";
@@ -27,10 +26,9 @@ import { useGetMySettings } from "@/components/hooks/settings/get-settings";
 import { toast } from "sonner";
 
 const HeaderAvatarComponent = () => {
-    const { state: authState, dispatch } = useAuth();
+    const { state: authState, dispatch } = useAuth(); // --- FIX: Import `dispatch` ---
     const { user, status } = authState;
     const { setTheme } = useTheme();
-    // The setSettings function from the hook is not used here, but the hook is kept to get the initial theme value.
     const { settings } = useGetMySettings();
     
     const [optimisticTheme, setOptimisticTheme] = useState<'light' | 'dark' | 'system' | undefined>(undefined);
@@ -47,27 +45,28 @@ const HeaderAvatarComponent = () => {
 
         const originalTheme = settings.uiCustomizationPreferences.theme;
         setOptimisticTheme(newTheme);
-        setTheme(newTheme); // Apply theme visually before reload
+        setTheme(newTheme);
         setIsSavingTheme(true);
 
         try {
-            // Wait for the theme preference to be saved to the database.
             await updateMyTheme({ theme: newTheme });
-
-            // As requested: Reload the current page to apply the theme change.
             window.location.reload();
-
         } catch (error) {
-            // FIX: Use the 'error' variable for logging to resolve the no-unused-vars error.
             console.error("Failed to save theme preference:", error);
             toast.error("Failed to save theme preference.");
-            // If saving fails, revert the optimistic changes.
             setOptimisticTheme(originalTheme);
             setTheme(originalTheme);
-            setIsSavingTheme(false); // Reset saving state on error
+            setIsSavingTheme(false);
         }
-        // NOTE: The `finally` block is omitted as it would not be reached if the page reloads successfully.
     };
+
+    // --- START OF FIX: Create a robust logout handler ---
+    const handleSignOut = () => {
+        dispatch({ type: 'LOGOUT' });
+        // Force a hard reload to the sign-in page to ensure all state is cleared.
+        window.location.href = '/sign-in';
+    };
+    // --- END OF FIX ---
 
     if (status === 'loading') {
         return <Skeleton className="h-8 w-8 rounded-full" />;
@@ -129,10 +128,12 @@ const HeaderAvatarComponent = () => {
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => dispatch({ type: 'LOGOUT' })} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
+                {/* --- START OF FIX: Use onSelect for the logout action --- */}
+                <DropdownMenuItem onSelect={handleSignOut} className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Sign Out</span>
                 </DropdownMenuItem>
+                {/* --- END OF FIX --- */}
             </DropdownMenuContent>
         </DropdownMenu>
     );

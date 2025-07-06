@@ -1,4 +1,3 @@
-// src/components/auth/SignOutButton.tsx
 "use client";
 
 import React from "react";
@@ -17,13 +16,20 @@ export const SignOutButton = ({ children, onSignOut, ...props }: SignOutButtonPr
   const { dispatch } = useAuth();
 
   const handleSignOut = () => {
-    // You can optionally inform the backend, but it's not strictly necessary.
-    // apiClient.post('/auth/logout').catch(err => console.error("Backend logout failed"));
-    
+    // First, dispatch the logout action to clear the token from localStorage
+    // and update the auth context state.
     dispatch({ type: 'LOGOUT' });
+
+    // Optional: Call any additional callback functions.
     if (onSignOut) {
       onSignOut();
     }
+
+    // --- START OF FIX ---
+    // Force a full page reload by setting the window location.
+    // This wipes all application state from memory, ensuring a clean slate for the next user.
+    window.location.href = '/sign-in';
+    // --- END OF FIX ---
   };
 
   return (

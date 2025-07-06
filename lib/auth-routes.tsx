@@ -7,7 +7,7 @@ export const publicRoutes: string[] = [
   '/',
   '/about',
   '/faq',
-  '/contacts',
+  // --- FIX: '/contacts' is removed from public routes. ---
   '/banned',
   '/sitemap.xml',
   '/privacy-policy',
@@ -30,6 +30,8 @@ export const protectedRoutes: string[] = [
   '/settings',
   '/admin/analytics',
   '/notifications',
+  // --- FIX: '/contacts' is added to protected routes. ---
+  '/contacts',
 ];
 
 /**
@@ -39,7 +41,7 @@ export const protectedRoutes: string[] = [
 export const authRoutes: string[] = [
   '/sign-in',
   '/auth/google/callback',
-  '/log-in',
+  '/log-in', // Assuming this is an alias for sign-in
   '/reset-password',
 ];
 

@@ -1,4 +1,3 @@
-// src/app/(routes)/home/components/header.tsx
 'use client';
 
 import Image from "next/image";
@@ -10,7 +9,9 @@ import { SignInButton } from "@/components/auth/sign-in-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import HeaderAvatarComponent from "./header-avatar-button";
-import { SettingsProvider } from "@/components/hooks/settings/get-settings";
+// --- START OF FIX: SettingsProvider is no longer needed here. ---
+// import { SettingsProvider } from "@/components/hooks/settings/get-settings";
+// --- END OF FIX ---
 import { NotificationBell } from "./notification-bell";
 
 const Header = () => {
@@ -33,11 +34,13 @@ const Header = () => {
 
             <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
                 {isAuthenticated ? (
-                    <SettingsProvider>
+                    // --- START OF FIX: Removed the redundant SettingsProvider wrapper ---
+                    <>
                         <Navbar />
                         <NotificationBell />
                         <HeaderAvatarComponent />
-                    </SettingsProvider>
+                    </>
+                    // --- END OF FIX ---
                 ) : status === 'loading' ? (
                     <>
                         <Skeleton className="h-9 w-24 rounded-md" />

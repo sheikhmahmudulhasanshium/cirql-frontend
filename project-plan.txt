@@ -1,39 +1,60 @@
-Changelog - v1.2.2 (July 3, 2025)
-This is a user experience and stability update. We've introduced a highly requested personalization feature, improved UI consistency across the platform, and fixed a critical bug that was affecting user sessions.
-✨ New Features
-Your Dates, Your Way: Customizable Date & Time Formats
-What it is: Users can now visit their Settings page and choose exactly how they want dates and times to be displayed.
-Why it matters: This makes the platform feel more personal and intuitive, catering to international users and individual preferences. Whether you prefer July 2, 2024 or 02/07/2024, the choice is now yours.
-Details:
-A new "Date & Time" section is now available in Settings.
-Options are available for Short Dates, Long Dates, and Time (12-hour vs. 24-hour).
-Your chosen format will now appear everywhere, from notification timestamps to announcement creation dates.
-🛠️ Improvements & Refinements
-Smarter Timestamps (Relative Time)
-What it is: Instead of showing a full date for a recent event, the UI will now use relative terms like "5 minutes ago" or "2 hours ago".
-Why it matters: This provides a much quicker sense of when something happened. For the exact date, users can simply hover their mouse over the relative time.
-Consistent Pagination Controls
-What it is: We've standardized the page navigation controls across all feeds (like Notifications and Announcements).
-Why it matters: The old, complex page links (< 1 ... 4 5 6 ... 10 >) have been replaced with a simple and clear Previous | Page X of Y | Next style, making navigation easier and more predictable.
-Centralized Date Logic (Technical Improvement)
-What it is: We built a single, reliable "date formatting engine" that all parts of the app now use.
-Why it matters: This internal refactor makes the app easier to maintain and ensures that all dates are handled consistently, reducing the chance of future bugs.
-🐛 Bug Fixes
-Critical Authentication Fix
-The Bug: After logging in, users were being treated as "logged out" by the server on subsequent page loads, leading to widespread errors and an inability to access protected content.
-The Fix: We identified and fixed the issue where the user's login session (authentication token) was not being correctly saved in the browser. The login and logout processes are now robust and reliable.
-Impact: This resolves all 401 Unauthorized errors and ensures a stable, uninterrupted user session.
-📝 What's Next (To-Do)
+Changelog - v1.2.3 (July 6, 2025)
+This is a critical stability and security release that addresses session management, user state synchronization, and core administrative functionality. The primary focus was on fixing bugs that led to a poor and insecure user experience after login and logout.
+🐛 Critical Bug Fixes
+Comprehensive Session State & Synchronization Fix
+The Bug: After logging in, users were experiencing long delays, incorrect redirects, and stale data from previous users (including avatars and last visited pages). Logging out was unreliable.
+The Fix: We completely overhauled the frontend and backend authentication flow. The JWT payload is now enriched with essential user data. The frontend now forces a hard reload after login and logout to guarantee a clean application state for every user session. All session-related data is now correctly cleared from localStorage on logout.
+Impact: Login, logout, and page navigation are now fast, reliable, and secure. The user's avatar and data are always correctly displayed immediately after login.
+Affected Files:
+Backend:
+src/auth/auth.service.ts (Enriched the JWT payload with user details)
+Frontend:
+src/components/contexts/AuthContext.tsx (Corrected localStorage handling in the reducer)
+src/app/(routes)/auth/google/callback/page.tsx (Simplified to decode the enriched JWT and dispatch, eliminating a race condition)
+src/components/providers/AuthInitializer.tsx (Centralized provider logic and forced a hard reload on login)
+src/app/layout.tsx (Simplified provider structure)
+src/app/(routes)/home/components/header.tsx (Removed redundant provider)
+src/app/(routes)/components/header-avatar-button.tsx (Fixed logout action to use onSelect and a hard reload)
+src/app/(routes)/sign-out/page.tsx (Simplified to force a hard reload)
+src/components/auth/SignOutButton.tsx (Updated to force a hard reload)
+src/lib/auth-routes.ts (Correctly classified routes as public/protected)
+src/app/(routes)/components/RelativeTime.tsx (Made component auth-aware to prevent crashes on public pages)
+Admin Email Notification Fix
+The Bug: Email notifications for new support tickets were only being sent to the primary "owner" account, not to other users with the "admin" role.
+The Fix: The backend logic was updated to correctly identify all admin/owner accounts and send an email to each one. Implemented anti-spam best practices (staggered sending, proper headers, plain-text fallback) using nodemailer.
+Impact: All administrators now receive critical email notifications as intended, with improved deliverability.
+Affected Files:
+Backend:
+src/support/support.service.ts (Main logic change to loop through admins and build emails)
+src/email/email.service.ts (Made the sendMail method public to be accessible by other services)
+📝 What's Next (To-Do for v1.3.0 and beyond)
+This is the official roadmap for upcoming features and improvements.
+High-Priority Features
 Cloud-Based File & Image Handling
-Goal: Allow users to upload files like profile pictures, with automatic optimization and fast delivery.
-Plan:
-Integrate cloudflare/upload-thing into our NestJS backend to handle secure file uploads.
-Files will be stored on a cloud service like Cloudflare R2.
-The service will automatically handle resizing, compression, and format conversion (e.g., to WebP).
-A free CDN (Cloudflare) will be used to serve the optimized images, ensuring fast load times for users globally and reducing bandwidth costs on our Vercel hosting.
+Goal: Allow users to upload files, starting with profile pictures, with automatic optimization and fast delivery via a global CDN.
+Plan: Integrate the upload-thing library with a Cloudflare R2 bucket. This is considered an essential addition for this feature.
+Enhanced 2FA/MFA System
+Goal: Fulfill the user request to improve 2FA security by using a more complex code.
+Plan: Update the existing email-based 2FA system to generate a 6-character alphanumeric code (including special characters) instead of just digits, using the built-in crypto module.
+Message Editing & Ticket Unlocking
+Goal: Give users the ability to edit their ticket messages and allow admins to lock/unlock support tickets.
+Plan: Add new backend endpoints and corresponding frontend UI controls for these actions. This will involve adding a "Locked" status to the ticket system.
+User Experience & Admin Features
+"Resume Session" on Login
+Goal: A highly requested user experience improvement. When a user logs in, redirect them to the last page they were on during their previous session, instead of always defaulting to /home.
+Plan: This will be implemented by saving the user's last visited URL to their profile in the database and retrieving it upon login.
 In-App Surveys & Feedback System
-Goal: Create a simple and effective way to gather user feedback, vote on new features, and report bugs without leaving the app.
-Plan:
-Integrate Google Forms directly into the frontend.
-We will create specific forms for "System Review," "Feature Polls," and "Bug Reports."
-These forms will be embedded within dedicated pages or modals in the app, providing a seamless experience for the user and an easy way for the admin team to collect and analyze data.
+Goal: Create a simple and effective way to gather user feedback directly within the application.
+Plan: Integrate Google Forms for "System Review," "Feature Polls," and "Bug Reports" into dedicated pages or modals.
+Add "Tester" Role
+Goal: Create a new user role for QA and testing purposes.
+Plan: Add a Tester role to the backend user role enum.
+Optional & Future Technical Improvements
+These are important but non-urgent items to be addressed in future releases to improve maintainability and performance.
+Architectural Refactor: Centralize Header/Footer Logic
+Goal: Improve code maintainability by creating a single "switcher" component that conditionally renders the public vs. authenticated header.
+Plan: Create an AppLayout component (or modify BasicPageProvider as you suggested) that uses the useAuth hook to select the correct header, then simplify all page components to use this central layout.
+Deferred Improvement: Refactor In-Memory Caching
+Goal: Improve backend performance and scalability for the Vercel serverless environment.
+Problem: The current in-memory cache in the ActivityService is not effective.
+Plan (Future): Replace the in-memory Map with a distributed cache service like Vercel KV or Upstash Redis. This is a key piece of technical debt to address as the application grows.
