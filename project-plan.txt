@@ -1,26 +1,31 @@
 Changelog - v1.3.0 (In Progress)
-This version introduces new roles and dedicated tooling for testers, laying the groundwork for more robust quality assurance and user feedback cycles.
+This version introduces new roles and dedicated tooling for testers, alongside significant user experience enhancements like smart navigation, laying the groundwork for more robust quality assurance and a more personalized user journey.
 ✨ New Features
-Dedicated Tester Panel & Role
-What it is: A new Tester role has been added to the system. Users with this role now see a dedicated "Tester Panel" instead of the standard user dashboard. This panel includes an admin-like sidebar for easy navigation.
-Why it matters: This provides a centralized and extensible space for quality assurance. Testers can now easily access specialized tools without cluttering the main user or admin interfaces.
+Smart Navigation System
+What it is: The application now intelligently tracks user navigation to provide two key enhancements: "Resume Session" and "Quick Access Shortcuts".
+Why it matters: This makes the platform feel more personal and efficient. Users can seamlessly pick up where they left off, and frequent destinations are just a click away, reducing friction and improving workflow.
 Details:
-The panel features a dashboard with infographics summarizing a tester's submitted tickets (Total, Open, Pending, Closed) and a chart visualizing these statuses.
-A new "My Bug Reports" view allows testers to see a filterable and sortable list of all tickets they have submitted.
-A specialized "Report an Issue" modal allows testers to submit well-formatted bug reports to the existing support system with zero backend changes.
+Resume Session: Upon logging in, users are now automatically redirected to the last page they were on during their previous session, instead of always defaulting to the home page.
+Quick Access Shortcuts: A new "Quick Access" card on the user dashboard displays a personalized list of the top 5 most frequently visited pages, providing one-click access to their favorite parts of the app.
+This is all powered by a new backend activity logging system that securely tracks page views per user.
 Affected Files:
 Backend:
-src/common/enums/role.enum.ts (Added the Tester role)
+src/activity/schemas/activity-log.schema.ts (Added PAGE_VIEW action)
+src/activity/activity.service.ts (Added getNavigationStats logic)
+src/activity/activity.controller.ts (Added new endpoints)
+src/activity/dto/ (New DTO files for the feature)
 Frontend:
-app/(routes)/home/body.tsx (Added logic to render the tester layout)
-app/(routes)/home/user/tester/tester-layout.tsx (New)
-app/(routes)/home/user/tester/tester-sidebar.tsx (New)
-app/(routes)/home/user/tester/tester-header.tsx (New)
-app/(routes)/home/user/tester/tester-dashboard.tsx (New)
-app/(routes)/home/user/tester/bug-list.tsx (New)
-app/(routes)/home/user/tester/issue-reporter.tsx (New)
-components/modals/BugReportModal.tsx (New)
-components/contexts/AuthContext.tsx (Added Tester role to frontend enum)
+components/providers/AuthInitializer.tsx (Updated login logic to use lastVisitedUrl)
+components/hooks/activity/usePageLogger.ts (New)
+components/hooks/activity/useNavigationStats.ts (New)
+app/(routes)/home/user/user/Shortcuts.tsx (New UI component)
+app/(routes)/home/user/user/dashboard-home.tsx (Integrated shortcuts)
+Dedicated Tester Panel & Role
+What it is: A new Tester role has been added. Users with this role see a dedicated "Tester Panel" with an admin-like sidebar, a dashboard with bug submission stats, a sortable list of their submitted reports, and a specialized reporting modal.
+Why it matters: Provides a centralized space for QA, enabling more effective testing and feedback cycles without cluttering other user interfaces.
+Affected Files:
+Backend: src/common/enums/role.enum.ts
+Frontend: app/(routes)/home/body.tsx, all files in app/(routes)/home/user/tester/, components/modals/BugReportModal.tsx, components/contexts/AuthContext.tsx
 📝 Updated To-Do List (for v1.3.0 and beyond)
 Here is the remaining work for the v1.3.0 release and future updates.
 High-Priority Features
@@ -34,13 +39,9 @@ Message Editing & Ticket Unlocking
 Goal: Allow users to edit their messages and admins to lock/unlock tickets.
 Plan: Add new backend endpoints and frontend UI for these actions.
 User Experience & Admin Features
-"Resume Session" on Login
-Goal: Redirect users to their last visited page upon login.
-Plan: Save the last URL to the user's profile in the database.
 In-App Surveys & Feedback System
 Goal: Gather user feedback directly within the app.
 Plan: Integrate Google Forms for surveys and polls.
 Optional & Future Technical Improvements
 Architectural Refactor: Centralize Header/Footer Logic
 Deferred Improvement: Refactor In-Memory Caching
-This updated changelog accurately reflects our progress. We are ready for the next task.

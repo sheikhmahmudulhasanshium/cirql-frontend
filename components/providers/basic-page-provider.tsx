@@ -23,9 +23,9 @@ const BasicPageProvider: React.FC<BasicPageProviderProps> = ({
     return (
         <>
             {header}
-            <main className="flex-grow w-full">
+            <div className="flex-grow w-full">
                 {children}
-            </main>
+            </div>
             {footer}
         </>
     );

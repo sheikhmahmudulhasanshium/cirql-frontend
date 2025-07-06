@@ -45,10 +45,10 @@ const TesterLayout = () => {
           activeView={activeView}
         />
         {/* --- START OF FIX: Reduced padding for extra-small screens --- */}
-        <main className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
+        <div className="flex-1 p-2 sm:p-4 md:p-6 overflow-auto">
         {/* --- END OF FIX --- */}
           {renderContent()}
-        </main>
+        </div>
       </div>
     </div>
   );

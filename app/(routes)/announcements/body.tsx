@@ -182,7 +182,7 @@ export const AnnouncementsBody = () => {
   };
 
   return (
-    <main className="container mx-auto max-w-3xl py-8 px-4 md:py-12">
+    <div className="container mx-auto max-w-3xl py-8 px-4 md:py-12">
       <div className="mb-8 text-center">
         <h1 className="font-bold mb-8 text-center text-3xl font-geistSans lg:text-6xl md:text-4xl sm:text-3xl bg-gradient-to-tl from-slate-500 to-yellow-100 dark:from-blue-500 dark:to-cyan-300 text-transparent bg-clip-text py-4 animate-accordion-down" id='announcements'>Announcements</h1>
         <p className="mt-4 text-lg text-muted-foreground">The latest news, updates, and sneak peeks from our team.</p>
@@ -242,7 +242,7 @@ export const AnnouncementsBody = () => {
       <div className="pt-8">
         <AnnouncementsPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
       </div>
-    </main>
+    </div>
   );
 };
 

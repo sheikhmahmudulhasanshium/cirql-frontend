@@ -101,7 +101,7 @@ function Verify2faContent() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen py-12 dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
-      <main className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-6">
+      <div className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-6">
         <Link href={'/'}>
             <Image src="/banner.svg" alt="Cirql Logo" width={400} height={200} className="mb-4"/>
         </Link>
@@ -148,7 +148,7 @@ function Verify2faContent() {
         <SignOutButton variant="link" className="text-sm">
             {isExpired ? "Get a new code (Sign in again)" : "Start Over"}
         </SignOutButton>
-      </main>
+      </div>
     </div>
   );
 }

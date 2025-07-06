@@ -9,16 +9,17 @@ import { SignInButton } from "@/components/auth/sign-in-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import HeaderAvatarComponent from "./header-avatar-button";
-// --- START OF FIX: SettingsProvider is removed from here. ---
-// import { SettingsProvider } from "@/components/hooks/settings/get-settings";
-// --- END OF FIX ---
 import { NotificationBell } from "./notification-bell";
+import { usePageLogger } from "@/components/hooks/activity/usePageLogger"; // --- Import the new hook ---
 
 const Header = () => {
     const { state } = useAuth();
     const { status } = state;
     const isAuthenticated = status === 'authenticated';
     
+    // --- Call the hook here. It will run in the background for any authenticated user. ---
+    usePageLogger();
+
     return (
         <header className="flex h-16 sm:h-20 px-2 md:px-4 lg:px-6 items-center w-full shadow-md dark:shadow-gray-700/50 bg-background gap-2 sm:gap-3 md:gap-4 ">
             <div className="flex-shrink-0">
@@ -34,13 +35,11 @@ const Header = () => {
 
             <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
                 {isAuthenticated ? (
-                    // --- START OF FIX: The redundant provider wrapper is removed. ---
                     <>
                         <Navbar />
                         <NotificationBell />
                         <HeaderAvatarComponent />
                     </>
-                    // --- END OF FIX ---
                 ) : status === 'loading' ? (
                     <>
                         <Skeleton className="h-9 w-24 rounded-md" />

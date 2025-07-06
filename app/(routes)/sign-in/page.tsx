@@ -57,7 +57,7 @@ function SignInContent() {
 
   return (
       <div className="flex flex-col items-center justify-center min-h-screen py-12 dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
-        <main className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-8">
+        <div className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-8">
           <Link href={'/'}>
             <Image src="/banner.svg" alt="Cirql Logo" width={400} height={200} className="mb-6"/>
           </Link>
@@ -78,7 +78,7 @@ function SignInContent() {
             <Link href="/terms-and-conditions" className="underline hover:text-primary">Terms of Service</Link> and{' '}
             <Link href="/privacy-policy" className="underline hover:text-primary">Privacy Policy</Link>.
           </p>
-        </main>
+        </div>
       </div>
   );
 }

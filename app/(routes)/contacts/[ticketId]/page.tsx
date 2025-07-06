@@ -145,7 +145,7 @@ export default function TicketConversationPage() {
 
     return (
         <BasicPageProvider header={<Header />} footer={<Footer />}>
-            <main className="container mx-auto max-w-3xl px-4 py-8">
+            <div className="container mx-auto max-w-3xl px-4 py-8">
                 <div className="flex justify-between items-start gap-4 mb-2">
                     <h1 className="text-2xl font-bold tracking-tight">{ticket.subject}</h1>
                     {isAdmin && !isTicketClosed && (
@@ -194,7 +194,7 @@ export default function TicketConversationPage() {
                         </>
                     )}
                 </div>
-            </main>
+            </div>
         </BasicPageProvider>
     );
 }

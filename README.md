@@ -22,12 +22,20 @@ The development of Cirql is guided by the following principles:
 *   **UI Components:** [shadcn/ui](https://ui.shadcn.com/) - A collection of re-usable UI components.
 *   **Styling:** Tailwind CSS
 *   **Font:** [Geist](https://vercel.com/font) (via `next/font`)
-*   **State Management:** React Context API (for Authentication)
-*   **API Communication:** Axios (via `lib/apiClient.ts`)
+*   **State Management:** React Context API for:
+    *   Authentication (`AuthContext`)
+    *   User Settings (`SettingsContext`)
+    *   Notifications (`NotificationContext`)
+*   **API Communication:** Axios (via a configured `lib/apiClient.ts` instance with interceptors)
 *   **Authentication:**
-    *   Integrates with the Cirql Backend for Google OAuth 2.0.
-    *   Handles JWTs issued by the backend for session management.
-    *   Client-side token storage in `localStorage`.
+    *   Integrates with the Cirql Backend for Google OAuth 2.0 and email-based 2FA.
+    *   Handles JWTs for session management with a robust silent token refresh strategy planned to ensure long-lived, secure user sessions.
+    *   Secure client-side token storage in `localStorage`.
+*   **Key User-Facing Features:**
+    *   **Smart Navigation:** Automatically resumes a user's session on their last visited page and provides a "Quick Access" panel of their most visited pages.
+    *   **Dedicated Tester Panel:** A unique dashboard for users with the `Tester` role, featuring infographics and tools for submitting structured bug reports.
+    *   **Full Personalization:** Users can control themes, date/time formats, fonts, and more via a comprehensive Settings page.
+    *   **Activity & Analytics:** Users can view their own activity logs, and Admins have access to a system-wide analytics dashboard.
 *   **Analytics:** Google Analytics & Google Tag Manager integration.
 
 ## Environment Variables
@@ -37,7 +45,7 @@ Create a `.env.local` file in the root of the project for local development. For
 **Local Development (`.env.local`):**
 ```env
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
-NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000 # Or whatever port your local frontend runs on
+NEXT_PUBLIC_FRONTEND_URL=http://localhost:3000
 
 # Optional, for local analytics testing if needed
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=G-YOUR_GA_ID_FOR_DEV

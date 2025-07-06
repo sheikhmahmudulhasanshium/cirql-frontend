@@ -157,7 +157,7 @@ export default function ContactsDashboardPage() {
 
   return (
     <BasicPageProvider header={<Header/>} footer={<Footer/>}>
-      <main className="container mx-auto max-w-4xl px-4 py-8">
+      <div className="container mx-auto max-w-4xl px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
           <Link href="/contacts/new">
@@ -167,7 +167,7 @@ export default function ContactsDashboardPage() {
           </Link>
         </div>
         {renderContent()}
-      </main>
+      </div>
     </BasicPageProvider>
   );
 }

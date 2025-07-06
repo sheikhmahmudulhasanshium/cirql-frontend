@@ -38,7 +38,7 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     }, [user, authIsLoading, router, pathname]);
 
     if (authIsLoading) {
-        return <main className="bg-background text-foreground"><p className="text-center p-10">Authenticating...</p></main>;
+        return <div className="bg-background text-foreground"><p className="text-center p-10">Authenticating...</p></div>;
     }
 
     // This check is important. If the user is not logged in, we shouldn't try to render styled content.
@@ -48,15 +48,15 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     }
 
     if (settingsIsLoading) {
-        return <main className="bg-background text-foreground"><p className="text-center p-10">Loading your settings...</p></main>;
+        return <div className="bg-background text-foreground"><p className="text-center p-10">Loading your settings...</p></div>;
     }
 
     if (error) {
-        return <main className="bg-background text-foreground"><p className="text-center p-10 text-destructive">Error: Could not load user settings. {error.message}</p></main>;
+        return <div className="bg-background text-foreground"><p className="text-center p-10 text-destructive">Error: Could not load user settings. {error.message}</p></div>;
     }
 
     if (!settings) {
-        return <main className="bg-background text-foreground"><p className="text-center p-10">No settings data available for this user.</p></main>;
+        return <div className="bg-background text-foreground"><p className="text-center p-10">No settings data available for this user.</p></div>;
     }
     
     const { accessibilityOptionsPreferences } = settings;
@@ -91,9 +91,9 @@ const BasicBodyProvider: React.FC<BasicBodyProviderProps> = ({ children }) => {
     ].join(' ');
 
     return (
-        <main className={mainClassName}>
+        <div className={mainClassName}>
             {children}
-        </main>
+        </div>
     );
 }
 

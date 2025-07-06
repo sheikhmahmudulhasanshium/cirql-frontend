@@ -77,12 +77,12 @@ const AnnouncementDetailsPage = () => {
 
   return (
     <BasicPageProvider header={<Header />} footer={<Footer />}>
-      <main className="container mx-auto p-4 md:p-8">
+      <div className="container mx-auto p-4 md:p-8">
         <h1 className="mb-6 text-3xl font-bold tracking-tight">
           Announcement Details
         </h1>
         {renderContent()}
-      </main>
+      </div>
     </BasicPageProvider>
   );
 };

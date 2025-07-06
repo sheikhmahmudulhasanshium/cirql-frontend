@@ -47,9 +47,9 @@ const AdminLayout = () => {
           setMobileMenuOpen={setMobileMenuOpen}
           activeView={activeView}
         />
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-auto">
           {renderContent()}
-        </main>
+        </div>
       </div>
     </div>
   );
