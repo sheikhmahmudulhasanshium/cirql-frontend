@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, ReactNode } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { useAuth, User } from '../contexts/AuthContext';
@@ -13,9 +13,11 @@ import {
   defaultRedirectPath
 } from '@/lib/auth-routes';
 import { Loader2 } from 'lucide-react';
-import { SettingsProvider } from '../hooks/settings/get-settings';
-import { TakeABreakReminder } from '@/app/(routes)/components/take-a-break-reminder';
-import { NotificationProvider } from '../contexts/NotificationContext';
+// --- START OF FIX: No longer need to manage these providers here ---
+// import { SettingsProvider } from '../hooks/settings/get-settings';
+// import { TakeABreakReminder } from '@/app/(routes)/components/take-a-break-reminder';
+// import { NotificationProvider } from '../contexts/NotificationContext';
+// --- END OF FIX ---
 
 function isDynamicRouteMatch(pathname: string, pattern: string): boolean {
   if (!pattern.includes('[')) return false;
@@ -34,16 +36,9 @@ const FullScreenLoader = ({ message }: { message: string }) => (
     </main>
 );
 
-const AuthenticatedAppManager = ({ children }: { children: ReactNode }) => {
-  return (
-    <SettingsProvider>
-      <NotificationProvider>
-        <TakeABreakReminder />
-        {children}
-      </NotificationProvider>
-    </SettingsProvider>
-  );
-};
+// --- START OF FIX: The AuthenticatedAppManager is no longer needed here ---
+// const AuthenticatedAppManager = ({ children }: { children: ReactNode }) => { ... };
+// --- END OF FIX ---
 
 export const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
   const { state, dispatch } = useAuth();
@@ -63,9 +58,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
       localStorage.removeItem('preLoginRedirectPath');
       window.location.assign(redirectPath);
     }
-  // --- START OF FIX: Add 'router' to the dependency array ---
   }, [router]);
-  // --- END OF FIX ---
 
   useEffect(() => {
     if (state.status !== 'loading') return;
@@ -152,9 +145,7 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     return <FullScreenLoader message="Redirecting to 2FA verification..." />;
   }
   
-  if (state.status === 'authenticated') {
-    return <AuthenticatedAppManager>{children}</AuthenticatedAppManager>;
-  }
-
+  // --- START OF FIX: Render children directly. The providers are now handled in layout.tsx ---
   return <>{children}</>;
+  // --- END OF FIX ---
 };

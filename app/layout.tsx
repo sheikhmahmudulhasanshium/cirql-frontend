@@ -6,6 +6,8 @@ import type { Metadata } from 'next';
 import { AuthProvider } from "../components/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner"
 import { AuthInitializer } from "@/components/providers/AuthInitializer";
+import { SettingsProvider } from "@/components/hooks/settings/get-settings";
+import { NotificationProvider } from "@/components/contexts/NotificationContext";
 const geistSans = Geist({ // Corrected invocation
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -182,20 +184,24 @@ export default function RootLayout({
             ></iframe>
           </noscript>
         )}
-        <ThemeProvider
+         <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
         >
-          {/* --- START OF FIX: Simplified Provider Structure --- */}
+          {/* --- START OF FIX: Restructure provider nesting --- */}
           <AuthProvider>
-            <AuthInitializer>
-              <main className="flex flex-col min-h-screen">{children}</main>
-            </AuthInitializer>
+            <SettingsProvider>
+              <NotificationProvider>
+                <AuthInitializer>
+                    {children}
+                </AuthInitializer>
+              </NotificationProvider>
+            </SettingsProvider>
           </AuthProvider>
           {/* --- END OF FIX --- */}
-        </ThemeProvider>          
+        </ThemeProvider>                
         <Toaster />
 
       </body>
