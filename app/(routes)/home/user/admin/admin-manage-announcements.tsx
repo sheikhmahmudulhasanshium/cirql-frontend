@@ -7,10 +7,9 @@ import { Eye, EyeOff } from "lucide-react";
 import useAnnouncementsWithFilter from '@/components/hooks/announcements/get-announcement-with-filter';
 import CreateAnnouncementModal from '@/components/modals/announcements/create-announcement-modal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { FormattedDate } from '@/lib/FormattedDate';
 import UpdateAnnouncementModal from '@/components/modals/announcements/update-announcement';
 import DeleteAnnouncementModal from '@/components/modals/announcements/delete-announcement';
-import { FormattedDate } from '@/lib/FormattedDate';
-// --- ADDED: Import our custom date formatting component ---
 
 const AdminManageAnnouncements = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -50,9 +49,7 @@ const AdminManageAnnouncements = () => {
             <div className="flex-grow">
               <p className="font-semibold text-lg">{announcement.title}</p>
               <p className="text-sm text-muted-foreground">
-                {/* --- THIS IS THE FIX --- */}
                 Created on: <FormattedDate date={announcement.createdAt} formatType="short" />
-                {/* --- END OF FIX --- */}
               </p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0 w-full sm:w-auto">

@@ -12,7 +12,6 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { FormattedDate } from '@/lib/FormattedDate';
-// --- ADDED: Import our custom date formatting component ---
 
 const AdminMessages = () => {
   const [tickets, setTickets] = useState<TicketSummary[]>([]);
@@ -123,9 +122,7 @@ const AdminMessages = () => {
                 )}
                 <div className="text-xs font-medium bg-muted text-muted-foreground px-2 py-1 rounded-full whitespace-nowrap">{ticket.status}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {/* --- THIS IS THE FIX --- */}
                   <FormattedDate date={ticket.updatedAt} formatType="short" />
-                  {/* --- END OF FIX --- */}
                 </p>
               </div>
             </div>

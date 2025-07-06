@@ -9,7 +9,7 @@ import { SignInButton } from "@/components/auth/sign-in-button";
 import { ModeToggle } from "@/components/mode-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import HeaderAvatarComponent from "./header-avatar-button";
-// --- START OF FIX: SettingsProvider is no longer needed here. ---
+// --- START OF FIX: SettingsProvider is removed from here. ---
 // import { SettingsProvider } from "@/components/hooks/settings/get-settings";
 // --- END OF FIX ---
 import { NotificationBell } from "./notification-bell";
@@ -22,7 +22,7 @@ const Header = () => {
     return (
         <header className="flex h-16 sm:h-20 px-2 md:px-4 lg:px-6 items-center w-full shadow-md dark:shadow-gray-700/50 bg-background gap-2 sm:gap-3 md:gap-4 ">
             <div className="flex-shrink-0">
-                <Link href="/" aria-label="Go to homepage" className="flex items-center">
+                <Link href="/home" aria-label="Go to homepage" className="flex items-center">
                     <Image src={'/logo.png'} alt="Company Logo Short" width={40} height={40} className="block h-9 w-9 sm:h-10 sm:w-10 lg:hidden" priority />
                     <Image src={'/logo-full.svg'} alt="Company Logo Full" width={130} height={40} className="hidden lg:block h-9 sm:h-10 w-auto" priority />
                 </Link>
@@ -34,7 +34,7 @@ const Header = () => {
 
             <div className="flex items-center flex-shrink-0 gap-1 sm:gap-2">
                 {isAuthenticated ? (
-                    // --- START OF FIX: Removed the redundant SettingsProvider wrapper ---
+                    // --- START OF FIX: The redundant provider wrapper is removed. ---
                     <>
                         <Navbar />
                         <NotificationBell />

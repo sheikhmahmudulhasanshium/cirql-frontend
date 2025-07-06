@@ -1,60 +1,46 @@
-Changelog - v1.2.3 (July 6, 2025)
-This is a critical stability and security release that addresses session management, user state synchronization, and core administrative functionality. The primary focus was on fixing bugs that led to a poor and insecure user experience after login and logout.
-🐛 Critical Bug Fixes
-Comprehensive Session State & Synchronization Fix
-The Bug: After logging in, users were experiencing long delays, incorrect redirects, and stale data from previous users (including avatars and last visited pages). Logging out was unreliable.
-The Fix: We completely overhauled the frontend and backend authentication flow. The JWT payload is now enriched with essential user data. The frontend now forces a hard reload after login and logout to guarantee a clean application state for every user session. All session-related data is now correctly cleared from localStorage on logout.
-Impact: Login, logout, and page navigation are now fast, reliable, and secure. The user's avatar and data are always correctly displayed immediately after login.
+Changelog - v1.3.0 (In Progress)
+This version introduces new roles and dedicated tooling for testers, laying the groundwork for more robust quality assurance and user feedback cycles.
+✨ New Features
+Dedicated Tester Panel & Role
+What it is: A new Tester role has been added to the system. Users with this role now see a dedicated "Tester Panel" instead of the standard user dashboard. This panel includes an admin-like sidebar for easy navigation.
+Why it matters: This provides a centralized and extensible space for quality assurance. Testers can now easily access specialized tools without cluttering the main user or admin interfaces.
+Details:
+The panel features a dashboard with infographics summarizing a tester's submitted tickets (Total, Open, Pending, Closed) and a chart visualizing these statuses.
+A new "My Bug Reports" view allows testers to see a filterable and sortable list of all tickets they have submitted.
+A specialized "Report an Issue" modal allows testers to submit well-formatted bug reports to the existing support system with zero backend changes.
 Affected Files:
 Backend:
-src/auth/auth.service.ts (Enriched the JWT payload with user details)
+src/common/enums/role.enum.ts (Added the Tester role)
 Frontend:
-src/components/contexts/AuthContext.tsx (Corrected localStorage handling in the reducer)
-src/app/(routes)/auth/google/callback/page.tsx (Simplified to decode the enriched JWT and dispatch, eliminating a race condition)
-src/components/providers/AuthInitializer.tsx (Centralized provider logic and forced a hard reload on login)
-src/app/layout.tsx (Simplified provider structure)
-src/app/(routes)/home/components/header.tsx (Removed redundant provider)
-src/app/(routes)/components/header-avatar-button.tsx (Fixed logout action to use onSelect and a hard reload)
-src/app/(routes)/sign-out/page.tsx (Simplified to force a hard reload)
-src/components/auth/SignOutButton.tsx (Updated to force a hard reload)
-src/lib/auth-routes.ts (Correctly classified routes as public/protected)
-src/app/(routes)/components/RelativeTime.tsx (Made component auth-aware to prevent crashes on public pages)
-Admin Email Notification Fix
-The Bug: Email notifications for new support tickets were only being sent to the primary "owner" account, not to other users with the "admin" role.
-The Fix: The backend logic was updated to correctly identify all admin/owner accounts and send an email to each one. Implemented anti-spam best practices (staggered sending, proper headers, plain-text fallback) using nodemailer.
-Impact: All administrators now receive critical email notifications as intended, with improved deliverability.
-Affected Files:
-Backend:
-src/support/support.service.ts (Main logic change to loop through admins and build emails)
-src/email/email.service.ts (Made the sendMail method public to be accessible by other services)
-📝 What's Next (To-Do for v1.3.0 and beyond)
-This is the official roadmap for upcoming features and improvements.
+app/(routes)/home/body.tsx (Added logic to render the tester layout)
+app/(routes)/home/user/tester/tester-layout.tsx (New)
+app/(routes)/home/user/tester/tester-sidebar.tsx (New)
+app/(routes)/home/user/tester/tester-header.tsx (New)
+app/(routes)/home/user/tester/tester-dashboard.tsx (New)
+app/(routes)/home/user/tester/bug-list.tsx (New)
+app/(routes)/home/user/tester/issue-reporter.tsx (New)
+components/modals/BugReportModal.tsx (New)
+components/contexts/AuthContext.tsx (Added Tester role to frontend enum)
+📝 Updated To-Do List (for v1.3.0 and beyond)
+Here is the remaining work for the v1.3.0 release and future updates.
 High-Priority Features
 Cloud-Based File & Image Handling
-Goal: Allow users to upload files, starting with profile pictures, with automatic optimization and fast delivery via a global CDN.
-Plan: Integrate the upload-thing library with a Cloudflare R2 bucket. This is considered an essential addition for this feature.
+Goal: Allow users to upload files, starting with profile pictures.
+Plan: Integrate upload-thing with Cloudflare R2.
 Enhanced 2FA/MFA System
-Goal: Fulfill the user request to improve 2FA security by using a more complex code.
-Plan: Update the existing email-based 2FA system to generate a 6-character alphanumeric code (including special characters) instead of just digits, using the built-in crypto module.
+Goal: Improve 2FA security with a more complex, non-numeric code.
+Plan: Update the email-based 2FA system to generate a 6-character alphanumeric code.
 Message Editing & Ticket Unlocking
-Goal: Give users the ability to edit their ticket messages and allow admins to lock/unlock support tickets.
-Plan: Add new backend endpoints and corresponding frontend UI controls for these actions. This will involve adding a "Locked" status to the ticket system.
+Goal: Allow users to edit their messages and admins to lock/unlock tickets.
+Plan: Add new backend endpoints and frontend UI for these actions.
 User Experience & Admin Features
 "Resume Session" on Login
-Goal: A highly requested user experience improvement. When a user logs in, redirect them to the last page they were on during their previous session, instead of always defaulting to /home.
-Plan: This will be implemented by saving the user's last visited URL to their profile in the database and retrieving it upon login.
+Goal: Redirect users to their last visited page upon login.
+Plan: Save the last URL to the user's profile in the database.
 In-App Surveys & Feedback System
-Goal: Create a simple and effective way to gather user feedback directly within the application.
-Plan: Integrate Google Forms for "System Review," "Feature Polls," and "Bug Reports" into dedicated pages or modals.
-Add "Tester" Role
-Goal: Create a new user role for QA and testing purposes.
-Plan: Add a Tester role to the backend user role enum.
+Goal: Gather user feedback directly within the app.
+Plan: Integrate Google Forms for surveys and polls.
 Optional & Future Technical Improvements
-These are important but non-urgent items to be addressed in future releases to improve maintainability and performance.
 Architectural Refactor: Centralize Header/Footer Logic
-Goal: Improve code maintainability by creating a single "switcher" component that conditionally renders the public vs. authenticated header.
-Plan: Create an AppLayout component (or modify BasicPageProvider as you suggested) that uses the useAuth hook to select the correct header, then simplify all page components to use this central layout.
 Deferred Improvement: Refactor In-Memory Caching
-Goal: Improve backend performance and scalability for the Vercel serverless environment.
-Problem: The current in-memory cache in the ActivityService is not effective.
-Plan (Future): Replace the in-memory Map with a distributed cache service like Vercel KV or Upstash Redis. This is a key piece of technical debt to address as the application grows.
+This updated changelog accurately reflects our progress. We are ready for the next task.

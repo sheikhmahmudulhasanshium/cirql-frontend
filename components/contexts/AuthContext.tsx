@@ -15,11 +15,14 @@ export interface User {
   banReason?: string;
 }
 
+// --- START OF FIX: Add the Tester role to the frontend enum ---
 export enum Role {
   User = 'user',
   Admin = 'admin',
   Owner = 'owner',
+  Tester = 'tester',
 }
+// --- END OF FIX ---
 
 interface AuthState {
   status: 'loading' | 'authenticated' | 'unauthenticated' | '2fa_required';
@@ -66,13 +69,10 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
         isAdmin: false,
       };
     case 'LOGOUT':
-      // --- START OF FIX: Clear ALL session-related data from localStorage ---
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken');
-        // This is the crucial missing piece.
         localStorage.removeItem('preLoginRedirectPath');
       }
-      // --- END OF FIX ---
       return {
         ...initialState,
         status: 'unauthenticated',
@@ -101,7 +101,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const refreshUser = useCallback(async () => {
     const tokenFromState = state.token;
     if (state.status !== 'authenticated' || !tokenFromState) return;
-
     try {
       const response = await apiClient.get('/auth/status');
       const user = response.data as User;
