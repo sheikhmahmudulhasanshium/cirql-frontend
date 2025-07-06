@@ -61,14 +61,11 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     } else {
       const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
       localStorage.removeItem('preLoginRedirectPath');
-      
-      // --- START OF FIX: Force a hard reload to the destination ---
-      // This ensures a completely fresh application state after login.
-      // We use window.location.assign which is equivalent to a user click.
       window.location.assign(redirectPath);
-      // --- END OF FIX ---
     }
-  }, []); // router is stable and doesn't need to be in dependencies
+  // --- START OF FIX: Add 'router' to the dependency array ---
+  }, [router]);
+  // --- END OF FIX ---
 
   useEffect(() => {
     if (state.status !== 'loading') return;
@@ -142,14 +139,12 @@ export const AuthInitializer = ({ children }: { children: React.ReactNode }) => 
     }
   }, [state.status, state.user, pathname, router, isMounted, handleLoginSuccess]);
 
-  // The loading screens remain crucial for a good UX during transitions
   if (!isMounted || state.status === 'loading') {
     return <FullScreenLoader message="Initializing Session..." />;
   }
   if (state.status === 'authenticated' && state.user?.accountStatus === 'banned' && pathname !== '/banned') {
     return <FullScreenLoader message="Redirecting..." />;
   }
-  // This loader is shown briefly after the Google callback while the hard reload is initiated.
   if (state.status === 'authenticated' && authRoutes.includes(pathname)) {
     return <FullScreenLoader message="Login successful, redirecting..." />;
   }
