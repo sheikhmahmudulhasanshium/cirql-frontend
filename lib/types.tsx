@@ -1,11 +1,11 @@
+// src/lib/types.ts
 import { ReactNode } from "react";
 
 export enum Role {
   User = 'user',
   Admin = 'admin',
   Owner = 'owner',
-  Tester = 'tester', // --- ADDED: New role for testers ---
-
+  Tester = 'tester',
 }
 
 export interface User {
@@ -99,13 +99,11 @@ export interface SettingsDto {
   contentPreferences: ContentPreferencesDto;
   uiCustomizationPreferences: UiCustomizationPreferencesDto;
   wellbeingPreferences: WellbeingPreferencesDto;
-  // --- UPDATED: Full dateTimePreferences object ---
   dateTimePreferences: {
     shortDateFormat: string;
     longDateFormat: string;
     timeFormat: string;
   };
-  // --- END UPDATED ---
   createdAt: string;
   updatedAt: string;
 }
@@ -119,13 +117,11 @@ export type UpdateSettingDto = {
   contentPreferences?: Partial<ContentPreferencesDto>;
   uiCustomizationPreferences?: Partial<UiCustomizationPreferencesDto>;
   wellbeingPreferences?: Partial<WellbeingPreferencesDto>;
-  // --- UPDATED: Full optional dateTimePreferences object ---
   dateTimePreferences?: {
     shortDateFormat?: string;
     longDateFormat?: string;
     timeFormat?: string;
   };
-  // --- END UPDATED ---
 };
 
 export interface UpdateThemeDto {
@@ -295,6 +291,7 @@ export interface TicketSummary {
   };
   guestName?: string;
   guestEmail?: string;
+  isLocked: boolean; // --- ADDED ---
 }
 
 export interface TicketMessage {
@@ -307,12 +304,14 @@ export interface TicketMessage {
   };
   content: string;
   createdAt: string;
+  editedAt?: string; // --- ADDED ---
 }
 
 export interface TicketDetails {
   _id: string;
   subject: string;
   status: TicketStatus;
+  isLocked: boolean; // --- ADDED ---
   messages: TicketMessage[];
   lastSeenByUserAt: string | null;
   lastSeenByAdminAt: string | null;

@@ -1,47 +1,50 @@
-Changelog - v1.3.0 (In Progress)
-This version introduces new roles and dedicated tooling for testers, alongside significant user experience enhancements like smart navigation, laying the groundwork for more robust quality assurance and a more personalized user journey.
+Changelog - v1.4.0 (In Progress)
+This entry documents the addition of advanced filtering and sorting capabilities for the admin support inbox.
 ✨ New Features
-Smart Navigation System
-What it is: The application now intelligently tracks user navigation to provide two key enhancements: "Resume Session" and "Quick Access Shortcuts".
-Why it matters: This makes the platform feel more personal and efficient. Users can seamlessly pick up where they left off, and frequent destinations are just a click away, reducing friction and improving workflow.
-Details:
-Resume Session: Upon logging in, users are now automatically redirected to the last page they were on during their previous session, instead of always defaulting to the home page.
-Quick Access Shortcuts: A new "Quick Access" card on the user dashboard displays a personalized list of the top 5 most frequently visited pages, providing one-click access to their favorite parts of the app.
-This is all powered by a new backend activity logging system that securely tracks page views per user.
+What it is: The primary admin ticket view (/home, "Contact Inbox" tab) has been enhanced with powerful new UI controls. Administrators can now filter the ticket list by status (Open, Pending Reply, Closed, Locked) and sort the results by "Last Updated," "First Updated," or "Subject" (ascending/descending).
+Why it matters: This is a critical quality-of-life improvement for the support and moderation team. It allows administrators to instantly triage the inbox, prioritize tickets that need immediate attention (e.g., filter for "Open"), find specific conversations, and manage their workflow much more efficiently.
 Affected Files:
 Backend:
-src/activity/schemas/activity-log.schema.ts (Added PAGE_VIEW action)
-src/activity/activity.service.ts (Added getNavigationStats logic)
-src/activity/activity.controller.ts (Added new endpoints)
-src/activity/dto/ (New DTO files for the feature)
+src/support/dto/admin-tickets-query.dto.ts: (New) A DTO was created to validate and type-safe the incoming query parameters.
+src/support/support.controller.ts: The getAllTicketsForAdmin endpoint was updated to accept the new query DTO.
+src/support/support.service.ts: The getAllTicketsForAdmin method was rewritten to dynamically build a Mongoose query based on the provided filter and sort parameters. The TicketSummary interface was updated to include the isLocked status.
 Frontend:
-components/providers/AuthInitializer.tsx (Updated login logic to use lastVisitedUrl)
-components/hooks/activity/usePageLogger.ts (New)
-components/hooks/activity/useNavigationStats.ts (New)
-app/(routes)/home/user/user/Shortcuts.tsx (New UI component)
-app/(routes)/home/user/user/dashboard-home.tsx (Integrated shortcuts)
-Dedicated Tester Panel & Role
-What it is: A new Tester role has been added. Users with this role see a dedicated "Tester Panel" with an admin-like sidebar, a dashboard with bug submission stats, a sortable list of their submitted reports, and a specialized reporting modal.
-Why it matters: Provides a centralized space for QA, enabling more effective testing and feedback cycles without cluttering other user interfaces.
-Affected Files:
-Backend: src/common/enums/role.enum.ts
-Frontend: app/(routes)/home/body.tsx, all files in app/(routes)/home/user/tester/, components/modals/BugReportModal.tsx, components/contexts/AuthContext.tsx
-📝 Updated To-Do List (for v1.3.0 and beyond)
-Here is the remaining work for the v1.3.0 release and future updates.
+app/(routes)/home/user/admin/admin-messages.tsx: This component was significantly refactored. State management for filters and sorting was added, along with new DropdownMenu controls. The data fetching logic was updated to pass the selected options as query parameters to the API.
+lib/types.ts: The TicketSummary type was updated to include the isLocked property, ensuring type safety with the new API response.
+🚀 What's New in This Update?
+Here's a summary of the powerful new features now available for your team:
+A Smarter, Faster Inbox for Admins: Say goodbye to endless scrolling! The admin support inbox is now equipped with powerful filtering and sorting tools. Instantly find the tickets that matter most by filtering by status—like 'Open' or 'Locked'—and sorting by the last update time or subject.
+New Moderation Tools: Lock & Edit:
+For Admins: You can now Lock a heated or sensitive conversation to pause all replies and investigate without interruption. Unlock it when you're ready to continue.
+For Users: Made a typo in your support ticket? You can now edit your own messages to correct mistakes or add clarity.
+Enhanced Security: Your account is now even more secure. Our Two-Factor Authentication system has been upgraded to use 6-character alphanumeric codes, increasing the possible combinations from one million to over two billion.
+📝 Updated To-Do List (for v1.4.0 and beyond)
+Here is the remaining work for this release cycle and a look at future improvements.
 High-Priority Features
 Cloud-Based File & Image Handling
-Goal: Allow users to upload files, starting with profile pictures.
-Plan: Integrate upload-thing with Cloudflare R2.
-Enhanced 2FA/MFA System
-Goal: Improve 2FA security with a more complex, non-numeric code.
-Plan: Update the email-based 2FA system to generate a 6-character alphanumeric code.
-Message Editing & Ticket Unlocking
-Goal: Allow users to edit their messages and admins to lock/unlock tickets.
-Plan: Add new backend endpoints and frontend UI for these actions.
+Goal: Allow users to upload files, starting with profile pictures, to personalize their experience and enable richer content.
+Plan: Integrate upload-thing with Cloudflare R2 for a modern, robust, and cost-effective file handling solution.
+Backend Setup (Next Immediate Step):
+Prerequisites: Add the required Cloudflare R2 and upload-thing credentials to the .env file.
+Dependencies: Install the upload-thing and @uploadthing/react packages in the backend project.
+File Router: Create a new src/upload/upload.router.ts file. This is the core of the backend logic. It will define a file route that:
+Checks for an authenticated user via their JWT.
+Restricts uploads to images only (e.g., image/*).
+Enforces a file size limit (e.g., 4MB).
+(Optional) Includes a callback onUploadComplete that could update the user's record, though we'll handle this on the client for now.
+Integration: Create a new UploadModule and a controller to expose the upload-thing router via a NestJS endpoint (e.g., /api/uploadthing).
+Frontend Implementation:
+Upload Component: Build a reusable ImageUpload component using upload-thing's React hooks. This component will handle the UI for file selection, display upload progress, and manage error states.
+Profile Integration: Add the ImageUpload component to the user profile settings page.
+State Management: On successful upload, use the returned file URL to call the existing PATCH /users/profile/me endpoint to update the user's picture field in the database. Also, update the AuthContext state to reflect the new profile picture instantly in the UI.
 User Experience & Admin Features
 In-App Surveys & Feedback System
-Goal: Gather user feedback directly within the app.
-Plan: Integrate Google Forms for surveys and polls.
+Goal: Implement a lightweight system to gather user feedback directly within the application.
+Plan: Integrate Google Forms by embedding a form within an <iframe> on a dedicated feedback page or modal. This is a frontend-only task.
 Optional & Future Technical Improvements
 Architectural Refactor: Centralize Header/Footer Logic
+Goal: Improve code maintainability and reduce repetition by ensuring common layout components are defined in a single, centralized location.
+Plan: Utilize Next.js App Router root layout.tsx files and route groups to wrap pages with the appropriate Header and Footer components.
 Deferred Improvement: Refactor In-Memory Caching
+Goal: Replace the current in-memory Map-based caching in the backend with a distributed, persistent caching solution like Redis.
+Plan: This is a backend-only architectural update. It involves setting up a managed Redis instance and creating a CacheModule in NestJS to abstract away interactions, then migrating existing services to use it.

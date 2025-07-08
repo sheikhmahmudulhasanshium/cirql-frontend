@@ -1,3 +1,4 @@
+// app/(routes)/log-in/2fa/page.tsx
 'use client';
 
 import { useState, Suspense, useEffect } from 'react';
@@ -42,16 +43,11 @@ function Verify2faContent() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add a check to ensure we have the partial token in our state before proceeding.
     if (!code || code.length < 6 || isLoading || !state.token) return;
 
     setIsLoading(true);
     setError(null);
     try {
-      // --- START OF FIX ---
-      // Explicitly pass the partial token from the AuthContext state in the headers.
-      // This guarantees we are sending the correct token for this specific verification
-      // step, rather than relying on a potentially old token in localStorage.
       const response = await apiClient.post(
         '/auth/2fa/verify-code',
         { code },
@@ -61,13 +57,11 @@ function Verify2faContent() {
           },
         },
       );
-      // --- END OF FIX ---
       
       const { accessToken, user } = response.data as { accessToken: string, user: User };
       dispatch({ type: 'LOGIN', payload: { token: accessToken, user } });
       toast.success('Successfully authenticated!');
 
-      // Redirect logic after successful login
       const redirectPath = localStorage.getItem('preLoginRedirectPath') || defaultRedirectPath;
       localStorage.removeItem('preLoginRedirectPath');
       router.push(redirectPath);
@@ -90,7 +84,6 @@ function Verify2faContent() {
     return <div className="flex items-center justify-center min-h-screen">Loading Session...</div>;
   }
 
-  // A safety net redirect
   if (state.status !== '2fa_required') {
     return <div className="flex items-center justify-center min-h-screen">Redirecting...</div>
   }
@@ -108,7 +101,7 @@ function Verify2faContent() {
         <div className="text-center">
             <h1 className="text-2xl font-bold text-shadow-accent text-shadow-2xs">Two-Factor Verification</h1>
             <p className="mt-2 text-muted-foreground">
-              A 6-digit code has been sent to your email.
+              A 6-character code has been sent to your email.
             </p>
         </div>
         {error && (
@@ -125,8 +118,8 @@ function Verify2faContent() {
                     id="2fa-code"
                     type="text"
                     value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                    placeholder="123456"
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="A1B2C3"
                     required
                     minLength={6}
                     maxLength={6}

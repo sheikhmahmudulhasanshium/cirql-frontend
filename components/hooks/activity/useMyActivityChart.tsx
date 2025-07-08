@@ -1,15 +1,24 @@
+// src/components/hooks/activity/use-my-activity-chart.ts
 'use client';
 
 import { useState, useEffect } from 'react';
 import apiClient from '@/lib/apiClient';
 import { GrowthChartDataDto, AnalyticsPeriod } from '@/lib/types';
+import { useAuth } from '@/components/contexts/AuthContext';
 
 const useMyActivityChart = (period: AnalyticsPeriod) => {
+  const { state } = useAuth(); // --- MODIFICATION: Get auth state
   const [data, setData] = useState<GrowthChartDataDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // --- MODIFICATION: Only fetch if authenticated ---
+    if (state.status !== 'authenticated') {
+      setIsLoading(false);
+      return;
+    }
+
     const controller = new AbortController();
 
     const fetchData = async () => {
@@ -38,7 +47,7 @@ const useMyActivityChart = (period: AnalyticsPeriod) => {
     return () => {
       controller.abort();
     };
-  }, [period]);
+  }, [period, state.status]); // --- MODIFICATION: Depend on auth status ---
 
   return { data, isLoading, error };
 };
