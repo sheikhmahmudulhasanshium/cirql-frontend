@@ -291,9 +291,10 @@ export interface TicketSummary {
   };
   guestName?: string;
   guestEmail?: string;
-  isLocked: boolean; // --- ADDED ---
+  isLocked: boolean;
 }
 
+// --- START OF FIX ---
 export interface TicketMessage {
   _id: string;
   sender: {
@@ -303,15 +304,17 @@ export interface TicketMessage {
     roles: Role[];
   };
   content: string;
+  attachments?: string[]; // Add this optional property
   createdAt: string;
-  editedAt?: string; // --- ADDED ---
+  editedAt?: string;
 }
+// --- END OF FIX ---
 
 export interface TicketDetails {
   _id: string;
   subject: string;
   status: TicketStatus;
-  isLocked: boolean; // --- ADDED ---
+  isLocked: boolean;
   messages: TicketMessage[];
   lastSeenByUserAt: string | null;
   lastSeenByAdminAt: string | null;
@@ -342,4 +345,28 @@ export interface AdminAnalyticsDto {
 export interface GrowthChartDataDto {
   date: string;
   count: number;
+}
+
+// src/lib/types.ts
+
+// ... (all your existing types and enums) ...
+
+export interface Media {
+  _id: string;
+  userId: string;
+  url: string;
+  key: string;
+  filename: string;
+  size: number;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// --- ADD THIS INTERFACE AT THE END OF THE FILE ---
+export interface JwtPayload {
+  sub: string;
+  email: string;
+  roles: Role[];
+  isTwoFactorAuthenticationComplete: boolean;
 }

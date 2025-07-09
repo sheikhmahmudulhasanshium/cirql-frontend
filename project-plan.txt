@@ -1,50 +1,63 @@
-Changelog - v1.4.0 (In Progress)
-This entry documents the addition of advanced filtering and sorting capabilities for the admin support inbox.
+Changelog - v1.5.0 (In Progress)
+This version introduces a comprehensive, database-backed media management system, allowing users to upload, view, and delete their own files. It builds upon the initial file upload API to provide a full CRUD (Create, Read, Delete) experience.
 ✨ New Features
-What it is: The primary admin ticket view (/home, "Contact Inbox" tab) has been enhanced with powerful new UI controls. Administrators can now filter the ticket list by status (Open, Pending Reply, Closed, Locked) and sort the results by "Last Updated," "First Updated," or "Subject" (ascending/descending).
-Why it matters: This is a critical quality-of-life improvement for the support and moderation team. It allows administrators to instantly triage the inbox, prioritize tickets that need immediate attention (e.g., filter for "Open"), find specific conversations, and manage their workflow much more efficiently.
+What it is: The application now features a complete media management system. A new set of frontend and backend components work together to handle file uploads securely. Every file a user uploads is now tracked in the database, linked to their account. New API endpoints have been created to allow users to fetch and delete their own media.
+Why it matters: This is a foundational step towards giving users full control over their content. It enables future features like a "My Uploads" gallery and allows for attachments in support tickets and other parts of the app. It also ensures that when a user deletes a file, it is removed from both our database and cloud storage, which is essential for data privacy and storage management.
 Affected Files:
-Backend:
-src/support/dto/admin-tickets-query.dto.ts: (New) A DTO was created to validate and type-safe the incoming query parameters.
-src/support/support.controller.ts: The getAllTicketsForAdmin endpoint was updated to accept the new query DTO.
-src/support/support.service.ts: The getAllTicketsForAdmin method was rewritten to dynamically build a Mongoose query based on the provided filter and sort parameters. The TicketSummary interface was updated to include the isLocked status.
-Frontend:
-app/(routes)/home/user/admin/admin-messages.tsx: This component was significantly refactored. State management for filters and sorting was added, along with new DropdownMenu controls. The data fetching logic was updated to pass the selected options as query parameters to the API.
-lib/types.ts: The TicketSummary type was updated to include the isLocked property, ensuring type safety with the new API response.
+Backend (cirql-backend):
+src/upload/schemas/media.schema.ts: (New) A new Mongoose schema to store metadata for each uploaded file, linking it to a user.
+src/upload/media.service.ts: (New) A dedicated service to handle all database operations for media files (create, find by user, delete).
+src/upload/media.controller.ts: (New) Exposes new API endpoints (POST /media, GET /media/my-uploads, DELETE /media/:id). The POST endpoint is secured for server-to-server communication.
+src/upload/upload.module.ts: Registered the new Media schema, service, and controller.
+(Deleted) upload.controller.ts and upload.router.ts were removed as part of the architectural change to the official Next.js App Router pattern for uploadthing.
+Frontend (cirql-frontend):
+app/api/uploadthing/route.ts: (New) The official Next.js API route handler for uploadthing. It intercepts all upload requests from the client.
+app/api/uploadthing/core.ts: (New) The core file router for uploadthing. It defines the types of files that can be uploaded and contains the server-side authentication middleware and onUploadComplete callback.
+src/components/hooks/media/: (New) New folder containing get-my-media.ts and delete-media.ts hooks to communicate with the backend's media endpoints.
+src/app/(routes)/settings/my-uploads/: (New) The new page and body components for the "My Uploads" gallery.
+src/app/(routes)/settings/body.tsx: Updated to include a link to the new "My Uploads" page.
+src/lib/types.ts: Updated to include Media and JwtPayload interfaces.
+src/components/file-upload.tsx: Updated to pass the user's auth token in the request headers.
+Architectural Decisions & Debugging Summary
+During this implementation, several critical architectural decisions and debugging steps were taken:
+Adopted the Official Next.js App Router Pattern for uploadthing:
+Reasoning: Initial attempts to proxy upload requests directly from the frontend to the NestJS backend resulted in persistent 404 Not Found and CORS-related errors. The official uploadthing documentation and best practices for Next.js strongly recommend using a dedicated API route within the Next.js project (/app/api/uploadthing). This pattern simplifies the flow by handling authentication and pre-signed URL generation on the Next.js server (as a "Backend for the Frontend").
+Implementation: We created route.ts and core.ts in the frontend project. The core.ts file now contains an authMiddleware that verifies the user's JWT. After a successful upload, the onUploadComplete callback makes a secure, server-to-server POST request to the NestJS backend to save the file's metadata.
+Secured Server-to-Server Communication:
+Reasoning: To ensure that only our Next.js server can call the POST /media endpoint on our NestJS backend, a shared secret key was introduced. This prevents unauthorized actors from creating media records in our database.
+Implementation: A new environment variable, UPLOADTHING_WEBHOOK_SECRET, was created. This secret is present on both servers. The Next.js server sends it in a custom header (x-uploadthing-webhook-secret), and the NestJS controller verifies it before proceeding.
+Resolved Package and Environment Conflicts:
+Reasoning: An early attempt to upgrade to uploadthing@7 caused the NestJS backend to crash due to its use of modern ES Module syntax (import.meta) in a CommonJS environment. Furthermore, uploadthing@7 uses a different set of environment variables (UPLOADTHING_TOKEN).
+Implementation: Both the frontend and backend uploadthing packages were standardized to the latest stable v6 release (~6.13.x), which is fully compatible with the NestJS environment. The required environment variables (UPLOADTHING_SECRET, UPLOADTHING_APP_ID) were then correctly configured in the frontend's .env file, as the Next.js server now handles the primary interaction with the UploadThing service.
 🚀 What's New in This Update?
-Here's a summary of the powerful new features now available for your team:
-A Smarter, Faster Inbox for Admins: Say goodbye to endless scrolling! The admin support inbox is now equipped with powerful filtering and sorting tools. Instantly find the tickets that matter most by filtering by status—like 'Open' or 'Locked'—and sorting by the last update time or subject.
-New Moderation Tools: Lock & Edit:
-For Admins: You can now Lock a heated or sensitive conversation to pause all replies and investigate without interruption. Unlock it when you're ready to continue.
-For Users: Made a typo in your support ticket? You can now edit your own messages to correct mistakes or add clarity.
-Enhanced Security: Your account is now even more secure. Our Two-Factor Authentication system has been upgraded to use 6-character alphanumeric codes, increasing the possible combinations from one million to over two billion.
-📝 Updated To-Do List (for v1.4.0 and beyond)
-Here is the remaining work for this release cycle and a look at future improvements.
+A Foundation for Your Media Library: Every file you upload is now securely logged and associated with your account. This is the behind-the-scenes work needed to build a future "My Files" gallery where you can manage all your content in one place!
+File Attachments in Support Tickets: You can now attach files when creating or replying to a support ticket.
+A New "My Uploads" Page: A dedicated page is now available in your settings where you can view and delete all your uploaded files.
+Your Profile, Your Picture: You can now upload a custom profile picture! Head over to your Settings page to find the new uploader.
+A Faster, Smarter Admin Inbox: The admin support inbox now has powerful filtering and sorting tools, helping our team respond to you faster.
+New Moderation & User Tools: Admins can now Lock and Unlock support tickets, and users can edit their own messages.
+Enhanced Security: The 2FA system now uses stronger 6-character alphanumeric codes.
+📝 Updated To-Do List (for v1.5.0 and beyond)
+Here is the remaining work and a look at future improvements.
+✅ Done in this Session
+Cloud-Based File & Image Handling: The core system is complete. The frontend authenticates and handles uploads via a Next.js API route, which then securely communicates with the NestJS backend to save metadata.
+User-Facing Media Management UI: A "My Uploads" page has been created where users can view and delete their files.
+Support Ticket Attachments: The FileUpload component has been integrated into the ticket reply and creation forms.
+🚨 Unresolved Issues
+Image Previews on "My Uploads" Page: The page correctly fetches and lists media files, but image previews (<Image> component) are not rendering, showing a fallback icon instead. This is likely a final configuration issue in next.config.mjs or a subtle styling conflict. [High Priority to Fix]
 High-Priority Features
-Cloud-Based File & Image Handling
-Goal: Allow users to upload files, starting with profile pictures, to personalize their experience and enable richer content.
-Plan: Integrate upload-thing with Cloudflare R2 for a modern, robust, and cost-effective file handling solution.
-Backend Setup (Next Immediate Step):
-Prerequisites: Add the required Cloudflare R2 and upload-thing credentials to the .env file.
-Dependencies: Install the upload-thing and @uploadthing/react packages in the backend project.
-File Router: Create a new src/upload/upload.router.ts file. This is the core of the backend logic. It will define a file route that:
-Checks for an authenticated user via their JWT.
-Restricts uploads to images only (e.g., image/*).
-Enforces a file size limit (e.g., 4MB).
-(Optional) Includes a callback onUploadComplete that could update the user's record, though we'll handle this on the client for now.
-Integration: Create a new UploadModule and a controller to expose the upload-thing router via a NestJS endpoint (e.g., /api/uploadthing).
-Frontend Implementation:
-Upload Component: Build a reusable ImageUpload component using upload-thing's React hooks. This component will handle the UI for file selection, display upload progress, and manage error states.
-Profile Integration: Add the ImageUpload component to the user profile settings page.
-State Management: On successful upload, use the returned file URL to call the existing PATCH /users/profile/me endpoint to update the user's picture field in the database. Also, update the AuthContext state to reflect the new profile picture instantly in the UI.
+Extend File Uploads to Announcements:
+Goal: Leverage the new FileUpload component to allow images in announcements.
+Plan: Integrate the component into the "Create/Update Announcement" modal, targeting the mediaUploader endpoint and saving the returned URL to the imageUrl field.
 User Experience & Admin Features
-In-App Surveys & Feedback System
-Goal: Implement a lightweight system to gather user feedback directly within the application.
-Plan: Integrate Google Forms by embedding a form within an <iframe> on a dedicated feedback page or modal. This is a frontend-only task.
+In-App Surveys & Feedback System:
+Goal: Implement a lightweight system to gather user feedback.
+Plan: Integrate Google Forms by embedding a form within an <iframe>.
 Optional & Future Technical Improvements
-Architectural Refactor: Centralize Header/Footer Logic
-Goal: Improve code maintainability and reduce repetition by ensuring common layout components are defined in a single, centralized location.
-Plan: Utilize Next.js App Router root layout.tsx files and route groups to wrap pages with the appropriate Header and Footer components.
-Deferred Improvement: Refactor In-Memory Caching
-Goal: Replace the current in-memory Map-based caching in the backend with a distributed, persistent caching solution like Redis.
-Plan: This is a backend-only architectural update. It involves setting up a managed Redis instance and creating a CacheModule in NestJS to abstract away interactions, then migrating existing services to use it.
+Add "Upload from URL" Functionality:
+Goal: Allow users to provide a URL to a media file instead of uploading it directly.
+Plan: Create a new backend endpoint that can fetch a file from a given URL and upload it to our cloud storage.
+Architectural Refactor: Centralize Header/Footer Logic:
+Plan: Utilize Next.js App Router root layout.tsx files and route groups.
+Deferred Improvement: Refactor In-Memory Caching:
+Plan: Replace the current in-memory caching with a distributed solution like Redis for a future release.

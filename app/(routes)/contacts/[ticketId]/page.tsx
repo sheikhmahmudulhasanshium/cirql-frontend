@@ -1,4 +1,4 @@
-// app/(routes)/contacts/[ticketId]/page.tsx
+// src/app/(routes)/contacts/[ticketId]/page.tsx
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -9,7 +9,7 @@ import { TicketDetails, TicketMessage, TicketStatus, Role } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Send, Lock, Unlock, Pencil, Ban } from 'lucide-react';
+import { Loader2, Send, Lock, Unlock, Pencil, Ban, Paperclip } from 'lucide-react'; // --- START OF CHANGE: Added Paperclip icon ---
 import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
@@ -17,6 +17,8 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { RelativeTime } from '@/lib/RelativeTime';
 import { editMessage, lockTicket, unlockTicket } from '@/components/hooks/support/use-ticket-action';
+import { Label } from '@/components/ui/label'; // --- START OF CHANGE: Imported the Label component ---
+import { FileUpload } from '../../components/file-upload';
 
 const TicketConversationPage = () => {
     const { state: { user, isAdmin } } = useAuth();
@@ -32,6 +34,10 @@ const TicketConversationPage = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
     const [editedContent, setEditedContent] = useState('');
+
+    // --- START OF CHANGE: State for managing file attachments ---
+    const [attachments, setAttachments] = useState<string[]>([]);
+    // --- END OF CHANGE ---
 
     const scrollToBottom = () => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -68,11 +74,21 @@ const TicketConversationPage = () => {
     }, [ticket, user, isAdmin]);
 
     const handleReply = async () => {
-        if (replyContent.trim().length === 0 || isReplying) return;
+        // --- START OF CHANGE: Include check for attachments ---
+        if ((replyContent.trim().length === 0 && attachments.length === 0) || isReplying) return;
+        // --- END OF CHANGE ---
+        
         setIsReplying(true);
         try {
-            await apiClient.post(`/support/tickets/${ticketId}/messages`, { content: replyContent });
+            // --- START OF CHANGE: Add attachments to the payload ---
+            await apiClient.post(`/support/tickets/${ticketId}/messages`, { 
+                content: replyContent,
+                attachments: attachments 
+            });
+            // --- END OF CHANGE ---
+            
             setReplyContent('');
+            setAttachments([]); // Clear attachments after sending
             toast.success('Reply sent!');
             await fetchTicket(); 
         } catch {
@@ -132,6 +148,12 @@ const TicketConversationPage = () => {
             setIsSubmittingAction(false);
         }
     };
+    
+    // --- START OF CHANGE: Handler for successful file upload ---
+    const handleUploadComplete = (url: string) => {
+        setAttachments(prev => [...prev, url]);
+    };
+    // --- END OF CHANGE ---
 
     if (isLoading || !user) {
       return (
@@ -200,6 +222,24 @@ const TicketConversationPage = () => {
                                 <div className={`flex flex-col ${isUserMessage ? 'items-end' : 'items-start'}`}>
                                     <div className={`relative p-3 rounded-lg max-w-md md:max-w-xl ${isUserMessage ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                                         <p className="text-sm break-words" style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
+                                        {/* --- START OF CHANGE: Render attachments if they exist --- */}
+                                        {message.attachments && message.attachments.length > 0 && (
+                                            <div className="mt-2 pt-2 border-t border-muted-foreground/30 space-y-1">
+                                                {message.attachments.map((url: string, index: number) => (
+                                                    <a
+                                                        key={index}
+                                                        href={url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 text-sm hover:underline"
+                                                    >
+                                                        <Paperclip className="h-3 w-3" />
+                                                        <span>{url.split('/').pop()?.split('-').slice(1).join('-') || 'Attachment'}</span>
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* --- END OF CHANGE --- */}
                                         {canEdit && (
                                             <Button variant="ghost" size="icon" className="absolute top-0 right-0 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleStartEdit(message)}>
                                                 <Pencil className="h-4 w-4"/>
@@ -227,14 +267,41 @@ const TicketConversationPage = () => {
                             <p className="text-sm text-muted-foreground">Further replies cannot be added.</p>
                         </div>
                     ) : (
-                        <>
-                            <h2 className="text-lg font-semibold mb-3">Add a Reply</h2>
+                        <div className="space-y-4">
+                            <h2 className="text-lg font-semibold">Add a Reply</h2>
                             <Textarea value={replyContent} onChange={e => setReplyContent(e.target.value)} placeholder="Type your reply here..." className="min-h-[120px]" disabled={isReplying} />
-                            <Button onClick={handleReply} className="mt-3 w-full" disabled={isReplying || replyContent.trim().length === 0}>
+                            
+                            {/* --- START OF CHANGE: Add the FileUpload component --- */}
+                            <div>
+                                <Label className="text-sm font-medium">Attach Files (optional)</Label>
+                                <div className="mt-2">
+                                    <FileUpload
+                                        endpoint="mediaUploader"
+                                        onUpload={handleUploadComplete}
+                                    />
+                                </div>
+                                {attachments.length > 0 && (
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-xs text-muted-foreground">Attached:</p>
+                                        <ul className="list-disc list-inside">
+                                            {attachments.map((url, i) => (
+                                                <li key={i} className="text-xs">
+                                                    <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                                        {url.split('/').pop()?.split('-').slice(1).join('-') || 'file'}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                            {/* --- END OF CHANGE --- */}
+
+                            <Button onClick={handleReply} className="w-full" disabled={isReplying || (replyContent.trim().length === 0 && attachments.length === 0)}>
                                 {isReplying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                                 Send Reply
                             </Button>
-                        </>
+                        </div>
                     )}
                 </div>
             </div>

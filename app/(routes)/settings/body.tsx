@@ -1,9 +1,10 @@
+// src/app/(routes)/settings/body.tsx
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import Link from 'next/link'; // --- ADDED: Import Link for navigation ---
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
@@ -20,9 +21,9 @@ import {
     BellRing, ShieldCheck, UserCog, Brush,
     LogOut, AlertTriangle, Undo, UserX, Download as DownloadIcon,
     LogIn, Text, Type,
-    View, Loader2, History, Coffee,
+    View, Loader2, Coffee,
     CalendarDays,
-    LineChart, // --- ADDED: Import a suitable icon ---
+    LineChart,
 } from 'lucide-react';
 import { useAuth } from '@/components/contexts/AuthContext';
 import { SettingsDto, UpdateSettingDto } from '@/lib/types';
@@ -291,7 +292,6 @@ export default function Body() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        {/* --- THIS IS THE FIX --- */}
                         <Separator />
                         <div className="flex items-center justify-between">
                            <div>
@@ -305,7 +305,6 @@ export default function Body() {
                                 </Button>
                            </Link>
                         </div>
-                        {/* --- END OF FIX --- */}
                     </div>
                 </section>
                 <Separator />
@@ -341,13 +340,37 @@ export default function Body() {
                 </section>
                 <Separator />
 
+                {/* --- START: NEW CONTENT & DATA SECTION --- */}
                 <section className="space-y-6">
-                    <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-muted-foreground"><History className="mr-2 h-5 w-5"/> Data & Privacy (Upcoming)</h2>
+                    <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center">
+                        <DownloadIcon className="mr-2 h-5 w-5 text-muted-foreground"/> Content & Data
+                    </h2>
                     <div className="p-4 sm:p-6 border rounded-lg shadow-sm dark:border-slate-700 space-y-6">
-                        <div className="flex items-center justify-between"><Label htmlFor="save-history" className="flex-1 cursor-pointer font-medium">Save search history</Label><Switch id="save-history" disabled /></div>
-                        <div className="flex items-center justify-between"><p className="text-sm flex-1">Clear your search history on this account.</p><Button variant="outline" disabled>Clear History</Button></div>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-md font-medium">My Uploads</h3>
+                                <p className="text-sm text-muted-foreground">View and manage all your uploaded files.</p>
+                            </div>
+                            <Link href="/settings/my-uploads" passHref>
+                                <Button variant="outline">
+                                    <View className="mr-2 h-4 w-4" />
+                                    Manage Files
+                                </Button>
+                            </Link>
+                        </div>
+                        <Separator />
+                        <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                                <h3 className="text-md font-medium">Download My Data</h3>
+                                <p className="text-sm text-muted-foreground leading-snug">Request an archive of your account data.</p>
+                            </div>
+                            <Button variant="outline" onClick={() => alert("Not implemented")}>
+                                <DownloadIcon className="mr-2 h-4 w-4" /> Download Data
+                            </Button>
+                        </div>
                     </div>
                 </section>
+                {/* --- END: NEW CONTENT & DATA SECTION --- */}
                 <Separator />
                 
                 <section className="space-y-6">
@@ -363,8 +386,6 @@ export default function Body() {
                     <h2 className="text-lg sm:text-xl font-semibold tracking-tight flex items-center text-destructive"><AlertTriangle className="mr-2 h-5 w-5" /> Danger Zone</h2>
                     <div className="p-4 sm:p-6 border rounded-lg shadow-sm border-destructive dark:border-red-700/70 space-y-8">
                         <div className="flex items-center justify-between"><div className="flex-1"><h3 className="text-md font-medium text-destructive">Deactivate Account</h3><p className="text-sm text-red-600/90 dark:text-red-500/90 leading-snug">Temporarily deactivate your account.</p></div><Button variant="outline" onClick={() => alert("Not implemented")} className="border-destructive text-destructive hover:bg-destructive/10"><UserX className="mr-2 h-4 w-4" /> Deactivate</Button></div>
-                        <Separator className="dark:bg-slate-700/50"/>
-                        <div className="flex items-center justify-between"><div className="flex-1"><h3 className="text-md font-medium">Download My Data</h3><p className="text-sm text-muted-foreground leading-snug">Request an archive of your account data.</p></div><Button variant="outline" onClick={() => alert("Not implemented")}><DownloadIcon className="mr-2 h-4 w-4" /> Download Data</Button></div>
                         <Separator className="dark:bg-slate-700/50"/>
                         <div className="flex items-center justify-between"><div className="flex-1"><h3 className="text-md font-medium text-destructive">Delete Account</h3><p className="text-sm text-red-600/90 dark:text-red-500/90 leading-snug">Permanently delete your account and all data.</p></div><Button variant="destructive" onClick={() => alert("Not implemented")}><AlertTriangle className="mr-2 h-4 w-4" /> Delete My Account</Button></div>
                     </div>

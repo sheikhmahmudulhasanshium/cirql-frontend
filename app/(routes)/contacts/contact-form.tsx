@@ -40,7 +40,6 @@ export function ContactForm() {
         setIsLoading(true);
 
         try {
-            // THIS IS THE KEY CHANGE: Call the single, correct endpoint
             await apiClient.post('/support/public-ticket', {
                 name: fullName,
                 email,
@@ -53,7 +52,6 @@ export function ContactForm() {
                 icon: <CheckCircle className="h-4 w-4" />,
             });
 
-            // Reset all form fields
             setFullName('');
             setEmail('');
             setMessage('');

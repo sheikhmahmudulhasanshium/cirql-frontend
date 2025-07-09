@@ -1,4 +1,4 @@
-// app/(routes)/contacts/new/page.tsx
+// src/app/(routes)/contacts/new/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +18,10 @@ import { Loader2 } from 'lucide-react';
 import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
-import { AxiosError } from 'axios'; // Import AxiosError for better error handling
+import { AxiosError } from 'axios';
+import { FileUpload } from '../../components/file-upload';
+// --- START OF CHANGE: Import FileUpload component ---
+// --- END OF CHANGE ---
 
 // Zod schema for robust form validation
 const formSchema = z.object({
@@ -36,6 +39,9 @@ const formSchema = z.object({
 export default function NewTicketPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // --- START OF CHANGE: Add state for attachments ---
+  const [attachments, setAttachments] = useState<string[]>([]);
+  // --- END OF CHANGE ---
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,20 +51,30 @@ export default function NewTicketPage() {
     },
   });
 
+  // --- START OF CHANGE: Create an onUpload handler ---
+  const handleUploadComplete = (url: string) => {
+    setAttachments(prev => [...prev, url]);
+  };
+  // --- END OF CHANGE ---
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const response = await apiClient.post('/support/tickets', values);
+      // --- START OF CHANGE: Include attachments in the API call ---
+      const response = await apiClient.post('/support/tickets', {
+        ...values,
+        attachments: attachments,
+      });
+      // --- END OF CHANGE ---
+      
       toast.success('Ticket created successfully!');
       router.push(`/contacts/${response.data._id}`);
     } catch (err) {
-      // --- FIX: Type the error object correctly ---
       let errorMessage = 'Failed to create ticket.';
       if (err instanceof AxiosError && err.response?.data?.message) {
-        errorMessage = err.response.data.message;
+        errorMessage = Array.isArray(err.response.data.message) ? err.response.data.message.join(', ') : err.response.data.message;
       }
       toast.error('Submission Error', { description: errorMessage });
-      // --- FIX END ---
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +143,33 @@ export default function NewTicketPage() {
                 </FormItem>
               )}
             />
+
+            {/* --- START OF CHANGE: Add the FileUpload section to the form --- */}
+            <div className="space-y-2">
+              <FormLabel>Attach Files (optional)</FormLabel>
+              <div className="mt-2">
+                  <FileUpload
+                      endpoint="mediaUploader"
+                      onUpload={handleUploadComplete}
+                  />
+              </div>
+              {attachments.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                      <p className="text-xs text-muted-foreground">Attached:</p>
+                      <ul className="list-disc list-inside">
+                          {attachments.map((url, i) => (
+                              <li key={i} className="text-xs">
+                                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                      {url.split('/').pop()?.split('-').slice(1).join('-') || 'file'}
+                                  </a>
+                              </li>
+                          ))}
+                      </ul>
+                  </div>
+              )}
+            </div>
+            {/* --- END OF CHANGE --- */}
+
             <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Ticket
