@@ -2,17 +2,17 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // The rewrites function is correctly removed for the new architecture.
-
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'raw.githubusercontent.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
-      // --- THIS IS THE FIX ---
-      // We must add the hostname for UploadThing's file storage service.
+      { protocol: 'https', hostname: 'utfs.io' },
+      // --- ADD THIS BLOCK TO FIX THE ERROR ---
+      // This allows images from any subdomain of ufs.sh,
+      // which is where your error is coming from.
       {
         protocol: 'https',
-        hostname: 'utfs.io',
+        hostname: '*.ufs.sh',
       },
       // --- END OF FIX ---
     ],

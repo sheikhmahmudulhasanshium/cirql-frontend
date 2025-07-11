@@ -61,3 +61,46 @@ Architectural Refactor: Centralize Header/Footer Logic:
 Plan: Utilize Next.js App Router root layout.tsx files and route groups.
 Deferred Improvement: Refactor In-Memory Caching:
 Plan: Replace the current in-memory caching with a distributed solution like Redis for a future release.
+
+
+Project Changelog: Cross-Account Protection Implementation
+This changelog outlines the modifications made to the cirql-backend and cirql-frontend projects to securely receive and act upon Google's Cross-Account Protection security events.
+High-Level Summary
+The primary goal was to fix the "Your project is not configured for Cross-Account Protection" warning. This was achieved by building a secure webhook on the backend to receive events from Google and adding logic to enforce session revocation for compromised accounts. The implementation was completed with zero new package dependencies and zero frontend code changes.
+I. Backend Changes (cirql-backend)
+The majority of the work was done on the backend to create a new, isolated system for handling security events.
+A. New Feature: RiscModule
+A dedicated module was created to encapsulate all logic related to the RISC (Risk and Incident Sharing and Coordination) feature.
+src/risc/risc.module.ts
+Change: Created a new NestJS module.
+Reason: To register the new controller and service with the application and import necessary dependencies (UsersModule, ConfigModule).
+src/risc/risc.controller.ts
+Change: Created a new controller with a single POST /risc/webhook endpoint.
+Reason: To provide the public-facing URL that Google's servers will send security events to. It uses @RawBody() to accept the plain-text JWT from Google and safely handles errors.
+src/risc/risc.service.ts
+Change: Created a new service containing the core business logic.
+Reason:
+Validates Tokens: Uses the existing google-auth-library to verify the JWT's signature, issuer, and audience (GOOGLE_PROJECT_ID), ensuring the message is authentic and from Google.
+Processes Events: It understands different event types (sessions-revoked, account-disabled) and calls the appropriate internal function.
+Takes Action: Implements forceUserLogout to invalidate user sessions and disableUserAccount to suspend accounts in your system.
+B. Core Application Modifications
+Key existing files were modified to support the new feature.
+src/users/schemas/user.schema.ts
+Change: Added a new optional field: tokensValidFrom: Date;.
+Reason: This is the central mechanism for session revocation. When a security event occurs, we set this timestamp. Any JWT issued before this time is now considered invalid.
+src/auth/strategies/jwt.strategy.ts
+Change: Added a new security check within the validate method.
+Reason: To enforce the tokensValidFrom rule. Before returning a validated user, it now checks if the token's iat (issued at) timestamp is older than the tokensValidFrom date. If it is, it throws a 401 UnauthorizedException, effectively logging the user out.
+src/app.module.ts
+Change: Imported and registered the new RiscModule. Added GOOGLE_PROJECT_ID to the Joi environment validation schema.
+Reason: To make the application aware of the new module and its routes, and to ensure the backend always starts with the required project ID configuration.
+II. Configuration Changes
+Backend (.env file)
+Change: Added the GOOGLE_PROJECT_ID=cirql-xyz variable.
+Reason: Required by the RiscService to correctly validate the audience of the incoming security tokens from Google.
+Frontend (next.config.mjs)
+Change: Added { protocol: 'https', hostname: '*.ufs.sh' } to the images.remotePatterns array.
+Reason: To resolve a runtime error where the Next.js Image component would not load images served from UploadThing's *.ufs.sh domain because it was not explicitly trusted.
+III. Frontend Changes (cirql-frontend)
+Change: No code changes were made.
+Reason: The existing frontend architecture was already robust enough to handle the outcome. The AuthInitializer correctly interprets the 401 Unauthorized error (which the backend now sends for a revoked token) and automatically triggers the logout flow, redirecting the user to the sign-in page. This is the desired behavior.

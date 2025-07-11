@@ -59,8 +59,7 @@ function SignInContent() {
       <div className="flex flex-col items-center justify-center min-h-screen py-12 dark:bg-gradient-to-bl dark:from-teal-300 dark:to-blue-900 bg-gradient-to-tr from-25% to-teal-900 from-blue-950">
         <div className="flex flex-col items-center justify-center w-full max-w-md p-8 space-y-8">
           <Link href={'/'}>
-            <Image src="/banner.svg" alt="Cirql Logo" width={400} height={200} className="mb-6"/>
-          </Link>
+            <Image src="/banner.svg" alt="Cirql Logo" width={400} height={200} className="mb-6" priority />          </Link>
           <div className="text-center">
             <h1 className="text-4xl font-bold text-shadow-accent text-shadow-2xs">Sign in to CiRQL</h1>
             <p className="mt-2 text-muted-foreground">Access your account or join the community.</p>
