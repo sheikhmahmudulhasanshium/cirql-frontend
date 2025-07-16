@@ -1,4 +1,3 @@
-// src/app/(routes)/contacts/new/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -19,11 +18,8 @@ import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
 import { AxiosError } from 'axios';
-import { FileUpload } from '../../components/file-upload';
-// --- START OF CHANGE: Import FileUpload component ---
-// --- END OF CHANGE ---
+import { FileUpload, UploadedFileResponse } from '../../components/uploads/file-upload';
 
-// Zod schema for robust form validation
 const formSchema = z.object({
   category: z.nativeEnum(TicketCategory, {
     required_error: "Please select a category.",
@@ -31,17 +27,13 @@ const formSchema = z.object({
   subject: z.string().min(5, {
     message: "Subject must be at least 5 characters.",
   }).max(100),
-  initialMessage: z.string().min(20, {
-    message: "Message must be at least 20 characters.",
-  }),
+  initialMessage: z.string().optional(),
 });
 
 export default function NewTicketPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // --- START OF CHANGE: Add state for attachments ---
-  const [attachments, setAttachments] = useState<string[]>([]);
-  // --- END OF CHANGE ---
+  const [attachments, setAttachments] = useState<UploadedFileResponse[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -51,24 +43,28 @@ export default function NewTicketPage() {
     },
   });
 
-  // --- START OF CHANGE: Create an onUpload handler ---
-  const handleUploadComplete = (url: string) => {
-    setAttachments(prev => [...prev, url]);
+  const handleUploadComplete = (res: UploadedFileResponse[]) => {
+    setAttachments(prev => [...prev, ...res]);
+    form.trigger();
   };
-  // --- END OF CHANGE ---
+  
+  const canSubmit = attachments.length > 0 || (form.getValues('initialMessage') || '').trim().length > 0;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      // --- START OF CHANGE: Include attachments in the API call ---
+      const attachmentUrls = attachments.map(a => a.url);
+
+      // --- START OF FIX ---
+      // We don't need the 'response' variable, so we just await the call.
       const response = await apiClient.post('/support/tickets', {
         ...values,
-        attachments: attachments,
+        attachments: attachmentUrls,
       });
-      // --- END OF CHANGE ---
+      // --- END OF FIX ---
       
       toast.success('Ticket created successfully!');
-      router.push(`/contacts/${response.data._id}`);
+      router.push(`/contacts/${response.data._id}`); // Use the response data to redirect
     } catch (err) {
       let errorMessage = 'Failed to create ticket.';
       if (err instanceof AxiosError && err.response?.data?.message) {
@@ -144,23 +140,22 @@ export default function NewTicketPage() {
               )}
             />
 
-            {/* --- START OF CHANGE: Add the FileUpload section to the form --- */}
             <div className="space-y-2">
               <FormLabel>Attach Files (optional)</FormLabel>
               <div className="mt-2">
                   <FileUpload
                       endpoint="mediaUploader"
-                      onUpload={handleUploadComplete}
+                      onUploadComplete={handleUploadComplete}
                   />
               </div>
               {attachments.length > 0 && (
                   <div className="mt-2 space-y-1">
                       <p className="text-xs text-muted-foreground">Attached:</p>
                       <ul className="list-disc list-inside">
-                          {attachments.map((url, i) => (
+                          {attachments.map((file, i) => (
                               <li key={i} className="text-xs">
-                                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                      {url.split('/').pop()?.split('-').slice(1).join('-') || 'file'}
+                                  <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                                      {file.name}
                                   </a>
                               </li>
                           ))}
@@ -168,12 +163,12 @@ export default function NewTicketPage() {
                   </div>
               )}
             </div>
-            {/* --- END OF CHANGE --- */}
 
-            <Button type="submit" disabled={isSubmitting} className="w-full">
+            <Button type="submit" disabled={isSubmitting || !canSubmit} className="w-full">
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Submit Ticket
             </Button>
+            {!canSubmit && <p className="text-xs text-center text-muted-foreground pt-2">Please enter a message or upload a file to submit.</p>}
           </form>
         </Form>
       </div>

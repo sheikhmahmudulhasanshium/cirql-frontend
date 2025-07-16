@@ -294,7 +294,6 @@ export interface TicketSummary {
   isLocked: boolean;
 }
 
-// --- START OF FIX ---
 export interface TicketMessage {
   _id: string;
   sender: {
@@ -304,11 +303,10 @@ export interface TicketMessage {
     roles: Role[];
   };
   content: string;
-  attachments?: string[]; // Add this optional property
+  attachments?: string[]; // This property is now included
   createdAt: string;
   editedAt?: string;
 }
-// --- END OF FIX ---
 
 export interface TicketDetails {
   _id: string;
@@ -347,10 +345,6 @@ export interface GrowthChartDataDto {
   count: number;
 }
 
-// src/lib/types.ts
-
-// ... (all your existing types and enums) ...
-
 export interface Media {
   _id: string;
   userId: string;
@@ -363,7 +357,6 @@ export interface Media {
   updatedAt: string;
 }
 
-// --- ADD THIS INTERFACE AT THE END OF THE FILE ---
 export interface JwtPayload {
   sub: string;
   email: string;
