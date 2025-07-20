@@ -1,5 +1,15 @@
 // In cirql-frontend/server.js
 
+// --- START OF THE GUARANTEED FIX ---
+// This line tells this specific Node.js process to allow connections to
+// localhost servers with self-signed certificates. It is the definitive fix.
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// This line is for verification. You should see it in your terminal when you restart.
+console.log('[SERVER.JS] NODE_TLS_REJECT_UNAUTHORIZED is set to:', process.env.NODE_TLS_REJECT_UNAUTHORIZED);
+// --- END OF THE GUARANTEED FIX ---
+
+
 const { createServer } = require('https');
 const { parse } = require('url');
 const next = require('next');

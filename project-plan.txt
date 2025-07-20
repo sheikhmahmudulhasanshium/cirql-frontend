@@ -1,220 +1,32 @@
-ere is a comprehensive status update and plan, incorporating everything we've discussed and the initial context you provided.
-Project Status & Changelog (As of July 12, 2025)
-This document tracks recent changes and outlines the immediate and future work for the Cirql project.
-✅ Done in this Session: Local Development Environment Hardening
-The primary focus of this session was to establish a secure, consistent, and production-aligned local development environment.
-Enabled Full HTTPS Local Development:
-cirql-frontend: Implemented a custom server.js to run the Next.js application on https://localhost:3000. This was necessary as modern Next.js versions have deprecated CLI flags for SSL. Certificates were generated using mkcert and are loaded by the custom server.
-cirql-backend: Modified src/main.ts to run the NestJS server on https://localhost:3001 for local development only. This change is scoped and does not affect the Vercel production build. Certificates were also generated using mkcert.
-Standardized Environment Configuration:
-Updated the backend's .env file and CORS policy to recognize and permit requests from the new https://localhost:3000 frontend URL.
-Identified the need to update GOOGLE_CALLBACK_TO_BACKEND_URL to https:// and to reflect this change in the Google Cloud Console.
+Project Status, Changelog & Plan (As of July 17, 2025)
+Here is the comprehensive status update, incorporating the Vercel logs and our entire conversation.
+✅ Done in this Session: New Upload Architecture
+New Frontend UI: Implemented a new attachment UI in the ticket conversation page ([ticketId]/page.tsx). It uses simple buttons to toggle between "From Device" and "From URL" upload methods, avoiding complex components.
+"Upload from URL" Feature: Successfully created a new backend endpoint (/media/from-url) that fetches a file from a public link, uploads it to your Vercel Blob storage, and saves its metadata to MongoDB. This feature is confirmed working.
+New Backend Webhook Architecture: Rerouted the responsibility for saving file metadata from the frontend to a secure backend webhook (/api/uploadthing in cirql-backend). This is a more robust and secure architecture.
 🚨 Unresolved Issues & Blockers
-This is the most critical section. The following issues are preventing further development and deployment.
-cirql-backend Build is Failing: The production build for the backend is broken due to a series of TypeScript errors that were present in the initial build log. This is the highest priority and blocks all other backend work. The errors include:
-TS2339: Property 'equals' does not exist on type 'ObjectId': Occurring in support.service.ts.
-TS2554: Expected 0 arguments, but got 1: Occurring across nearly all services (settings, social, notifications, etc.), likely due to a Mongoose version update changing methods from callback-style to promise-based.
-Stale File References: The build process is still attempting to compile the deleted upload.controller.ts and upload.router.ts, indicating they are still referenced in a module (likely upload.module.ts).
-Image Previews Not Rendering: The "My Uploads" page (/settings/my-uploads) correctly lists media files, but the Next.js <Image> component fails to render the image previews. This is a high-priority user-facing bug.
+This is the most critical section. The following issues are preventing a successful build and test cycle.
+cirql-backend Build is Failing (BLOCKER): The Vercel deployment log shows a complete build failure due to a large number of TypeScript errors. This is the highest priority and blocks all other work.
+Stale/Incorrect Controller Code: The log shows errors in upload.controller.ts that indicate the wrong code is being used (e.g., req.headers, res.status). This file needs to be replaced with the correct NestJS-specific version.
+Obsolete upload.router.ts: The build is still trying to compile upload.router.ts. This file should be deleted, and all references to it must be removed from upload.module.ts.
+Widespread Mongoose Errors (TS2554): The build log shows a repeating error (Expected 0 arguments, but got 1) across nearly every service (settings, social, notifications, activity, support). This is a systemic issue, likely from a Mongoose version update that changed how methods are called.
+ObjectId Comparison Error (TS2339): The support.service.ts is using .equals() to compare ObjectIds, which is no longer a valid method in the current Mongoose version.
+Local Webhook Connection Failure: The frontend logs show Failed to simulate callback for file. This is happening because the UploadThing dev server (on https->localhost:3000) cannot establish a trusted SSL connection with your local backend server (https->localhost:3001). This prevents local uploads from being saved to the database.
 📝 Immediate To-Do List (High Priority)
 This is the action plan for our next session.
 Fix the cirql-backend Build (BLOCKER):
-Goal: Get the backend to build successfully without any TypeScript errors.
+Goal: Get the backend to build successfully on Vercel without any errors.
 Plan:
-upload.module.ts: Remove the stale UploadController reference.
-support.service.ts: Refactor all .equals() calls on ObjectIds to string comparisons (e.g., id1.toString() === id2.toString()).
-All Services with TS2554: Review every file mentioned in the build log and refactor the failing function calls from a callback pattern to use modern async/await.
-Fix "My Uploads" Image Previews:
-Goal: Ensure user-uploaded images render correctly on the "My Uploads" page.
-Plan:
-Investigate next.config.mjs to ensure the images.remotePatterns array correctly trusts the *.ufs.sh domain from UploadThing.
-Debug the src/app/(routes)/settings/my-uploads/page.tsx component to check props passed to the <Image> component.
-Verify Google OAuth Configuration:
-Goal: Ensure Google Login works with the new HTTPS setup.
-Action: Manually update the Authorized redirect URIs in the Google Cloud Console to include https://localhost:3001/auth/google/callback.
-🚀 Future Plans (v1.5.0 and Beyond)
-Once the high-priority fixes are complete, we will proceed with the originally planned features.
-High-Priority Features:
-Announcements: Integrate the FileUpload component into the "Create/Update Announcement" modal.
-User Experience & Admin Features:
-Feedback System: Implement in-app surveys, potentially using embedded Google Forms.
-Optional & Future Technical Improvements:
-"Upload from URL": Create a backend endpoint to fetch a file from a URL and save it to cloud storage.
-Architectural Refactor: Centralize Header/Footer logic using Next.js Layouts.
-Caching: Replace the current in-memory caching with a distributed solution like Redis.
-[00:29:19.134] Running build in Washington, D.C., USA (East) – iad1
-[00:29:19.146] Build machine configuration: 2 cores, 8 GB
-[00:29:19.198] Cloning github.com/sheikhmahmudulhasanshium/cirql-frontend (Branch: main, Commit: c66ac0d)
-[00:29:20.878] Cloning completed: 1.676s
-[00:29:22.602] Restored build cache from previous deployment (AujDXa3T74T6S5BufK7EcpNKnpYq)
-[00:29:23.432] Running "vercel build"
-[00:29:23.854] Vercel CLI 44.3.0
-[00:29:24.254] Detected `pnpm-lock.yaml` 9 which may be generated by pnpm@9.x or pnpm@10.x
-[00:29:24.255] Using pnpm@10.x based on project creation date
-[00:29:24.255] To use pnpm@9.x, manually opt in using corepack (https://vercel.com/docs/deployments/configure-a-build#corepack)
-[00:29:24.284] Installing dependencies...
-[00:29:25.023] Lockfile is up to date, resolution step is skipped
-[00:29:25.151] Already up to date
-[00:29:25.495] 
-[00:29:25.496] ╭ Warning ─────────────────────────────────────────────────────────────────────╮
-[00:29:25.496] │                                                                              │
-[00:29:25.496] │   Ignored build scripts: @tailwindcss/oxide, msgpackr-extract, sharp,        │
-[00:29:25.496] │   unrs-resolver.                                                             │
-[00:29:25.496] │   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
-[00:29:25.497] │   to run scripts.                                                            │
-[00:29:25.497] │                                                                              │
-[00:29:25.497] ╰──────────────────────────────────────────────────────────────────────────────╯
-[00:29:25.497] 
-[00:29:25.515] Done in 1.1s using pnpm v10.13.1
-[00:29:25.526] Detected Next.js version: 15.3.2
-[00:29:25.542] Running "pnpm run build"
-[00:29:25.819] 
-[00:29:25.820] > cirql-frontend@0.1.0 build /vercel/path0
-[00:29:25.820] > next build
-[00:29:25.820] 
-[00:29:26.747]    ▲ Next.js 15.3.2
-[00:29:26.748] 
-[00:29:26.779]    Creating an optimized production build ...
-[00:29:45.511]  ✓ Compiled successfully in 15.0s
-[00:29:45.515]    Linting and checking validity of types ...
-[00:30:00.834]    Collecting page data ...
-[00:30:04.154]    Generating static pages (0/28) ...
-[00:30:04.866] Sitemap generation: Using date: 2025-07-12T18:30:04.775Z
-[00:30:05.561]    Generating static pages (7/28) 
-[00:30:05.562]    Generating static pages (14/28) 
-[00:30:05.693]    Generating static pages (21/28) 
-[00:30:05.717]  ✓ Generating static pages (28/28)
-[00:30:06.043]    Finalizing page optimization ...
-[00:30:06.043]    Collecting build traces ...
-[00:30:13.990] 
-[00:30:14.001] Route (app)                                 Size  First Load JS
-[00:30:14.002] ┌ ○ /                                    2.37 kB         210 kB
-[00:30:14.002] ├ ○ /_not-found                            147 B         102 kB
-[00:30:14.003] ├ ○ /about                               2.79 kB         150 kB
-[00:30:14.003] ├ ○ /activity                            6.67 kB         302 kB
-[00:30:14.003] ├ ○ /announcements                         211 B         208 kB
-[00:30:14.003] ├ ƒ /announcements/[id]                  3.15 kB         207 kB
-[00:30:14.003] ├ ƒ /api/uploadthing                       147 B         102 kB
-[00:30:14.003] ├ ○ /auth/google/callback                2.91 kB         134 kB
-[00:30:14.003] ├ ○ /banned                              4.08 kB         145 kB
-[00:30:14.003] ├ ○ /calls                                3.7 kB         189 kB
-[00:30:14.003] ├ ○ /chats                                3.7 kB         189 kB
-[00:30:14.003] ├ ○ /contacts                            5.03 kB         190 kB
-[00:30:14.003] ├ ƒ /contacts/[ticketId]                  6.5 kB         214 kB
-[00:30:14.003] ├ ○ /contacts/new                        29.7 kB         236 kB
-[00:30:14.003] ├ ○ /faq                                 4.61 kB         151 kB
-[00:30:14.003] ├ ○ /home                                22.2 kB         322 kB
-[00:30:14.003] ├ ○ /log-in/2fa                          4.92 kB         154 kB
-[00:30:14.004] ├ ○ /notifications                       6.34 kB         214 kB
-[00:30:14.004] ├ ○ /privacy-policy                      2.79 kB         150 kB
-[00:30:14.004] ├ ƒ /profile/[id]                          163 B         189 kB
-[00:30:14.004] ├ ○ /profile/me                            163 B         189 kB
-[00:30:14.004] ├ ○ /robots.txt                              0 B            0 B
-[00:30:14.004] ├ ○ /search                                 5 kB         152 kB
-[00:30:14.004] ├ ○ /settings                            13.9 kB         214 kB
-[00:30:14.004] ├ ○ /settings/my-uploads                 4.37 kB         198 kB
-[00:30:14.004] ├ ○ /sign-in                             3.36 kB         144 kB
-[00:30:14.004] ├ ○ /sign-out                            2.12 kB         124 kB
-[00:30:14.004] ├ ○ /sitemap.xml                           147 B         102 kB
-[00:30:14.004] └ ○ /terms-and-conditions                2.79 kB         150 kB
-[00:30:14.004] + First Load JS shared by all             102 kB
-[00:30:14.004]   ├ chunks/09f5f10c-184733c459458ad1.js  53.2 kB
-[00:30:14.004]   ├ chunks/951-f31d31b3fb208df1.js       46.6 kB
-[00:30:14.004]   └ other shared chunks (total)          1.93 kB
-[00:30:14.005] 
-[00:30:14.005] 
-[00:30:14.005] ○  (Static)   prerendered as static content
-[00:30:14.005] ƒ  (Dynamic)  server-rendered on demand
-[00:30:14.005] 
-[00:30:14.197] Traced Next.js server files in: 88.139ms
-[00:30:14.348] Created all serverless functions in: 150.546ms
-[00:30:14.390] Collected static files (public/, static/, .next/static): 32.99ms
-[00:30:14.499] Build Completed in /vercel/output [50s]
-[00:30:14.617] Deploying outputs...
-[00:30:22.385] 
-[00:30:22.565] Deployment completed
-[00:30:43.123] Uploading build cache [214.31 MB]...
-[00:30:46.733] Build cache uploaded: 3.619s
-[00:30:48.965] Exiting build container
-[00:30:23.084] Running build in Washington, D.C., USA (East) – iad1
-[00:30:23.085] Build machine configuration: 2 cores, 8 GB
-[00:30:23.113] Cloning github.com/sheikhmahmudulhasanshium/cirql-backend (Branch: main, Commit: 74c4c47)
-[00:30:23.445] Cloning completed: 332.000ms
-[00:30:24.322] Restored build cache from previous deployment (AqkFYWycBSRAHgiw4H6G2mUoFkaZ)
-[00:30:24.986] Running "vercel build"
-[00:30:25.433] Vercel CLI 44.3.0
-[00:30:25.604] WARN! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
-[00:30:26.168] Installing dependencies...
-[00:30:26.169] Detected `pnpm-lock.yaml` 9 which may be generated by pnpm@9.x or pnpm@10.x
-[00:30:26.169] Using pnpm@9.x based on project creation date
-[00:30:26.169] To use pnpm@10.x, manually opt in using corepack (https://vercel.com/docs/deployments/configure-a-build#corepack)
-[00:30:27.076] Lockfile is up to date, resolution step is skipped
-[00:30:27.190] Already up to date
-[00:30:27.765] 
-[00:30:27.791] Done in 1.5s using pnpm v9.15.9
-[00:30:28.025] Using TypeScript 5.8.3 (local user-provided)
-[00:30:34.337] src/settings/settings.service.ts(17,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.337] src/settings/settings.service.ts(23,45): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.338] src/settings/settings.service.ts(128,38): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.338] src/settings/settings.service.ts(148,38): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.338] src/settings/settings.service.ts(163,45): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.338] 
-[00:30:34.473] src/social/friends.service.ts(76,37): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.474] src/social/friends.service.ts(77,37): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.474] src/social/friends.service.ts(85,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.475] 
-[00:30:34.530] src/social/followers.service.ts(66,36): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.530] 
-[00:30:34.644] src/social/social.service.ts(37,44): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.644] src/social/social.service.ts(46,35): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.644] src/social/social.service.ts(89,57): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.645] 
-[00:30:34.772] src/social/groups.service.ts(27,46): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.772] src/social/groups.service.ts(97,47): error TS2554: Expected 0 arguments, but got 1.
-[00:30:34.772] 
-[00:30:35.248] src/support/support.service.ts(186,48): error TS2339: Property 'equals' does not exist on type 'ObjectId'.
-[00:30:35.249] src/support/support.service.ts(256,25): error TS2339: Property 'equals' does not exist on type 'ObjectId'.
-[00:30:35.249] src/support/support.service.ts(349,32): error TS2339: Property 'equals' does not exist on type 'ObjectId'.
-[00:30:35.249] src/support/support.service.ts(371,26): error TS2339: Property 'equals' does not exist on type 'ObjectId'.
-[00:30:35.249] src/support/support.service.ts(446,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.249] 
-[00:30:35.380] src/notifications/notifications.service.ts(108,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.381] src/notifications/notifications.service.ts(138,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.381] src/notifications/notifications.service.ts(150,59): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.382] src/notifications/notifications.service.ts(170,36): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.382] src/notifications/notifications.service.ts(181,36): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.382] 
-[00:30:35.565] src/activity/activity.service.ts(157,45): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.565] src/activity/activity.service.ts(223,45): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.565] src/activity/activity.service.ts(384,45): error TS2554: Expected 0 arguments, but got 1.
-[00:30:35.565] 
-[00:30:35.591] src/upload/upload.controller.ts(30,30): error TS2339: Property 'headers' does not exist on type 'Request<core.ParamsDictionary, any, any, core.Query, Record<string, any>>'.
-[00:30:35.592] src/upload/upload.controller.ts(33,12): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
-[00:30:35.594] src/upload/upload.controller.ts(44,12): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
-[00:30:35.594] src/upload/upload.controller.ts(55,19): error TS2349: This expression is not callable.
-[00:30:35.594]   Type 'Router' has no call signatures.
-[00:30:35.595] src/upload/upload.controller.ts(57,18): error TS2339: Property 'status' does not exist on type 'Response<any, Record<string, any>>'.
-[00:30:35.595] 
-[00:30:36.228] src/upload/upload.router.ts(24,74): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.228] src/upload/upload.router.ts(31,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:36.228] src/upload/upload.router.ts(32,17): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.228] src/upload/upload.router.ts(33,17): error TS2339: Property 'key' does not exist on type 'UploadedFileData'.
-[00:30:36.228] src/upload/upload.router.ts(34,22): error TS2339: Property 'name' does not exist on type 'UploadedFileData'.
-[00:30:36.229] src/upload/upload.router.ts(35,18): error TS2339: Property 'size' does not exist on type 'UploadedFileData'.
-[00:30:36.229] src/upload/upload.router.ts(36,18): error TS2339: Property 'type' does not exist on type 'UploadedFileData'.
-[00:30:36.229] src/upload/upload.router.ts(39,65): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.229] src/upload/upload.router.ts(48,14): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.229] src/upload/upload.router.ts(55,34): error TS2554: Expected 0 arguments, but got 1.
-[00:30:36.230] src/upload/upload.router.ts(56,17): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.230] src/upload/upload.router.ts(57,17): error TS2339: Property 'key' does not exist on type 'UploadedFileData'.
-[00:30:36.230] src/upload/upload.router.ts(58,22): error TS2339: Property 'name' does not exist on type 'UploadedFileData'.
-[00:30:36.230] src/upload/upload.router.ts(59,18): error TS2339: Property 'size' does not exist on type 'UploadedFileData'.
-[00:30:36.230] src/upload/upload.router.ts(60,18): error TS2339: Property 'type' does not exist on type 'UploadedFileData'.
-[00:30:36.231] src/upload/upload.router.ts(63,70): error TS2339: Property 'url' does not exist on type 'UploadedFileData'.
-[00:30:36.231] 
-[00:30:45.962] Build Completed in /vercel/output [20s]
-[00:30:46.533] Deploying outputs...
-[00:30:53.881] 
-[00:30:54.105] Deployment completed
-[00:31:12.689] Uploading build cache [85.98 MB]...
-[00:31:13.666] Build cache uploaded: 981.562ms
+Delete upload.router.ts from the cirql-backend/src/upload directory.
+Update upload.module.ts to remove any imports or references to upload.router.ts.
+Fix support.service.ts: Replace all instances of id1.equals(id2) with a string comparison: id1.toString() === id2.toString().
+Fix Systemic TS2554 Error: Methodically go through every service file mentioned in the build log (settings.service.ts, social.service.ts, etc.) and refactor the failing Mongoose calls from a callback pattern (which is what the error implies) to use modern async/await.
+Fix Local Webhook Connection:
+Goal: Allow local file uploads to be successfully saved to the database during local development.
+Plan: Implement the NODE_TLS_REJECT_UNAUTHORIZED fix in cirql-backend/main.ts. This is the standard, secure way to solve localhost-to-localhost SSL issues without compromising your code structure.
+🚫 What NOT To Do (Constraints & Learnings)
+To make our next session more efficient, we will adhere to the following constraints:
+Do NOT Downgrade to http: We will maintain the https setup for local development to ensure it mirrors the production environment.
+Do NOT Introduce New UI Components: We will not use Popover, ToggleGroup, or other complex components unless you specifically ask for them. We will build UIs with the basic, known components from your existing ShadCN setup (Button, Input, Label, etc.).
+🚀 Future Plans (Post-Fixes)
+Once the blockers are resolved, we can finally proceed with testing and deploying the complete, robust upload system we've designed. The architecture is sound; we just need to resolve these critical build and environment issues.

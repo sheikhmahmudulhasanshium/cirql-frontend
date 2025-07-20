@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import apiClient from '@/lib/apiClient';
 import { useAuth } from '@/components/contexts/AuthContext';
-import { TicketDetails, TicketStatus, Role, Media } from '@/lib/types';
+import { TicketDetails, TicketStatus, Role } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,19 +15,17 @@ import Footer from '../../components/footer';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { RelativeTime } from '@/lib/RelativeTime';
-import { FileUpload } from '../../components/uploads/file-upload';
+import { FileUpload, UploadedFileResponse } from '../../components/uploads/file-upload';
 import { UrlUploader } from '../../components/uploads/url-upload';
 import { Label } from '@/components/ui/label';
 
-// A more robust type for staged attachments
 interface StagedAttachment {
-  id: string; // A unique ID for the key prop and for removal
+  id: string; 
   name: string;
   url: string;
 }
 
 const TicketConversationPage = () => {
-    // --- FIX: Only destructure what is actually used ---
     const { state: { user } } = useAuth();
     const params = useParams();
     const router = useRouter();
@@ -47,7 +45,6 @@ const TicketConversationPage = () => {
         try {
             const response = await apiClient.get(`/support/tickets/${ticketId}`);
             setTicket(response.data);
-            // Silently mark ticket as seen
             apiClient.post(`/support/tickets/${ticketId}/seen`).catch(() => {});
         } catch {
             toast.error('Failed to load ticket', { description: 'You may not have permission to view this, or it may not exist.' });
@@ -65,11 +62,10 @@ const TicketConversationPage = () => {
 
     const unseenMessageCount = useMemo(() => {
         if (!ticket || !user) return 0;
-        // Assuming non-admins are users. For more complex roles, this could be adjusted.
-        const lastSeenTimestamp = ticket.lastSeenByAdminAt; 
+        const lastSeenTimestamp = ticket.lastSeenByUserAt; // This should be lastSeenByUserAt for a user-centric view
         if (!lastSeenTimestamp) return ticket.messages.filter(msg => msg.sender._id !== user._id).length;
         const lastSeenDate = new Date(lastSeenTimestamp);
-        return ticket.messages.filter(msg => new Date(msg.createdAt) > lastSeenDate).length;
+        return ticket.messages.filter(msg => new Date(msg.createdAt) > lastSeenDate && msg.sender._id !== user._id).length;
     }, [ticket, user]);
     
     const handleReply = async () => {
@@ -94,21 +90,20 @@ const TicketConversationPage = () => {
         }
     };
     
-    const handleUploadComplete = (res: { url: string; name: string }[]) => {
+    // A single handler for all file uploads (from device)
+    const handleFileUploadComplete = (res: UploadedFileResponse[]) => {
         const newAttachments = res.map(file => ({
             id: self.crypto.randomUUID(),
             name: file.name,
             url: file.url,
         }));
         setAttachments(prev => [...prev, ...newAttachments]);
+        toast.success(`${res.length} file(s) attached.`);
     };
     
-    const handleUrlUploadComplete = (media: Media) => {
-        setAttachments(prev => [...prev, {
-            id: self.crypto.randomUUID(),
-            name: media.filename,
-            url: media.url,
-        }]);
+    // A handler for URL uploads, which wraps the main handler
+    const handleUrlUploadComplete = (res: UploadedFileResponse) => {
+        handleFileUploadComplete([res]);
     };
 
     const handleRemoveAttachment = (idToRemove: string) => {
@@ -214,7 +209,7 @@ const TicketConversationPage = () => {
 
                                 <div className="p-4 border rounded-md bg-muted/50">
                                     {uploadMethod === 'device' ? (
-                                        <FileUpload endpoint="mediaUploader" onUploadComplete={handleUploadComplete} />
+                                        <FileUpload endpoint="mediaUploader" onUploadComplete={handleFileUploadComplete} />
                                     ) : (
                                         <UrlUploader onUploadComplete={handleUrlUploadComplete} />
                                     )}

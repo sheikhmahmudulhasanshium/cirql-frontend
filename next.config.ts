@@ -7,12 +7,14 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'raw.githubusercontent.com' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
       { protocol: 'https', hostname: 'utfs.io' },
-      // --- ADD THIS BLOCK TO FIX THE ERROR ---
-      // This allows images from any subdomain of ufs.sh,
-      // which is where your error is coming from.
+      { protocol: 'https', hostname: '*.ufs.sh' },
+      
+      // --- START OF FIX: Add the Vercel Blob Storage hostname ---
+      // This pattern allows images from any Vercel Blob Storage URL,
+      // which is where your files are being stored.
       {
         protocol: 'https',
-        hostname: '*.ufs.sh',
+        hostname: '*.public.blob.vercel-storage.com',
       },
       // --- END OF FIX ---
     ],
