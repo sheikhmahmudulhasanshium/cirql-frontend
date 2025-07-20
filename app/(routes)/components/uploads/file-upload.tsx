@@ -6,7 +6,6 @@ import { CheckCircle, AlertCircle, Upload, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { uploadFiles } from '@/lib/uploadthing';
-import apiClient from '@/lib/apiClient';
 
 export interface UploadedFileResponse {
   url: string;
@@ -53,18 +52,7 @@ export function FileUpload({ endpoint, onUploadComplete }: FileUploadProps) {
         headers: headers,
       });
 
-      const savePromises = res.map(file => 
-        // --- START OF FIX: Change 'name' to 'filename' to match the backend DTO ---
-        apiClient.post('/media', {
-            url: file.url,
-            key: file.key,
-            filename: file.name, // This was the typo causing the error
-            size: file.size,
-            type: file.type || 'application/octet-stream'
-        })
-        // --- END OF FIX ---
-      );
-      await Promise.all(savePromises);
+      // This apiClient.post block has been correctly removed, as the backend handles the database save.
 
       toast.success(`${res.length} file(s) uploaded successfully!`, {
         icon: <CheckCircle className="h-4 w-4" />,
@@ -90,8 +78,8 @@ export function FileUpload({ endpoint, onUploadComplete }: FileUploadProps) {
     ? selectedFiles.map(f => f.name).join(', ')
     : "No file selected";
 
+  // --- START OF FIX: Re-introducing the missing JSX return statement ---
   return (
-    // ... JSX is unchanged ...
     <div className="space-y-2">
       <div className="flex flex-col sm:flex-row gap-2">
         <Input
@@ -132,4 +120,5 @@ export function FileUpload({ endpoint, onUploadComplete }: FileUploadProps) {
       </Button>
     </div>
   );
+  // --- END OF FIX ---
 }
