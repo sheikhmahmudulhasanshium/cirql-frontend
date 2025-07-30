@@ -1,9 +1,10 @@
-// src/app/(routes)/settings/my-uploads/body.tsx
+// app/(routes)/media/page.tsx
+
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { Media, PaginatedResponse } from '@/lib/types';
+import { Media } from '@/lib/types';
 import { Loader2, Trash2, File as FileIcon, ArrowLeft, Clapperboard, FileAudio, Expand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,58 +14,61 @@ import Link from 'next/link';
 import { deleteMediaFile } from '@/components/hooks/media/delete-media';
 import { getMyMedia } from '@/components/hooks/media/get-my-media';
 
-const MediaGridSkeleton = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-    {Array.from({ length: 12 }).map((_, i) => (
-      <div key={i} className="space-y-2">
-        <Skeleton className="aspect-square w-full rounded-lg" />
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-3 w-1/2" />
-      </div>
-    ))}
-  </div>
-);
+// ... MediaGridSkeleton remains the same ...
 
-const FileCard = ({ file, onDelete }: { file: Media; onDelete: (fileId: string) => void; }) => {
+// --- MODIFICATION: Update FileCard to handle the new Media type ---
+interface FileCardProps {
+  file: Media & { name?: string; size?: number, type?: string }; // Allow optional frontend-only properties
+  onDelete: (fileId: string) => void;
+}
+
+const FileCard = ({ file, onDelete }: FileCardProps) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const isImage = file.type.startsWith('image/');
+  const isImage = file.thumbnailLink?.includes('googleusercontent.com'); // More reliable check
+  const isVideo = !isImage && file.thumbnailLink; // Google provides thumbnails for videos too
+  const isAudio = false; // We can't determine this reliably from the backend data
+  const displayName = file.name || 'Untitled File';
+  const displaySize = typeof file.size === 'number' ? `${(file.size / 1024).toFixed(1)} KB` : null;
+  
+  const previewSrc = file.thumbnailLink || `${process.env.NEXT_PUBLIC_BACKEND_URL}/media/download/${file._id}`;
+  const fullsizeSrc = `${process.env.NEXT_PUBLIC_BACKEND_URL}/media/download/${file._id}`;
 
   const handleDeleteConfirm = async () => {
-    const hasConfirmed = window.confirm(
-      `Are you sure you want to permanently delete "${file.filename}"? This action cannot be undone.`
-    );
+    const hasConfirmed = window.confirm(`Are you sure you want to delete this file reference? This action cannot be undone.`);
     if (!hasConfirmed) return;
 
     setIsDeleting(true);
     try {
       await deleteMediaFile(file._id);
-      toast.success(`"${file.filename}" was deleted successfully.`);
+      toast.success(`"${displayName}" reference was deleted.`);
       onDelete(file._id);
-    } catch (error) {
-      console.error("Failed to delete file:", error);
-      toast.error("Failed to delete file.", { description: "Please try again later." });
+    } catch (err) {
+      const deleteError = err as Error;
+      toast.error('Failed to delete file reference.', {
+        description: deleteError.message || 'The delete feature may not be fully implemented.',
+      });
     } finally {
       setIsDeleting(false);
     }
   };
 
   const renderPreview = () => {
-    const commonIconClass = "h-12 w-12 text-muted-foreground";
+    const commonIconClass = 'h-12 w-12 text-muted-foreground';
     if (isImage) {
       return (
         <Image
-          src={file.url}
-          alt={file.filename}
+          src={previewSrc}
+          alt={displayName}
           fill
           className="object-cover transition-transform group-hover:scale-105"
           sizes="(max-width: 768px) 50vw, 33vw"
         />
       );
     }
-    if (file.type.startsWith('video/')) return <Clapperboard className={commonIconClass} />;
-    if (file.type.startsWith('audio/')) return <FileAudio className={commonIconClass} />;
+    if (isVideo) return <Clapperboard className={commonIconClass} />;
+    if (isAudio) return <FileAudio className={commonIconClass} />;
     return <FileIcon className={commonIconClass} />;
   };
 
@@ -75,7 +79,8 @@ const FileCard = ({ file, onDelete }: { file: Media; onDelete: (fileId: string) 
           className="aspect-square w-full bg-muted flex items-center justify-center relative cursor-pointer"
           onClick={() => isImage && dialogRef.current?.showModal()}
           disabled={!isImage}
-          aria-label={`View ${file.filename}`}
+          aria-label={`View ${displayName}`}
+          type="button"
         >
           {renderPreview()}
           {isImage && (
@@ -84,7 +89,7 @@ const FileCard = ({ file, onDelete }: { file: Media; onDelete: (fileId: string) 
             </div>
           )}
         </button>
-        
+
         <div className="absolute top-1 right-1 z-10">
           <Button
             variant="destructive"
@@ -92,46 +97,56 @@ const FileCard = ({ file, onDelete }: { file: Media; onDelete: (fileId: string) 
             className="h-8 w-8"
             onClick={handleDeleteConfirm}
             disabled={isDeleting}
-            aria-label={`Delete ${file.filename}`}
+            aria-label={`Delete ${displayName}`}
           >
             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
           </Button>
         </div>
 
         <div className="p-2 text-sm">
-          <p className="font-semibold truncate" title={file.filename}>{file.filename}</p>
-          <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(1)} KB • {formatDate(file.createdAt, 'PP')}</p>
+          <p className="font-semibold truncate" title={displayName}>
+            {displayName}
+          </p>
+          <p className="text-xs text-muted-foreground">
+             {displaySize ? `${displaySize} • ` : ''}
+            {formatDate(file.createdAt, 'PP')}
+          </p>
         </div>
       </div>
 
-      <dialog ref={dialogRef} className="p-0 rounded-lg shadow-2xl backdrop:bg-black/50" onClick={() => dialogRef.current?.close()}>
-          <div className="relative max-w-[90vw] max-h-[90vh]">
-              <Image
-                src={file.url}
-                alt={`Zoomed view of ${file.filename}`}
-                width={1920}
-                height={1080}
-                className="w-auto h-auto max-w-full max-h-full object-contain"
-              />
-              <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent the dialog's onClick from firing
-                    dialogRef.current?.close();
-                  }}
-              >
-                  Close
-              </Button>
-          </div>
+      <dialog
+        ref={dialogRef}
+        className="p-0 rounded-lg shadow-2xl backdrop:bg-black/50"
+        onClick={() => dialogRef.current?.close()}
+      >
+        <div className="relative max-w-[90vw] max-h-[90vh]">
+          {/* Using a standard img tag for the full-size view for simplicity */}
+          <img
+            src={fullsizeSrc}
+            alt={`Zoomed view of ${displayName}`}
+            className="w-auto h-auto max-w-full max-h-full object-contain"
+          />
+          <Button
+            variant="secondary"
+            size="sm"
+            className="absolute top-2 right-2"
+            onClick={(e) => {
+              e.stopPropagation();
+              dialogRef.current?.close();
+            }}
+          >
+            Close
+          </Button>
+        </div>
       </dialog>
     </>
   );
 };
 
+
+// The main Body component remains the same as you provided
 export default function Body() {
-  const [mediaResponse, setMediaResponse] = useState<PaginatedResponse<Media> | null>(null);
+  const [media, setMedia] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,10 +155,11 @@ export default function Body() {
     setError(null);
     try {
       const data = await getMyMedia();
-      setMediaResponse(data);
+      setMedia(data ?? []);
     } catch (err) {
-      console.error(err);
-      setError("Failed to load your uploaded files. Please try again later.");
+      const fetchError = err as Error;
+      console.error(fetchError);
+      setError(`Failed to load files: ${fetchError.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -154,15 +170,7 @@ export default function Body() {
   }, [fetchMedia]);
 
   const handleFileDeleted = (deletedFileId: string) => {
-    setMediaResponse(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        data: prev.data.filter(file => file._id !== deletedFileId),
-        total: prev.total - 1,
-        pagination: { ...prev.pagination, totalItems: prev.pagination.totalItems - 1 }
-      };
-    });
+    setMedia((prev) => prev.filter((file) => file._id !== deletedFileId));
   };
 
   return (
@@ -176,7 +184,7 @@ export default function Body() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Uploads</h1>
           <p className="text-muted-foreground">
-            {isLoading ? "Loading your files..." : `You have ${mediaResponse?.total ?? 0} uploaded files.`}
+            {isLoading ? 'Loading your files...' : `You have ${media.length} uploaded files.`}
           </p>
         </div>
       </div>
@@ -185,13 +193,13 @@ export default function Body() {
         <MediaGridSkeleton />
       ) : error ? (
         <div className="text-center py-10 text-destructive bg-destructive/10 rounded-lg">{error}</div>
-      ) : !mediaResponse || mediaResponse.data.length === 0 ? (
+      ) : media.length === 0 ? (
         <div className="text-center py-10 border-2 border-dashed rounded-lg">
           <p className="text-muted-foreground">You haven&apos;t uploaded any files yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {mediaResponse.data.map(file => (
+          {media.map((file) => (
             <FileCard key={file._id} file={file} onDelete={handleFileDeleted} />
           ))}
         </div>
@@ -199,3 +207,16 @@ export default function Body() {
     </div>
   );
 }
+
+// Dummy MediaGridSkeleton to make the file complete
+const MediaGridSkeleton = () => (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="aspect-square w-full rounded-lg" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      ))}
+    </div>
+  );

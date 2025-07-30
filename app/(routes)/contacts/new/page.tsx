@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { TicketCategory } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Paperclip, X } from 'lucide-react';
 import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
@@ -33,38 +33,38 @@ const formSchema = z.object({
 export default function NewTicketPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [attachments, setAttachments] = useState<UploadedFileResponse[]>([]);
+  // --- MODIFICATION: State now holds the full response to display info, but we only send the ID ---
+  const [stagedFiles, setStagedFiles] = useState<UploadedFileResponse[]>([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      subject: "",
-      initialMessage: "",
-    },
+    defaultValues: { subject: "", initialMessage: "" },
   });
 
   const handleUploadComplete = (res: UploadedFileResponse[]) => {
-    setAttachments(prev => [...prev, ...res]);
-    form.trigger();
+    setStagedFiles(prev => [...prev, ...res]);
+    form.trigger(); // Re-validate form as we now have an attachment
+  };
+
+  const removeStagedFile = (mediaIdToRemove: string) => {
+    setStagedFiles(prev => prev.filter(file => file.mediaId !== mediaIdToRemove));
   };
   
-  const canSubmit = attachments.length > 0 || (form.getValues('initialMessage') || '').trim().length > 0;
+  const canSubmit = stagedFiles.length > 0 || (form.getValues('initialMessage') || '').trim().length > 0;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
-      const attachmentUrls = attachments.map(a => a.url);
+      // --- MODIFICATION: Extract just the mediaId from each staged file ---
+      const attachmentIds = stagedFiles.map(file => file.mediaId);
 
-      // --- START OF FIX ---
-      // We don't need the 'response' variable, so we just await the call.
       const response = await apiClient.post('/support/tickets', {
         ...values,
-        attachments: attachmentUrls,
+        attachments: attachmentIds, // Send the array of Media IDs
       });
-      // --- END OF FIX ---
       
       toast.success('Ticket created successfully!');
-      router.push(`/contacts/${response.data._id}`); // Use the response data to redirect
+      router.push(`/contacts/${response.data._id}`);
     } catch (err) {
       let errorMessage = 'Failed to create ticket.';
       if (err instanceof AxiosError && err.response?.data?.message) {
@@ -95,9 +95,7 @@ export default function NewTicketPage() {
                   <FormLabel>Reason for Contact</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a reason..." />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Select a reason..." /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {Object.values(TicketCategory).map(cat => (
@@ -130,7 +128,7 @@ export default function NewTicketPage() {
                   <FormLabel>Describe your issue</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Please include all relevant details, links, or steps to reproduce the issue."
+                      placeholder="Please include all relevant details..."
                       className="resize-y min-h-[150px]"
                       {...field}
                     />
@@ -142,24 +140,26 @@ export default function NewTicketPage() {
 
             <div className="space-y-2">
               <FormLabel>Attach Files (optional)</FormLabel>
-              <div className="mt-2">
-                  <FileUpload
-                      endpoint="mediaUploader"
-                      onUploadComplete={handleUploadComplete}
-                  />
-              </div>
-              {attachments.length > 0 && (
-                  <div className="mt-2 space-y-1">
-                      <p className="text-xs text-muted-foreground">Attached:</p>
-                      <ul className="list-disc list-inside">
-                          {attachments.map((file, i) => (
-                              <li key={i} className="text-xs">
-                                  <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                                      {file.name}
-                                  </a>
-                              </li>
+              <FileUpload
+                  endpoint="mediaUploader"
+                  onUploadComplete={handleUploadComplete}
+              />
+              {stagedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                      <p className="text-sm font-medium">Staged for submission:</p>
+                      <div className="flex flex-col gap-2 rounded-md border p-2">
+                          {stagedFiles.map((file) => (
+                              <div key={file.mediaId} className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-2 truncate">
+                                    <Paperclip className="h-4 w-4 flex-shrink-0" />
+                                    <span className="truncate">{file.name}</span>
+                                  </div>
+                                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeStagedFile(file.mediaId)}>
+                                      <X className="h-4 w-4" />
+                                  </Button>
+                              </div>
                           ))}
-                      </ul>
+                      </div>
                   </div>
               )}
             </div>

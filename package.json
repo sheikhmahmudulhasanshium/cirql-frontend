@@ -4,7 +4,7 @@
   "author": "Sheikh Mahmudul Hasan Shium",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -1,124 +1,103 @@
 'use client';
 
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef } from 'react';
 import { toast } from 'sonner';
-import { CheckCircle, AlertCircle, Upload, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { uploadFiles } from '@/lib/uploadthing';
+import { useAuth } from '@/components/contexts/AuthContext';
 
 export interface UploadedFileResponse {
-  url: string;
+  mediaId: string;
+  uploadedBy: string;
   key: string;
+  url: string;
   name: string;
   size: number;
-  type: string;
 }
 
 interface FileUploadProps {
-  endpoint: "mediaUploader" | "imageUploader";
+  endpoint: 'mediaUploader';
   onUploadComplete: (res: UploadedFileResponse[]) => void;
+  input?: {
+    ticketId?: string;
+    groupId?: string;
+  };
 }
 
-export function FileUpload({ endpoint, onUploadComplete }: FileUploadProps) {
+export function FileUpload({ endpoint, onUploadComplete, input }: FileUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const headers = useMemo(() => {
-    if (typeof window === 'undefined') return {};
-    const token = localStorage.getItem('authToken');
-    if (!token) return {};
-    return { Authorization: `Bearer ${token}` };
-  }, []);
+  // Access token from auth context
+  const { state } = useAuth();
+  const token = state.token;
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleUploadClick = async () => {
-    if (selectedFiles.length === 0) return;
-    if (!headers.Authorization) {
-      toast.error("Authentication Error", { description: "You must be logged in to upload files." });
+  const handleUpload = async (files: File[]) => {
+    if (files.length === 0) return;
+    if (!token) {
+      toast.error('Please login to upload files.');
       return;
     }
-    
+
     setIsUploading(true);
+
     try {
       const res = await uploadFiles(endpoint, {
-        files: selectedFiles,
-        headers: headers,
+        files,
+        input: input || {},
+        headers: {
+          Authorization: `Bearer ${token}`,  // Pass the JWT token here
+        },
       });
 
-      // This apiClient.post block has been correctly removed, as the backend handles the database save.
+      const mappedFiles: UploadedFileResponse[] = res.map((file) => ({
+        mediaId: file.key,
+        uploadedBy: '',
+        key: file.key || '',
+        url: file.url || '',
+        name: file.name || file.key,
+        size: file.size || 0,
+      }));
 
-      toast.success(`${res.length} file(s) uploaded successfully!`, {
-        icon: <CheckCircle className="h-4 w-4" />,
-      });
-      onUploadComplete(res);
-      setSelectedFiles([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "An unknown error occurred.";
-      toast.error("Upload Error", {
-        icon: <AlertCircle className="h-4 w-4" />,
-        description: message,
-      });
+      toast.success("Upload complete!");
+      onUploadComplete(mappedFiles);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      toast.error('Upload Error', { description: errorMsg });
     } finally {
       setIsUploading(false);
     }
   };
-  
-  const fileDisplayValue = selectedFiles.length > 0 
-    ? selectedFiles.map(f => f.name).join(', ')
-    : "No file selected";
 
-  // --- START OF FIX: Re-introducing the missing JSX return statement ---
   return (
-    <div className="space-y-2">
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Input
-          readOnly
-          value={fileDisplayValue}
-          className="flex-grow cursor-default"
-          placeholder="Your selected files will appear here"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-        >
-          Choose File(s)
-        </Button>
+    <div
+      className="flex flex-col sm:flex-row items-center gap-2 rounded-lg border p-4"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files) { handleUpload(Array.from(e.dataTransfer.files)); } }}
+    >
+      <Upload className="h-8 w-8 text-muted-foreground flex-shrink-0" />
+      <div className="flex-grow text-center sm:text-left">
+        <p className="font-semibold">Click to browse or drag and drop</p>
+        <p className="text-xs text-muted-foreground">Supports various file types.</p>
       </div>
       <input
         ref={fileInputRef}
         type="file"
         className="hidden"
-        multiple={endpoint === 'mediaUploader'}
-        onChange={handleFileSelect}
+        multiple
+        onChange={(e) => { if (e.target.files) handleUpload(Array.from(e.target.files)); }}
         disabled={isUploading}
       />
       <Button
         type="button"
-        onClick={handleUploadClick}
-        disabled={isUploading || selectedFiles.length === 0}
-        className="w-full"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isUploading}
+        className="w-full sm:w-auto"
       >
-        {isUploading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        ) : (
-          <Upload className="mr-2 h-4 w-4" />
-        )}
-        Upload {selectedFiles.length > 0 ? `(${selectedFiles.length})` : ''}
+        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+        {isUploading ? 'Uploading...' : 'Choose File(s)'}
       </Button>
     </div>
   );
-  // --- END OF FIX ---
 }

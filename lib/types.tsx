@@ -1,4 +1,3 @@
-// src/lib/types.ts
 import { ReactNode } from "react";
 
 export enum Role {
@@ -294,6 +293,22 @@ export interface TicketSummary {
   isLocked: boolean;
 }
 
+export interface Media {
+  _id: string;
+  owner: string;
+  googleFileId: string;
+  visibility: 'public' | 'private' | 'shared';
+  thumbnailLink?: string;
+  contextId?: string;
+  contextModel?: 'Group' | 'Conversation' | 'Ticket';
+  filename?: string; // ADDED BACK
+  size?: number;     // ADDED BACK
+  type?: string;     // ADDED BACK
+  createdAt: string;
+  updatedAt: string;
+}
+
+
 export interface TicketMessage {
   _id: string;
   sender: {
@@ -303,11 +318,10 @@ export interface TicketMessage {
     roles: Role[];
   };
   content: string;
-  attachments?: string[]; // This property is now included
+  attachments: Media[]; // This will now correctly use the updated Media type
   createdAt: string;
   editedAt?: string;
 }
-
 export interface TicketDetails {
   _id: string;
   subject: string;
@@ -317,6 +331,7 @@ export interface TicketDetails {
   lastSeenByUserAt: string | null;
   lastSeenByAdminAt: string | null;
 }
+
 
 export type AnalyticsPeriod = '1m' | '12h' | '1d' | '7d' | '30d' | '365d';
 
@@ -343,18 +358,6 @@ export interface AdminAnalyticsDto {
 export interface GrowthChartDataDto {
   date: string;
   count: number;
-}
-
-export interface Media {
-  _id: string;
-  userId: string;
-  url: string;
-  key: string;
-  filename: string;
-  size: number;
-  type: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface JwtPayload {

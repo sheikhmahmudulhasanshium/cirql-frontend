@@ -1,4 +1,5 @@
-// src/lib/uploadthing.ts
+// cirql-frontend/lib/uploadthing.ts
+
 import { generateReactHelpers } from "@uploadthing/react";
 import type { OurFileRouter } from "@/app/api/uploadthing/core";
 
