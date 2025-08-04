@@ -121,7 +121,7 @@ const FileCard = ({ file, onDelete }: FileCardProps) => {
       >
         <div className="relative max-w-[90vw] max-h-[90vh]">
           {/* Using a standard img tag for the full-size view for simplicity */}
-          <img
+          <Image
             src={fullsizeSrc}
             alt={`Zoomed view of ${displayName}`}
             className="w-auto h-auto max-w-full max-h-full object-contain"

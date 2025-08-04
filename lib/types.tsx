@@ -366,3 +366,24 @@ export interface JwtPayload {
   roles: Role[];
   isTwoFactorAuthenticationComplete: boolean;
 }
+
+
+/**
+ * Represents the combined user, profile, and settings data
+ * returned by the backend's /profile endpoints.
+ */
+export interface Profile {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  picture?: string;
+  headline?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  isPrivate: boolean;
+  accountStatus: 'active' | 'banned';
+  roles: Role[];
+  // Dates are typically serialized as strings over JSON
+  createdAt: string;
+}

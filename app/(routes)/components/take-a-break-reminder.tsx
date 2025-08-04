@@ -1,27 +1,25 @@
-// app/(routes)/components/take-a-break-reminder.tsx
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/contexts/AuthContext';
 import { useGetMySettings } from '@/components/hooks/settings/get-settings';
 import { Button } from '@/components/ui/button';
-import { Coffee, Settings, Timer, X } from 'lucide-react'; // Import Settings icon
+import { Coffee, Settings, Timer, X, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export const TakeABreakReminder = () => {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
+  const pathname = usePathname();
   const { state: authState } = useAuth();
   const { settings, isLoading: isLoadingSettings } = useGetMySettings();
-  
-  // --- FIX: Re-add the missing state and ref definitions ---
+
   const [isPopupVisible, setIsPopupVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const SNOOZE_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-  // --- END FIX ---
+  const SNOOZE_DURATION_MS = 5 * 60 * 1000;
 
-  // Extract the specific settings we care about to prevent unnecessary re-renders.
   const isEnabled = settings?.wellbeingPreferences?.isBreakReminderEnabled;
   const intervalMinutes = settings?.wellbeingPreferences?.breakReminderIntervalMinutes;
 
@@ -33,7 +31,14 @@ export const TakeABreakReminder = () => {
       }
     };
 
-    if (authState.status !== 'authenticated' || isLoadingSettings || !isEnabled || !intervalMinutes) {
+    // Suppress on specific routes if needed (optional)
+    if (
+      authState.status !== 'authenticated' ||
+      isLoadingSettings ||
+      !isEnabled ||
+      !intervalMinutes ||
+      pathname === '/activity' // Optional: hide reminder on /activity
+    ) {
       clearTimer();
       return;
     }
@@ -43,82 +48,97 @@ export const TakeABreakReminder = () => {
     timerRef.current = setInterval(() => {
       setIsPopupVisible(true);
     }, intervalMilliseconds);
-    
-    return () => {
-      clearTimer();
-    };
 
-  }, [authState.status, isLoadingSettings, isEnabled, intervalMinutes]);
+    return () => clearTimer();
+  }, [authState.status, isLoadingSettings, isEnabled, intervalMinutes, pathname]);
 
-  // --- FIX: Re-add the missing handler function definitions ---
   const handleDismiss = () => {
     setIsPopupVisible(false);
   };
-  
+
   const handleSnooze = () => {
     setIsPopupVisible(false);
-    toast.info("Reminder snoozed for 5 minutes.");
+    toast.info('Reminder snoozed for 5 minutes.');
 
     setTimeout(() => {
       setIsPopupVisible(true);
     }, SNOOZE_DURATION_MS);
   };
-  // --- END FIX ---
 
   const handleGoToSettings = () => {
-    setIsPopupVisible(false); // Hide the popup before navigating
+    setIsPopupVisible(false);
     router.push('/settings');
   };
-  
+
+  const handleGoToActivity = () => {
+    setIsPopupVisible(false);
+    router.push('/activity');
+  };
+
   return (
     <div
       className={cn(
-        "fixed bottom-5 left-5 w-[350px] max-w-[90vw] bg-background border rounded-lg shadow-lg p-4 z-50 transition-all duration-300 ease-in-out",
-        isPopupVisible // This variable is now defined
-          ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-4 pointer-events-none"
+        'fixed bottom-6 left-6 w-[320px] sm:w-[340px] min-h-[120px]',
+        'bg-card border border-border shadow-xl rounded-xl z-50',
+        'transition-all duration-300 ease-in-out',
+        isPopupVisible
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-4 pointer-events-none'
       )}
     >
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="absolute top-2 right-2 h-6 w-6"
-        onClick={handleDismiss} // This function is now defined
+      {/* Close Button */}
+      <button
+        onClick={handleDismiss}
+        className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition"
         aria-label="Dismiss reminder"
       >
-        <X className="h-4 w-4" />
-      </Button>
+        <X className="w-5 h-5" />
+      </button>
 
-      <div className="flex items-center gap-3">
-        <div className="bg-primary/10 p-2 rounded-full">
-            <Coffee className="h-6 w-6 text-primary" />
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-4">
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Coffee className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground">Time to stretch?</h3>
+            <p className="text-xs text-muted-foreground">
+              A quick break can boost your focus and wellbeing.
+            </p>
+          </div>
         </div>
-        <div>
-            <h3 className="font-semibold text-card-foreground">Time to stretch?</h3>
-            <p className="text-sm text-muted-foreground">A short break can help you stay refreshed.</p>
-        </div>
-      </div>
-      
-      <div className="mt-4 flex justify-between items-center">
-        {/* Left-aligned Settings link */}
-        <Button 
-          variant="link" 
-          className="p-0 h-auto text-muted-foreground hover:text-primary"
-          onClick={handleGoToSettings}
-        >
-          <Settings className="mr-1 h-4 w-4" />
-          Settings
-        </Button>
 
-        {/* Right-aligned action buttons */}
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDismiss}> {/* This function is now defined */}
-            Dismiss
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          {/* Change Settings Button */}
+          <Button
+            variant="secondary"
+            onClick={handleGoToSettings}
+            className="w-full flex items-center justify-center gap-2 text-sm"
+          >
+            Change Settings <Settings className="w-4 h-4" />
           </Button>
-          <Button onClick={handleSnooze}> {/* This function is now defined */}
-            <Timer className="mr-2 h-4 w-4" />
-            Snooze 5 min
+
+          {/* View Activity Button */}
+          <Button
+            variant="outline"
+            onClick={handleGoToActivity}
+            className="w-full flex items-center justify-center gap-2 text-sm"
+          >
+            View Activity <CalendarDays className="w-4 h-4" />
           </Button>
+
+          {/* Dismiss + Snooze */}
+          <div className="flex justify-between gap-2">
+            <Button variant="outline" className="flex-1 text-sm" onClick={handleDismiss}>
+              Dismiss
+            </Button>
+            <Button className="flex-1 text-sm" onClick={handleSnooze}>
+              <Timer className="w-4 h-4 mr-1" />
+              Snooze 5 min
+            </Button>
+          </div>
         </div>
       </div>
     </div>
