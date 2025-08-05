@@ -22,6 +22,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(routes)/terms-and-conditions"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "app/(routes)/terms-and-conditions", "app/(routes)/social/followers", "app/(routes)/social/friends", "app/(routes)/social/friend-requests"],
   "exclude": ["node_modules"]
 }

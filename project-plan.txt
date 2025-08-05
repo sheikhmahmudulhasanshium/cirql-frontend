@@ -1,92 +1,65 @@
-To successfully restart your UploadThing integration mission for your Next.js app with frontend and backend separated (e.g., hosted on Vercel), here is a clear, comprehensive prompt to guide your fresh implementation—covering system architecture, best practices, "what not to do," and an actionable to-do list:
-
-## Prompt for Redoing Your UploadThing Integration in Next.js (Frontend + Backend)
-
-### System Overview
-
-- **Frontend: Next.js app** for user interactions, inputs, and triggering file uploads.
-- **Backend: Next.js API routes (deployed separately)** to handle authenticated upload sessions, webhooks, and post-upload processing.
-- **UploadThing** handles file storage management and provides upload APIs and webhooks.
-
-### Core Requirements
-
-- Support **local files and external URLs (including base64 images)** upload in a unified UI.
-- Support **multiple files and multiple URLs at once.**
-- Pass **JWT tokens for auth** in upload requests.
-- Uploads are sent to UploadThing endpoint, which calls backend webhook after upload.
-- Backend webhook must be **publicly accessible** and **unauthenticated**.
-- Uploaded file metadata saved in backend MongoDB, categorized by file type to folders like:
-  - `media/photo/xyz.png`
-  - `media/audio/xyz.mp3`
-  - `media/video/xyz.mp4`
-  - `media/document/xyz.pdf`
-- Frontend and backend repos deploy separately; webhook URL in UploadThing must point to **public backend API URL**, not localhost.
-- Proper type handling—map UploadThing upload response to your `UploadedFileResponse` interface before passing data around.
-- Use a **universal uploader component** that encompasses local files + URLs + multiple inputs + authentication.
-
-### What Not To Do
-
-- Do NOT use `localhost` or any private IP in UploadThing webhook URLs.
-- Do NOT require authorization/authentication on the webhook endpoint called by UploadThing server.
-- Do NOT skip mapping UploadThing's upload response to your expected typed interface.
-- Avoid sending mismatched file counts or uploading files that exceed your backend route config.
-- Do NOT mix responsibilities: UploadThing webhook API route must only handle callbacks, no auth middleware.
-- Avoid incomplete error handling or warning suppressions that hide critical upload flow errors.
-- Avoid duplicating separate upload components for URL and file when a universal uploader can unify features.
-- Don't hardcode input context like `ticketId`; keep it optional and flexible for reuse.
-
-### Step-by-Step To-Do List
-
-#### Backend
-
-1. Create a Next.js **API route** `/api/uploadthing` that exports UploadThing route handler.
-2. Define a **FileRouter** with properly restricted file types and optional input, supporting `ticketId`, `groupId`, etc.
-3. Write **auth middleware** that *only* protects upload middleware but **NOT webhook POST requests**.
-4. In the backend webhook handler:
-   - Accept unauthenticated POST requests from UploadThing.
-   - Respond with HTTP 200 for successful callbacks.
-   - Parse uploaded file metadata and save to MongoDB `/media` collection/document including categorization.
-5. Ensure your backend deploys publicly (e.g., Vercel), with environment variables properly set (`JWT_SECRET`, etc.).
-6. Verify webhook URL in UploadThing dashboard points to your public backend API (e.g., `https://your-backend.vercel.app/api/uploadthing`).
-
-#### Frontend
-
-1. Build/Use a **UniversalUploader React component**:
-   - Accepts multiple local files + multiple URLs/base64 data inputs.
-   - Converts URLs/base64 to `File` objects before uploading.
-   - Uploads all files in one batch with JWT Authorization header.
-   - Accepts optional `input` prop for metadata (e.g., `{ ticketId }`)—kept optional.
-   - Properly maps upload response to `UploadedFileResponse[]`.
-   - Captures upload state, handles errors, shows user feedback with `toast`.
-2. Pass JWT tokens obtained from your AuthContext/store into the upload headers.
-3. Replace legacy `FileUpload` and `UrlUploader` components with the UniversalUploader.
-4. Use your UniversalUploader anywhere files need uploading: support tickets, social conversation, profile media, etc.
-5. Validate URLs/Base64 strings on client-side before uploading.
-6. Provide UI controls to add/remove multiple URLs, clear selected files, and initiate upload.
-7. Make sure the upload button is disabled when no files/URLs are selected or when uploading is in progress.
-
-#### Verifications and Testing
-
-- Locally test upload flow using **ngrok** or similar, exposing your backend webhook to the internet.
-- Use `curl` to test webhook endpoint accessibility and simulate UploadThing POST.
-- Deploy backend on Vercel and update the UploadThing webhook URL accordingly.
-- Monitor for upload errors like "FileCountMismatch," "Unauthorized," or webhook callback failures.
-- Confirm files appear saved in MongoDB with proper folder tags for media type.
-- Check type correctness and ESLint compliance with no unused vars or mismatches.
-
-### Bonus (Optional Enhancements)
-
-- Add progress bars or file preview thumbnails in the universal uploader UI.
-- Group uploads by media type to assign different folder paths on backend.
-- Automate syncing environment variables between repos.
-- Integrate error monitoring and logging for backend upload flow.
-- Implement upload retry mechanisms and optimistic UI updates.
-
-This prompt covers your system's **flow, architecture, do's and don'ts, and a structured plan to follow** with clear guidance on frontend/backend division and deployment realities.
-
-If you follow this approach, starting fresh and implementing according to this checklist will greatly increase your chance of a smooth, maintainable file upload system with UploadThing in Next.js.
-
-If you want, I can also generate a minimal starter upload example repo skeleton for you based on this prompt!
-the upload system is total failure. we will skip this for now.
-
-
+Change Log & Project Status: Social and Profile Feature Implementation
+System Overview
+Goal: To build an intelligent and robust social networking system within your existing application, covering user profiles, friendships, followers, and notifications.
+Architecture: The system uses a Backend-for-Frontend (BFF) pattern. The NestJS backend handles all business logic and data aggregation, providing clean, ready-to-use data to the Next.js frontend. The frontend is responsible for displaying this data and handling user interactions.
+What We've Done (Completed Tasks)
+Intelligent Profile Buttons:
+The backend's /profile/:userId endpoint was enhanced to calculate and return the precise relationship status (friendshipStatus, followStatus) between the viewing user and the profile owner. This offloaded all complex logic from the client.
+The frontend menu-bar.tsx component was completely refactored to be a simple, "dumb" component that just displays buttons based on the status provided by the backend, making it highly efficient.
+Social Counts on Profiles:
+The frontend profile pages (/profile/me and /profile/[id]) were updated to display clickable social statistics (Friends, Followers, Following) that link directly to the new social hub pages.
+Actionable Notifications:
+The backend's social services (friends.service.ts, followers.service.ts) were updated to ensure that all social notifications (friend requests, accepted requests, follow requests) now include a direct, clickable linkUrl that takes the user to the most relevant page (e.g., /social/friend-requests).
+Multi-Page Social Hub:
+A new, dedicated /social section was created, following a robust multi-page architecture with a shared layout and side navigation.
+Separate, independent pages were built for:
+Friends List (/social/friends-list)
+Followers List (/social/followers-list)
+Friend Requests (Received) (/social/friend-requests)
+Sent Friend Requests (/social/sent-requests)
+Enhanced User Experience:
+Confirmation Modals: A reusable ConfirmationModal was created and implemented for destructive actions like unfriending or declining requests to prevent user error.
+Skeleton Loaders: Simple loading spinners were replaced with more professional skeleton loaders that mimic the final UI, preventing layout shifts and improving perceived performance.
+Improved UI: Request lists were redesigned to use Card-based components for a cleaner, more modern look.
+Bug Fixes & Robustness:
+Fixed a bug where the "Sent Requests" list would fail if the backend returned invalid data by making the data-fetching hook more defensive.
+Resolved an issue where the useSentFriendRequests hook was not receiving populated recipient data by making a minimal, targeted change to the backend friends.service.ts.
+Cleaned up API client error logging to ignore expected client-side errors (like 429 Too Many Requests) and only report true server issues.
+To-Do List (Next Steps)
+Implement "Following" List Page:
+Create a backend endpoint and service function to get the list of users someone is following.
+Build the corresponding frontend page at /social/following-list.
+Implement Clipboard for 2FA Code:
+Backend: Add a div with a specific ID to the 2FA email template.
+Frontend: Create the ClipboardButton component and integrate it into the 2FA login page.
+Social Recommendations Feature:
+Design and implement backend logic for suggesting new friends or groups.
+Build the frontend UI to display these recommendations.
+Revisit the Upload System (Future):
+As noted, the current upload system is a pain point. A future task will be to follow a clear, structured plan (like the one we outlined) to rebuild it from the ground up using best practices for a separated frontend/backend architecture.
+Affected Files
+Backend (NestJS)
+src/social/friends.service.ts: MODIFIED (Added populate to getSentRequests; updated notification linkUrls).
+src/social/followers.service.ts: MODIFIED (Updated notification linkUrls).
+src/profile/profile.service.ts: MODIFIED (Added logic to calculate and return relationship statuses).
+src/profile/dto/profile.response.dto.ts: MODIFIED (Added new friendshipStatus and followStatus enums and fields).
+src/email/email.service.ts: (Pending) Will be modified for the 2FA clipboard feature.
+Frontend (Next.js)
+app/(routes)/profile/[id]/body.tsx: MODIFIED (Added social stats; simplified ProfileActions call).
+app/(routes)/profile/me/body.tsx: MODIFIED (Added social stats; simplified ProfileActions call).
+app/(routes)/profile/menu-bar.tsx: MODIFIED (Refactored to use new backend-driven status).
+app/(routes)/social/layout.tsx: CREATED (New shared layout for the social section).
+app/(routes)/social/friends-list/page.tsx & body.tsx: CREATED (New page).
+app/(routes)/social/followers-list/page.tsx & body.tsx: CREATED (New page).
+app/(routes)/social/friend-requests/page.tsx & body.tsx: CREATED (New page).
+app/(routes)/social/sent-requests/page.tsx & body.tsx: CREATED (New page).
+components/hooks/social/use-friends-list.ts: CREATED (New hook).
+components/hooks/social/use-followers-list.ts: CREATED (New hook).
+components/social/friends-list.tsx: CREATED (New component).
+components/social/followers-list.tsx: CREATED (New component).
+components/social/friend-request-list.tsx: MODIFIED (UI updated to use cards).
+components/social/sent-friend-request-list.tsx: CREATED (New component).
+components/social/follow-request-list.tsx: MODIFIED (UI updated to use cards).
+components/modals/confirmation-modal.tsx: CREATED (New reusable component).
+lib/types.ts: MODIFIED (Updated Profile and FriendRequest interfaces).
+lib/apiClient.ts: MODIFIED (Improved error logging).

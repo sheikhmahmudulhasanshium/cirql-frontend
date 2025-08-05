@@ -1,37 +1,42 @@
-// src/components/hooks/notifications/use-unread-count.ts
+'use client';
+
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/lib/apiClient';
 import { useAuth } from '@/components/contexts/AuthContext';
 
 export const useUnreadCount = () => {
   const [count, setCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true); // --- ADDED: Loading state
   const { state: { status } } = useAuth();
   const [trigger, setTrigger] = useState(0);
 
-  // This function allows any component to trigger a refetch
   const refetch = useCallback(() => {
     setTrigger(prev => prev + 1);
   }, []);
   
   useEffect(() => {
-    // Don't fetch if the user isn't fully authenticated
     if (status !== 'authenticated') {
-      setCount(0); // Ensure count is 0 when logged out
+      setCount(0);
+      setIsLoading(false);
       return;
     }
 
     const fetchCount = async () => {
+      setIsLoading(true); // --- ADDED: Set loading to true before fetching
       try {
         const response = await apiClient.get<{ count: number }>('/notifications/unread-count');
         setCount(response.data.count);
       } catch (error) {
         console.error("Failed to fetch unread notification count", error);
         setCount(0); // Reset on error
+      } finally {
+        setIsLoading(false); // --- ADDED: Set loading to false after fetching
       }
     };
 
     fetchCount();
-  }, [status, trigger]); // Reruns when auth status changes or when refetch is called
+  }, [status, trigger]);
 
-  return { count, refetch };
+  // Return the new isLoading state
+  return { count, isLoading, refetch };
 };

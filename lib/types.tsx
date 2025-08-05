@@ -7,6 +7,7 @@ export enum Role {
   Tester = 'tester',
 }
 
+
 export interface User {
   _id: string;
   id: string;
@@ -210,7 +211,7 @@ export enum FriendRequestStatus {
 export interface FriendRequest {
     _id: string;
     requester: PublicProfile;
-    recipient: string;
+    recipient: PublicProfile;
     status: FriendRequestStatus;
     createdAt: string;
 }
@@ -368,6 +369,20 @@ export interface JwtPayload {
 }
 
 
+export enum FriendshipStatus {
+  NONE = 'none',
+  FRIENDS = 'friends',
+  REQUEST_SENT = 'request_sent',
+  REQUEST_RECEIVED = 'request_received',
+}
+
+export enum FollowStatus {
+  NONE = 'none',
+  FOLLOWING = 'following',
+  REQUEST_SENT = 'request_sent',
+}
+// --- END: ADD NEW ENUMS ---
+
 /**
  * Represents the combined user, profile, and settings data
  * returned by the backend's /profile endpoints.
@@ -384,6 +399,19 @@ export interface Profile {
   isPrivate: boolean;
   accountStatus: 'active' | 'banned';
   roles: Role[];
-  // Dates are typically serialized as strings over JSON
   createdAt: string;
+
+  // Social Counts
+  friendsCount: number;
+  followersCount: number;
+  followingCount: number;
+  pendingFriendRequestsCount: number;
+  mutualFriendsCount: number;
+  
+  // --- START: ADDED NEW STATUS FIELDS ---
+  friendshipStatus: FriendshipStatus;
+  friendRequestId?: string;
+  followStatus: FollowStatus;
+  followRequestId?: string;
+  // --- END: ADDED NEW STATUS FIELDS ---
 }

@@ -1,4 +1,3 @@
-// src/lib/apiClient.ts
 import axios from 'axios';
 
 const apiClient = axios.create({
@@ -24,25 +23,34 @@ apiClient.interceptors.request.use(
   },
 );
 
-// Response Interceptor for logging and handling 401s gracefully
+// Response Interceptor for logging and handling errors gracefully
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (axios.isCancel(error)) {
       return Promise.reject(error);
     }
+
     if (error.response) {
       const status = error.response.status;
       const url = error.config.url;
-      if (status === 401 && url && url.endsWith('/auth/status')) {
-        // This is an expected error for an invalid/expired token.
-        // The AuthInitializer will handle the logout. No need to log it.
-      } else {
-        console.error(`[apiClient] Response Error: ${status} for ${url}`, error.response.data);
+
+      // --- START: MODIFIED CODE ---
+      // Define a list of status codes that are handled by the UI (with toasts, etc.)
+      // and should not be logged as "errors" in the console.
+      const ignoredStatusCodes = [400, 401, 403, 404, 409, 429]; // ADD 429 HERE
+      // --- END: MODIFIED CODE ---
+
+      if (!ignoredStatusCodes.includes(status)) {
+        console.error(
+          `[apiClient] Unexpected Response Error: ${status} for ${url}`,
+          error.response.data,
+        );
       }
     } else {
       console.error('[apiClient] Network or other error:', error.message);
     }
+    
     return Promise.reject(error);
   },
 );
