@@ -1,30 +1,34 @@
 Change Log & Project Status: Social and Profile Feature Implementation
 System Overview
-Goal: To build an intelligent and robust social networking system within your existing application, covering user profiles, friendships, followers, and notifications.
+Goal: To build an intelligent and robust social networking system within your existing application, covering user profiles, friendships, followers, recommendations, and notifications.
 Architecture: The system uses a Backend-for-Frontend (BFF) pattern. The NestJS backend handles all business logic and data aggregation, providing clean, ready-to-use data to the Next.js frontend. The frontend is responsible for displaying this data and handling user interactions.
 What We've Done (Completed Tasks)
-Intelligent Profile Buttons:
-The backend's /profile/:userId endpoint was enhanced to calculate and return the precise relationship status (friendshipStatus, followStatus) between the viewing user and the profile owner. This offloaded all complex logic from the client.
-The frontend menu-bar.tsx component was completely refactored to be a simple, "dumb" component that just displays buttons based on the status provided by the backend, making it highly efficient.
-Social Counts on Profiles:
-The frontend profile pages (/profile/me and /profile/[id]) were updated to display clickable social statistics (Friends, Followers, Following) that link directly to the new social hub pages.
-Actionable Notifications:
-The backend's social services (friends.service.ts, followers.service.ts) were updated to ensure that all social notifications (friend requests, accepted requests, follow requests) now include a direct, clickable linkUrl that takes the user to the most relevant page (e.g., /social/friend-requests).
-Multi-Page Social Hub:
-A new, dedicated /social section was created, following a robust multi-page architecture with a shared layout and side navigation.
-Separate, independent pages were built for:
-Friends List (/social/friends-list)
-Followers List (/social/followers-list)
-Friend Requests (Received) (/social/friend-requests)
-Sent Friend Requests (/social/sent-requests)
-Enhanced User Experience:
-Confirmation Modals: A reusable ConfirmationModal was created and implemented for destructive actions like unfriending or declining requests to prevent user error.
-Skeleton Loaders: Simple loading spinners were replaced with more professional skeleton loaders that mimic the final UI, preventing layout shifts and improving perceived performance.
-Improved UI: Request lists were redesigned to use Card-based components for a cleaner, more modern look.
-Bug Fixes & Robustness:
-Fixed a bug where the "Sent Requests" list would fail if the backend returned invalid data by making the data-fetching hook more defensive.
-Resolved an issue where the useSentFriendRequests hook was not receiving populated recipient data by making a minimal, targeted change to the backend friends.service.ts.
-Cleaned up API client error logging to ignore expected client-side errors (like 429 Too Many Requests) and only report true server issues.
+1. Intelligent Profile Buttons & Social Counts:
+The backend's /profile/:userId endpoint now calculates and returns the precise friendshipStatus and followStatus between the viewing user and the profile owner, offloading all complex logic from the client.
+The frontend menu-bar.tsx component was refactored to simply display buttons based on the status provided by the backend.
+Profile pages now display clickable social stats (Friends, Followers, Following) that link to the social hub.
+2. Actionable Notifications:
+The backend's social services now ensure that all social notifications include a direct, clickable linkUrl that takes the user to the most relevant page (e.g., /social/friend-requests).
+3. Multi-Page Social Hub:
+Created a new, dedicated /social section with a shared layout and navigation (SocialNavbar).
+Built separate, independent pages for Friends, Followers, Friend Requests (Received), and Sent Friend Requests.
+4. Social Recommendations Feature (NEWLY COMPLETED):
+Backend:
+Implemented a robust recommendation engine in recommendations.service.ts that suggests users based on shared interests.
+The engine correctly filters out the current user, existing friends, followers, and followed users.
+It prioritizes results by the number of common interests, with follower count as a tie-breaker.
+Exposed the logic via a secure, paginated endpoint at GET /social/recommendations/users.
+Frontend:
+Created a dedicated /interests page for users to select 5-10 topics, which are saved to their user settings.
+Made the interests editable directly from the /profile/me page via a modal for a seamless UX.
+Built a new /social/recommendations page that displays suggested users in a responsive grid.
+Created a reusable UserRecommendationCard component with clear actions ("Add Friend", "Follow", "Dismiss") and user feedback.
+Integrated a horizontal list of recommendations onto the main dashboard (/home) to drive engagement.
+5. Enhanced User Experience & Bug Fixes:
+A reusable ConfirmationModal was created for destructive actions.
+Implemented professional skeleton loaders to prevent layout shifts.
+Resolved bugs related to data fetching and population in the social hub.
+Cleaned up API client error logging.
 To-Do List (Next Steps)
 Implement "Following" List Page:
 Create a backend endpoint and service function to get the list of users someone is following.
@@ -32,34 +36,38 @@ Build the corresponding frontend page at /social/following-list.
 Implement Clipboard for 2FA Code:
 Backend: Add a div with a specific ID to the 2FA email template.
 Frontend: Create the ClipboardButton component and integrate it into the 2FA login page.
-Social Recommendations Feature:
-Design and implement backend logic for suggesting new friends or groups.
-Build the frontend UI to display these recommendations.
+Refine Social Actions on Recommendation Cards:
+Connect the "Add Friend" and "Follow" buttons on the UserRecommendationCard to their respective API hooks (use-profile-actions.ts).
 Revisit the Upload System (Future):
-As noted, the current upload system is a pain point. A future task will be to follow a clear, structured plan (like the one we outlined) to rebuild it from the ground up using best practices for a separated frontend/backend architecture.
-Affected Files
+As noted, the current upload system is a pain point. A future task will be to follow a clear, structured plan to rebuild it from the ground up using best practices for a separated frontend/backend architecture.
+Affected Files (Updated)
 Backend (NestJS)
-src/social/friends.service.ts: MODIFIED (Added populate to getSentRequests; updated notification linkUrls).
-src/social/followers.service.ts: MODIFIED (Updated notification linkUrls).
-src/profile/profile.service.ts: MODIFIED (Added logic to calculate and return relationship statuses).
-src/profile/dto/profile.response.dto.ts: MODIFIED (Added new friendshipStatus and followStatus enums and fields).
-src/email/email.service.ts: (Pending) Will be modified for the 2FA clipboard feature.
+src/social/friends.service.ts: MODIFIED
+src/social/followers.service.ts: MODIFIED
+src/profile/profile.service.ts: MODIFIED
+src/profile/dto/profile.response.dto.ts: MODIFIED
+src/settings/schemas/setting.schema.ts: MODIFIED (Interests array added to ContentPreferences).
+src/social/social.module.ts: MODIFIED (Added RecommendationsService and Setting schema).
+src/social/recommendations.service.ts: CREATED
+src/social/recommendations.controller.ts: CREATED
 Frontend (Next.js)
-app/(routes)/profile/[id]/body.tsx: MODIFIED (Added social stats; simplified ProfileActions call).
-app/(routes)/profile/me/body.tsx: MODIFIED (Added social stats; simplified ProfileActions call).
-app/(routes)/profile/menu-bar.tsx: MODIFIED (Refactored to use new backend-driven status).
-app/(routes)/social/layout.tsx: CREATED (New shared layout for the social section).
-app/(routes)/social/friends-list/page.tsx & body.tsx: CREATED (New page).
-app/(routes)/social/followers-list/page.tsx & body.tsx: CREATED (New page).
-app/(routes)/social/friend-requests/page.tsx & body.tsx: CREATED (New page).
-app/(routes)/social/sent-requests/page.tsx & body.tsx: CREATED (New page).
-components/hooks/social/use-friends-list.ts: CREATED (New hook).
-components/hooks/social/use-followers-list.ts: CREATED (New hook).
-components/social/friends-list.tsx: CREATED (New component).
-components/social/followers-list.tsx: CREATED (New component).
-components/social/friend-request-list.tsx: MODIFIED (UI updated to use cards).
-components/social/sent-friend-request-list.tsx: CREATED (New component).
-components/social/follow-request-list.tsx: MODIFIED (UI updated to use cards).
-components/modals/confirmation-modal.tsx: CREATED (New reusable component).
-lib/types.ts: MODIFIED (Updated Profile and FriendRequest interfaces).
-lib/apiClient.ts: MODIFIED (Improved error logging).
+app/(routes)/profile/[id]/body.tsx: MODIFIED
+app/(routes)/profile/me/body.tsx: MODIFIED (Added editable interests section).
+app/(routes)/profile/menu-bar.tsx: MODIFIED
+app/(routes)/social/layout.tsx: CREATED
+app/(routes)/social/friends-list/*: CREATED
+app/(routes)/social/followers-list/*: CREATED
+app/(routes)/social/friend-requests/*: CREATED
+app/(routes)/social/sent-requests/*: CREATED
+app/(routes)/interests/page.tsx & body.tsx: CREATED (New page for interest selection).
+app/(routes)/social/recommendations/page.tsx & body.tsx & list.tsx: CREATED (New page and components).
+app/(routes)/home/UserDashboard.tsx: MODIFIED (Integrated recommendations widget).
+components/hooks/social/use-friends-list.ts: CREATED
+components/hooks/social/use-followers-list.ts: CREATED
+components/hooks/social/use-recommendations.ts: CREATED
+components/social/*: CREATED/MODIFIED (Various list and card components).
+components/modals/confirmation-modal.tsx: CREATED
+components/modals/profile/interests-modal.tsx: CREATED
+lib/types.ts: MODIFIED (Updated Profile, SocialProfile interfaces).
+lib/apiClient.ts: MODIFIED
+lib/menu.tsx: MODIFIED (Added InterestsList and navbar links).

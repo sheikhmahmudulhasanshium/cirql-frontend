@@ -1,9 +1,11 @@
 'use client';
 
-import { Users, UserPlus, Mail, UserCheck } from 'lucide-react';
+import { Users, UserPlus, Mail, UserCheck, Sparkles } from 'lucide-react'; // 1. Import the Sparkles icon
 import { cn } from '@/lib/utils';
 
+// 2. Add the new "Recommendations" object to the top of the menu array
 const navMenu = [
+  { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
   { id: 'friends', label: 'Friends', icon: Users },
   { id: 'followers', label: 'Followers', icon: UserCheck },
   { id: 'friend-requests', label: 'Friend Requests', icon: UserPlus },
@@ -42,7 +44,7 @@ const SocialNavbar = ({ activeView, setActiveView }: SocialNavbarProps) => {
       </aside>
 
       {/* Top navbar for mobile */}
-      <nav className="md:hidden sticky top-16 z-10 bg-background border-b border-border py-2 px-4 flex overflow-x-auto gap-4">
+      <nav className="md:hidden  top-16 z-10 bg-background border-b border-border py-2 px-4 flex overflow-x-auto gap-4">
         {navMenu.map((item) => {
           const isActive = activeView === item.id;
           return (

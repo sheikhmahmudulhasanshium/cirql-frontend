@@ -1,7 +1,14 @@
 
 
 // @/lib/menu.tsx
-
+import {
+  Cpu, Plane, Briefcase, Medal, Newspaper,
+  BookOpen, Mic, Palette, Music, Tv, Gamepad, CookingPot,
+  HeartPulse, Shirt, Camera, Code, Rocket, FlaskConical, 
+  Landmark, Lightbulb, TrendingUp, Handshake, Dumbbell, Mountain,
+  Bitcoin, Users, Atom, PenTool, Drama, Film, Gem, Target,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import {HomeIcon, MessageSquareIcon, PhoneIcon,  } from "lucide-react";
 import { NavMenu } from "./types";
 
@@ -156,4 +163,40 @@ export const ProfileMenuList: ProfileMenuItem[] = [
       },
     ],
   },
+];
+
+// --- Comprehensive Interests List with Icons ---
+export const InterestsList: { name: string; icon: LucideIcon }[] = [
+  { name: 'Art & Design', icon: Palette },
+  { name: 'Books & Literature', icon: BookOpen },
+  { name: 'History', icon: Landmark },
+  { name: 'Movies & TV Shows', icon: Film },
+  { name: 'Music', icon: Music },
+  { name: 'Photography', icon: Camera },
+  { name: 'Philosophy & Psychology', icon: Lightbulb },
+  { name: 'Theatre & Performing Arts', icon: Drama },
+  { name: 'AI & Machine Learning', icon: Cpu },
+  { name: 'Coding & Programming', icon: Code },
+  { name: 'Gadgets & Devices', icon: Tv },
+  { name: 'Gaming & Esports', icon: Gamepad },
+  { name: 'Research & Discoveries', icon: FlaskConical },
+  { name: 'Science & Technology', icon: Atom },
+  { name: 'Space & Astronomy', icon: Rocket },
+  { name: 'Comedy & Memes', icon: Mic },
+  { name: 'Fashion & Style', icon: Shirt },
+  { name: 'Pop Culture', icon: Gem },
+  { name: 'Cars & Auto', icon: Target },
+  { name: 'Food & Cuisine', icon: CookingPot },
+  { name: 'Health & Wellness', icon: HeartPulse },
+  { name: 'DIY & Crafts', icon: PenTool },
+  { name: 'Travel & Adventure', icon: Plane },
+  { name: 'Business & Economy', icon: Briefcase },
+  { name: 'Finance & Investing', icon: Bitcoin },
+  { name: 'Startups & Entrepreneurship', icon: TrendingUp },
+  { name: 'Politics & Governance', icon: Users },
+  { name: 'Current Affairs', icon: Newspaper },
+  { name: 'Social Issues & Activism', icon: Handshake },
+  { name: 'Sports', icon: Medal },
+  { name: 'Fitness & Gym', icon: Dumbbell },
+  { name: 'Outdoor Activities', icon: Mountain },
 ];

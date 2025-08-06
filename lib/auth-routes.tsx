@@ -14,7 +14,6 @@ export const publicRoutes: string[] = [
   '/terms-and-conditions',
   '/sign-out',
   '/search',
-  '/profile/[id]',
   '/announcements',
   '/announcements/[id]',
   '/users/directory',
@@ -32,6 +31,10 @@ export const protectedRoutes: string[] = [
   '/notifications',
   // --- FIX: '/contacts' is added to protected routes. ---
   '/contacts',
+  '/social',
+  '/interests',
+  '/profile/[id]',
+
 ];
 
 /**
@@ -43,6 +46,7 @@ export const authRoutes: string[] = [
   '/auth/google/callback',
   '/log-in', // Assuming this is an alias for sign-in
   '/reset-password',
+  
 ];
 
 /**

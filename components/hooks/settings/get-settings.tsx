@@ -1,4 +1,3 @@
-// src/components/hooks/settings/get-settings.tsx
 "use client";
 
 import { useState, useEffect, useCallback, createContext, useContext, ReactNode, Dispatch, SetStateAction } from 'react';
@@ -12,6 +11,10 @@ interface SettingsContextType {
   isLoading: boolean;
   error: Error | null;
   setSettings: Dispatch<SetStateAction<SettingsDto | null>>;
+  // --- START: FIX ---
+  // 1. Add the refetch function to the context type definition.
+  refetch: () => Promise<void>;
+  // --- END: FIX ---
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -24,7 +27,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchSettings = useCallback(async (signal: AbortSignal) => {
+    // --- FIX: The function no longer needs a signal parameter to be easily callable ---
+    const fetchSettings = useCallback(async () => {
         if (!user) {
             setIsLoading(false);
             setSettings(null);
@@ -34,9 +38,10 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const { data } = await apiClient.get<SettingsDto>('/settings/me', { signal });
+            const { data } = await apiClient.get<SettingsDto>('/settings/me');
             setSettings(data);
         } catch (err: unknown) {
+            // This check is important because a component unmounting can trigger an abort error
             if (axios.isCancel(err)) return;
             
             console.error("useGetMySettings: Failed to fetch settings.", err);
@@ -47,16 +52,17 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
     }, [user]);
 
     useEffect(() => {
-        const controller = new AbortController();
         if (authStatus === 'loading') {
             setIsLoading(true);
             return;
         }
-        fetchSettings(controller.signal);
-        return () => controller.abort();
+        fetchSettings();
     }, [authStatus, fetchSettings]);
 
-    const value = { settings, setSettings, isLoading, error };
+    // --- START: FIX ---
+    // 3. Add the `refetch` function (which is `fetchSettings`) to the context value.
+    const value = { settings, setSettings, isLoading, error, refetch: fetchSettings };
+    // --- END: FIX ---
 
     return (
         <SettingsContext.Provider value={value}>

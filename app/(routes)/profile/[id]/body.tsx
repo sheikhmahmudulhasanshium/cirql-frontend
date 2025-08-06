@@ -4,20 +4,19 @@ import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/components/hooks/profile/get-user-profile';
 import BasicBodyProvider from '@/components/providers/basic-body-provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { InfoIcon, Globe2Icon, Users } from 'lucide-react'; // Import Users icon
+import { InfoIcon, Globe2Icon, Users, Heart } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ProfileActions } from '../menu-bar';
+import { useUserSettings } from '@/components/hooks/settings/get-settings-by-id';
 
-const breakpoints = {
-  phone_sm: 374, sm: 640, tablet_portrait: 767, md: 768, desktop_sm: 1023,
-};
+const breakpoints = { phone_sm: 374, sm: 640, tablet_portrait: 767, md: 768, desktop_sm: 1023 };
 
 const Body = () => {
   const params = useParams();
   const profileID = params.id as string;
   const { data, isLoading, isError, refetch } = useUserProfile(profileID);
-
+  const interests = useUserSettings(profileID).data?.contentPreferences.interests;
   const [width, setWidth] = useState<number | undefined>(undefined);
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
@@ -53,9 +52,7 @@ const Body = () => {
           </Avatar>
           <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-4 min-w-0">
             <div className="w-full">
-              <h1 className="text-3xl font-bold tracking-tight break-words" title={fullName}>
-                {fullName}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight break-words" title={fullName}>{fullName}</h1>
               {data.headline && <p className="text-lg text-muted-foreground break-words" title={data.headline}>{data.headline}</p>}
               {data.location && (<p className="text-sm text-muted-foreground">From {data.location}</p>)}
               {data.website && (
@@ -65,8 +62,6 @@ const Body = () => {
                 </Link>
               )}
             </div>
-            
-            {/* --- START: SOCIAL STATS --- */}
             <div className="flex items-center flex-wrap justify-center lg:justify-start gap-x-6 gap-y-2 text-sm">
               <div className="cursor-default">
                 <strong className="font-semibold">{data.friendsCount}</strong>
@@ -80,17 +75,14 @@ const Body = () => {
                 <strong className="font-semibold">{data.followingCount}</strong>
                 <span className="text-muted-foreground ml-1">Following</span>
               </div>
-              {/* Conditionally render Mutual Friends only if there are any */}
               {data.mutualFriendsCount > 0 && (
-                 <div className="flex items-center text-muted-foreground">
-                    <Users className="h-4 w-4 mr-1.5" />
-                    <strong className="text-foreground font-semibold">{data.mutualFriendsCount}</strong>
-                    <span className="ml-1">Mutual Friends</span>
+                <div className="flex items-center text-muted-foreground">
+                  <Users className="h-4 w-4 mr-1.5" />
+                  <strong className="text-foreground font-semibold">{data.mutualFriendsCount}</strong>
+                  <span className="ml-1">Mutual Friends</span>
                 </div>
               )}
             </div>
-            {/* --- END: SOCIAL STATS --- */}
-
             <ProfileActions type="public" profile={data} screenWidth={width} onProfileUpdate={refetch} />
           </div>
         </div>
@@ -100,6 +92,16 @@ const Body = () => {
               <InfoIcon className="h-5 w-5" /> About
             </h2>
             <p className="mt-2 text-muted-foreground">{data.bio}</p>
+          </div>
+        )}
+        {interests && interests.length > 0 && (
+          <div className="w-full max-w-5xl mt-6 px-6 py-5 shadow-md rounded-lg bg-card text-card-foreground">
+            <h2 className="text-xl flex items-center gap-2 font-semibold"><Heart className='h-5 w-5' /> Interests</h2>
+            <div className='mt-2 flex flex-wrap gap-2'>
+              {interests.map((interest, index) => (
+                <span key={index} className="inline-block bg-primary/10 text-primary px-3 py-1 rounded-full text-sm mr-2 mb-2">{interest}</span>
+              ))}
+            </div>
           </div>
         )}
       </div>

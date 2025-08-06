@@ -195,10 +195,10 @@ export interface PublicProfile {
 
 export interface SocialProfile {
     _id: string;
-    owner: string;
-    friends: PublicProfile[];
-    followers: PublicProfile[];
-    following: PublicProfile[];
+    owner: string|PublicProfile;
+    friends: (string|PublicProfile)[];
+    followers: (string|PublicProfile)[];
+    following: (string|PublicProfile)[];
     blockedUsers: string[];
 }
 
@@ -408,10 +408,8 @@ export interface Profile {
   pendingFriendRequestsCount: number;
   mutualFriendsCount: number;
   
-  // --- START: ADDED NEW STATUS FIELDS ---
   friendshipStatus: FriendshipStatus;
   friendRequestId?: string;
   followStatus: FollowStatus;
   followRequestId?: string;
-  // --- END: ADDED NEW STATUS FIELDS ---
 }
