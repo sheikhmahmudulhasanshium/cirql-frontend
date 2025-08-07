@@ -1,7 +1,6 @@
 import { footerLinks } from "@/lib/menu";
 import Image from "next/image";
 import Link from "next/link";
-import css from "styled-jsx/css";
 
 const Footer = () => {
     const currentYear = new Date().getFullYear();
