@@ -83,57 +83,74 @@ const faqData = [
 ];
 
 const FAQ = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(0); // Default first item to be open
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const handleToggle = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <div className="w-full px-4 py-12 max-w-4xl mx-auto">
-      <h2 className="font-bold mb-8 text-center text-3xl font-geistSans lg:text-6xl md:text-4xl sm:text-3xl bg-gradient-to-tl from-slate-500 to-yellow-100 dark:from-blue-500 dark:to-cyan-300 text-transparent bg-clip-text py-4 animate-accordion-down">
-        Frequently Asked Questions
-      </h2>
+    // The only change is here: increased bottom padding (pb-40 lg:pb-48)
+    <section className="relative w-full  pt-20 lg:pt-24 pb-40 lg:pb-48 bg-gradient-to-b from-bg-indigo-400 to-blue-100 dark:to-blue-950">
+      <div className="w-full px-4 max-w-4xl mx-auto">
+        <h2 className="font-bold mb-8 text-center text-3xl font-geistSans lg:text-6xl md:text-4xl sm:text-3xl bg-gradient-to-tl from-slate-500 to-yellow-100 dark:from-blue-500 dark:to-cyan-300 text-transparent bg-clip-text py-4 animate-accordion-down">
+          Frequently Asked Questions
+        </h2>
 
-      <div className="border-t">
-        {faqData.map((faq, index) => {
-          const isOpen = openIndex === index;
-          return (
-            <div key={index} className="border-b">
-              <button
-                onClick={() => handleToggle(index)}
-                className="flex justify-between items-start w-full py-5 text-left gap-4"
-                aria-expanded={isOpen}
-              >
-                <span className="text-2xl pt-1">{faq.emoji}</span>
-                <span className="flex-1 text-lg font-medium text-start">{faq.question}</span>
-                <ChevronDown
+        <div className="border-t">
+          {faqData.map((faq, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div key={index} className="border-b">
+                <button
+                  onClick={() => handleToggle(index)}
+                  className="flex justify-between items-start w-full py-5 text-left gap-4"
+                  aria-expanded={isOpen}
+                >
+                  <span className="text-2xl pt-1">{faq.emoji}</span>
+                  <span className="flex-1 text-lg font-medium text-start">{faq.question}</span>
+                  <ChevronDown
+                    className={cn(
+                      "h-6 w-6 text-muted-foreground transition-transform duration-300 flex-shrink-0 mt-1",
+                      isOpen ? "rotate-180" : ""
+                    )}
+                  />
+                </button>
+                <div
                   className={cn(
-                    "h-6 w-6 text-muted-foreground transition-transform duration-300 flex-shrink-0 mt-1",
-                    isOpen ? "rotate-180" : ""
+                    "grid transition-all duration-300 ease-in-out",
+                    isOpen
+                      ? "grid-rows-[1fr] opacity-100"
+                      : "grid-rows-[0fr] opacity-0"
                   )}
-                />
-              </button>
-              
-              <div
-                className={cn(
-                  "grid transition-all duration-300 ease-in-out",
-                  isOpen
-                    ? "grid-rows-[1fr] opacity-100"
-                    : "grid-rows-[0fr] opacity-0"
-                )}
-              >
-                <div className="overflow-hidden">
-                  <div className="pl-[calc(1.5rem+1rem)] pr-4 pb-5 text-lg text-muted-foreground text-start">
-                    {faq.answer}
+                >
+                  <div className="overflow-hidden">
+                    <div className="pl-[calc(1.5rem+1rem)] pr-4 pb-5 text-lg text-muted-foreground text-start">
+                      {faq.answer}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+
+      <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-none ">
+        <svg
+          data-name="Layer 1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1200 120"
+          preserveAspectRatio="none"
+          className="relative block w-[calc(148%+1.3px)] h-[100px] md:h-[141px]"
+        >
+          <path
+            d="M602.45,3.86h0S572.9,116.24,281.94,120H923C632,116.24,602.45,3.86,602.45,3.86Z"
+            className="fill-background "
+          ></path>
+        </svg>
+      </div>
+    </section>
   );
 };
 
