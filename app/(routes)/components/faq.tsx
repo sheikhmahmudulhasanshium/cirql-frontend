@@ -73,7 +73,7 @@ const faqData = [
   },
   {
     emoji: "🧪",
-    question: "What is the &lsquo;Tester&rsquo; role?",
+    question: "What is the 'Tester' role?",
     answer: (
       <>
         The &lsquo;Tester&rsquo; role is assigned to users who help us test new features. Testers have access to a special dashboard with tools for viewing their submitted bug reports and providing detailed feedback, helping us build a better platform for everyone.

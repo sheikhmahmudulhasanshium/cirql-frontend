@@ -2,8 +2,8 @@
 import type { Metadata } from 'next';
 import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '@/app/(routes)/components/header';
-import Footer from '@/app/(routes)/components/footer';
 import Body from './body';
+import Footer from '../components/footer-with-design';
 
 export const metadata: Metadata = {
   title: 'Select Your Interests',

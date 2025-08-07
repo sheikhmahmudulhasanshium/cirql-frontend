@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import Body from './body'; // The Client Component that will handle all logic
 import BasicPageProvider from '@/components/providers/basic-page-provider';
 import Header from '../../components/header';
-import Footer from '../../components/footer';
+import Footer from '../../components/footer-with-design';
 
 // Static metadata for this specific page.
 export const metadata: Metadata = {

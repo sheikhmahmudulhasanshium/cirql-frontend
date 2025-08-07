@@ -1,9 +1,9 @@
 // app/(routes)/home/page.tsx
 import BasicPageProvider from "@/components/providers/basic-page-provider";
 import Header from "../components/header";
-import Footer from "../components/footer";
 import type { Metadata } from 'next';
 import Body from "./body";
+import Footer from "../components/footer-with-design";
 
 export const metadata: Metadata = {
   title: 'Welcome to the CiRQL Community!',
