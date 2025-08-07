@@ -4,7 +4,7 @@ import { MetadataRoute } from 'next'
 const BASE_URL = 'https://cirql.vercel.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const routes = ['', '/about', '/faq', '/privacy-policy', '/contacts', '/terms-and-conditions'];
+  const routes = ['', '/about', '/faq', '/privacy-policy', '/contacts', '/terms-and-conditions', '/sign-out', '/search', '/announcements', '/announcements','/profile/me', '/settings', '/notifications', '/social', '/interests', '/home'];
   const currentDate = new Date().toISOString(); // Revert to this
 
   // Or for "current - 2 days"
